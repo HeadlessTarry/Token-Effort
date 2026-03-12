@@ -24,7 +24,7 @@ while IFS= read -r -d '' file; do
   mkdir -p "$(dirname "$target")"
   cp "$file" "$target"
   echo -e "  📄 ~/.copilot/${rel}"
-  (( count++ ))
+  (( ++count ))
 done < <(find "$SRC" -type f -print0)
 
 echo ""
