@@ -94,7 +94,7 @@ Use when the user should **review and approve** each phase before the next begin
 handoffs:
   - label: "Button label"
     agent: "target-agent"
-    prompt: >
+    prompt: |
       Apply the following plan exactly as described. Do not deviate from it.
       Create or modify only the files listed.
 

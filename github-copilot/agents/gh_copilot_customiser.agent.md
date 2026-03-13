@@ -9,7 +9,7 @@ tools: ["read", "search", "web/fetch", "vscode/askQuestions", "edit"]
 handoffs:
   - label: Apply Changes
     agent: "GH Copilot Customiser [Apply]"
-    prompt: >
+    prompt: |
       Apply the following plan exactly as described. Do not deviate from it.
       Create or modify only the files listed.
 
