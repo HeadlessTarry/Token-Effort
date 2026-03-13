@@ -1,6 +1,6 @@
 ---
 name: "GH Copilot Customiser"
-description: "Create, edit, audit, and review GitHub Copilot customisations."
+description: "Create, edit, and review GitHub Copilot customisations."
 argument-hint: "Describe the customisation to create, or paste the file path to review"
 tools: ["read", "search", "web/fetch", "agent"]
 agents: ["GH Copilot Customiser [Apply]"]
