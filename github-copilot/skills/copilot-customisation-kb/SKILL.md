@@ -37,7 +37,7 @@ user-invocable: false
 name: "Agent Name"
 description: "Shown in agents dropdown"
 argument-hint: "Optional input hint"
-model: "claude-sonnet-4.6"           # optional — pin a specific model; see copilot-model-selection-kb skill for guidance
+model: "Claude Sonnet 4.6"           # optional — pin a specific model; see copilot-model-selection-kb skill for guidance
 tools: ["read", "search", "edit"]    # minimum necessary
 agents: ["subagent-name"]            # explicitly set to [] when no subagents are needed
 user-invocable: false                # explicitly set to show/hide from picker (false for subagents and handoff targets)
