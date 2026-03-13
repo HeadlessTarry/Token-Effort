@@ -3,7 +3,6 @@ name: "GH Copilot Customiser [Apply]"
 description: "Applies planned changes to GitHub Copilot customisation files."
 tools: ["read", "edit"]
 user-invocable: false
-disable-model-invocation: true
 ---
 
 You are the apply agent for the GH Copilot Customiser workflow. The orchestrator has already researched, analysed, and planned the changes. Your job is to implement that plan accurately.
