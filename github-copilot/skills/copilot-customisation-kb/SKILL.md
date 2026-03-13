@@ -40,7 +40,7 @@ argument-hint: "Optional input hint"
 model: "gpt-4.1"                     # optional — pin a specific model for this agent
 tools: ["read", "search", "edit"]    # minimum necessary
 agents: ["subagent-name"]            # explicitly set to [] when no subagents are needed
-user-invocable: false                # set to hide from picker (subagents and handoff targets)
+user-invocable: false                # explicitly set to show/hide from picker (false for subagents and handoff targets)
 handoffs:
   - label: "Button label"
     agent: "target-agent"
