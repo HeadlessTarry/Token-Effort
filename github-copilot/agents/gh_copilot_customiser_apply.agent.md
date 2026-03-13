@@ -1,7 +1,7 @@
 ---
 name: "GH Copilot Customiser [Apply]"
 description: "Write-phase subagent: implements, creates, and modifies GitHub Copilot customisation files based on a plan provided by the orchestrator."
-tools: ["read", "edit"]
+tools: ["read", "search", "edit"]
 agents: []
 user-invocable: false
 ---
