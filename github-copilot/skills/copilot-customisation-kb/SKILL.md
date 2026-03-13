@@ -97,28 +97,18 @@ handoffs:
   - label: "Button label"
     agent: "target-agent"
     prompt: |
-      Apply the following plan exactly as described. Do not deviate from it.
+      Apply the plan exactly as described. Do not deviate from it.
       Create or modify only the files listed.
-
-      <PLAN>
-      [Paste the full plan summary here before triggering the handoff]
-      </PLAN>
     send: false   # true = auto-submit without user confirmation
 ```
 
-Explicitly instruct the orchestrating agent to paste the full plan summary into the handoff prompt before triggering. This ensures the target agent has all necessary context to implement the plan without needing to reference the conversation history, which may not be reliably passed. The user can review the plan in the prompt before confirming the handoff.
-
-```markdown
-# Workflows
-
-1. **Something** - ...
-2. **Something else** - ...
-3. **Report** - Before triggering the "Apply Changes" handoff, copy the full plan into the handoff prompt in place of `[Paste the full plan summary here before triggering the handoff]`. Then trigger the handoff.
-```
+Because the `prompt:` field is static (see limitation below), the pattern for passing a dynamic plan through a handoff is a **user action**: the orchestrator should output the plan summary clearly, then instruct the user to copy it into the handoff prompt before clicking the button. The user can review and edit the prompt before confirming.
 
 - The pre-filled prompt is the only context reliably passed to the target agent — make it self-contained.
 - Handoff buttons appear after a response completes; the user selects them to advance.
 - Best for: plan → implement, implement → review, any workflow where the user wants a checkpoint.
+
+**Limitation:** The `prompt:` field is a static string defined in the agent's YAML — the model cannot dynamically inject content into it at runtime. Avoid designs that require the model to populate the pre-filled prompt with dynamic content (e.g. inserting a generated plan). For workflows that need to pass dynamic context to the target agent, use the inline subagents pattern instead.
 
 **VS Code Limitation** - the tools defined in the orchestrating agent are carried over to other agents via a handoff. This is a necessary exception to the general rule that each agent should only include the minimum necessary tools.
 
