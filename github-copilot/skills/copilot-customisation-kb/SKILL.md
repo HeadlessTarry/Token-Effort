@@ -37,7 +37,7 @@ user-invocable: false
 name: "Agent Name"
 description: "Shown in agents dropdown"
 argument-hint: "Optional input hint"
-model: "Claude Sonnet 4.6"           # optional — pin a specific model; see copilot-model-selection-kb skill for guidance
+model: "Claude Sonnet 4.6 (copilot)" # optional — pin a specific model; see copilot-model-selection-kb skill for guidance
 tools: ["read", "search", "edit"]    # minimum necessary
 agents: ["subagent-name"]            # explicitly set to [] when no subagents are needed
 user-invocable: false                # explicitly set to show/hide from picker (false for subagents and handoff targets)
@@ -179,3 +179,4 @@ Fetch these only when you need detail on a specific feature. Do not fetch specul
 | Agent skills specification and portability | https://code.visualstudio.com/docs/copilot/customization/agent-skills |
 | MCP servers | https://code.visualstudio.com/docs/copilot/customization/mcp-servers |
 | Hooks, Agent-scoped hooks and lifecycle events | https://code.visualstudio.com/docs/copilot/customization/hooks |
+| Model selection, identifiers, and multipliers | Load the `copilot-model-selection-kb` skill — it contains the full catalogue and task-based guidance |
