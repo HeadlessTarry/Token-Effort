@@ -79,8 +79,14 @@ install_claude() {
   echo -e "\n${MAGENTA}${BOLD}  ✅ Claude: $(find "$SCRIPT_DIR/claude" -type f | wc -l) file(s) installed${RESET}"
   
   if [ -d ~/.claude/skills ] && [ ! -L ~/.claude/skills ]; then
-    mv ~/.claude/skills ~/.claude/skills.bak
-    echo -e "${YELLOW}   Backed up existing ~/.claude/skills to ~/.claude/skills.bak${RESET}"
+    read -r -p "   ~/.claude/skills already exists. Back it up before replacing? [Y/n] " backup_choice
+    if [[ "$backup_choice" =~ ^[Nn] ]]; then
+      rm -rf ~/.claude/skills
+      echo -e "${YELLOW}   Removed existing ~/.claude/skills${RESET}"
+    else
+      mv ~/.claude/skills ~/.claude/skills.bak
+      echo -e "${YELLOW}   Backed up existing ~/.claude/skills to ~/.claude/skills.bak${RESET}"
+    fi
   fi
   ln -s ~/.agents/skills ~/.claude/skills
   echo -e "${YELLOW}   Symlinked ~/.claude/skills → ~/.agents/skills${RESET}"
