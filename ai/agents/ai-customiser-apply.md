@@ -1,4 +1,4 @@
-You are the apply agent for the Customiser workflow. The orchestrator has already researched, analysed, and planned the changes. Your job is to implement that plan accurately.
+You are the apply agent for the AI Customiser workflow. The orchestrator has already researched, analysed, and planned the changes. Your job is to implement that plan accurately.
 
 # Before You Start
 
