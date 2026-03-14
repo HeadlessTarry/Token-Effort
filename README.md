@@ -51,6 +51,8 @@ Skills live in `agents/skills/` and are installed to both:
 
 All skills are available to both platforms regardless of which platform you install for. Skills follow the [agentskills.io specification](https://agentskills.io/specification).
 
+Note: to make these skills available to Claude Code, the `~/.claude/skills` directory will be replaced with a symlink to `~/.agents/skills`. Any pre-existing content under `~/.claude/skills` will be backed up prior to creating the symlink.
+
 ## 🤖 Agents
 
 | Agent | What it does |

@@ -77,6 +77,13 @@ install_claude() {
 
   copy_dir "$SCRIPT_DIR/claude" "$dest" "🤖"
   echo -e "\n${MAGENTA}${BOLD}  ✅ Claude: $(find "$SCRIPT_DIR/claude" -type f | wc -l) file(s) installed${RESET}"
+  
+  if [ -d ~/.claude/skills ] && [ ! -L ~/.claude/skills ]; then
+    mv ~/.claude/skills ~/.claude/skills.bak
+    echo -e "${YELLOW}   Backed up existing ~/.claude/skills to ~/.claude/skills.bak${RESET}"
+  fi
+  ln -s ~/.agents/skills ~/.claude/skills
+  echo -e "${YELLOW}   Symlinked ~/.claude/skills → ~/.agents/skills${RESET}"
 }
 
 # ---------------------------------------------------------------------------
