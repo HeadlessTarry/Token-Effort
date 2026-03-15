@@ -17,22 +17,86 @@ compatibility: Designed for GitHub Copilot (Microsoft)
 
 ## Decision Framework: Which format to use?
 
+**Always prefer cross-platform formats.** They work across both GitHub Copilot and Claude Code and are the default recommendation for any new customisation.
+
+### Cross-Platform (preferred)
+
+| Format | Use when… | File location |
+|---|---|---|
+| **Agent skill** (`SKILL.md`) | You need portable, reusable domain knowledge or a specialised workflow that Copilot should load automatically when relevant | `<base dir>/skills/<name>/SKILL.md` |
+| **AGENTS.md** | You need always-on instructions that apply across the whole project **or** are scoped to a specific subdirectory | `AGENTS.md` (project root) or `<subdir>/AGENTS.md` |
+
+### Platform-Specific (GitHub Copilot only)
+
 | Format | Use when… | File location |
 |---|---|---|
 | **Custom agent** (`.agent.md`) | You need a persistent persona across a conversation, tool restrictions, model preferences, handoffs, or subagent orchestration | `<base dir>/agents/*.agent.md` |
-| **Agent skill** (`SKILL.md`) | You need portable, reusable domain knowledge or a specialised workflow that Copilot should load automatically when relevant | `<base dir>/skills/<name>/SKILL.md` |
 | **Prompt file** (`.prompt.md`) | You need a lightweight, single-task slash command invoked manually | `<base dir>/prompts/*.prompt.md` |
-| **Instruction file** (`.instructions.md`) | You need coding standards or guidelines applied automatically by file glob | `<base dir>/instructions/*.instructions.md` |
 | **Hook** | You need automated actions triggered by agent lifecycle events (e.g. on file save, on tool call) | `<base dir>/hooks/*.json` |
 
-**Default: prefer the simplest format.** If no tool restrictions or persistent persona are needed, a skill or prompt is almost always better than an agent.
+> Copilot agents can be made cross-platform using the Shim Pattern — see Platform-Specific Features below.
 
-## Base Directory
+---
 
-- To customise Copilot for a specific project, add files to the `.github` directory in the root of that project. E.g. `.github/agents/my-agent.agent.md`, `.github/skills/my-skill/SKILL.md`, `.github/prompts/my-prompt.prompt.md`, `.github/instructions/my-instructions.instructions.md`, `.github/hooks/my-hook.json`.
-- To share customisations across multiple projects, but only for the current user, add files to under the user home directory. E.g. `~/.copilot/agents/my-agent.agent.md`, `~/.copilot/skills/my-skill/SKILL.md`, `~/.copilot/prompts/my-prompt.prompt.md`, `~/.copilot/instructions/my-instructions.instructions.md`, `~/.copilot/hooks/my-hook.json`.
+## Cross-Platform Features
 
-## Shim Pattern (multi-platform agents)
+### AGENTS.md — Unified Instructions
+
+`AGENTS.md` is the standard way to provide always-on project instructions. It is recognised by **both GitHub Copilot and Claude Code**, making it the single source of truth for a repository.
+
+#### Placement
+
+| File | Scope |
+|---|---|
+| `AGENTS.md` at the repository root | Global instructions for the entire project |
+| `<subdir>/AGENTS.md` (e.g. `src/AGENTS.md`) | Instructions scoped to that directory and its children only |
+
+Subdirectory `AGENTS.md` files are additive — they layer on top of the root `AGENTS.md`.
+
+### Agent Skill (`SKILL.md`)
+
+```yaml
+---
+name: skill-name          # must match parent directory name exactly (lowercase, hyphens)
+description: >            # max 1024 chars — Copilot uses this for relevance matching
+  What the skill does and when to use it. Be specific about both capabilities
+  and use cases.
+user-invocable: false     # hide from / menu; model still loads automatically
+disable-model-invocation: true  # only allow explicit /slash invocation; model won't auto-load
+---
+```
+
+The `name` field **must** match the parent directory name exactly or the skill will not load.
+
+> **`user-invocable: false`** hides the skill from the `/` slash command menu but Copilot will still load it automatically when the description matches the context.
+> **`disable-model-invocation: true`** goes further — it prevents Copilot from loading the skill automatically; it can only be loaded via an explicit `/` invocation. Use this when you want full manual control over when the skill is applied.
+
+---
+
+## Platform-Specific Features
+
+> These formats are GitHub Copilot only. Prefer cross-platform equivalents where possible. If you encounter `.github/copilot-instructions.md` or `.instructions.md` files in a repository, recommend migrating their contents to `AGENTS.md` — see the migration guides below.
+
+### Custom Agent (`.agent.md`)
+
+```yaml
+---
+name: "Agent Name"
+description: "Shown in agents dropdown"
+argument-hint: "Optional input hint"
+model: "Claude Sonnet 4.6 (copilot)" # optional — pin a specific model; see copilot-model-selection skill for guidance
+tools: ["read", "search", "edit"]    # minimum necessary
+agents: ["subagent-name"]            # explicitly set to [] when no subagents are needed
+user-invocable: false                # explicitly set to show/hide from picker (false for subagents and handoff targets)
+handoffs:
+  - label: "Button label"
+    agent: "target-agent"
+    prompt: "Pre-filled prompt text"
+    send: false                      # true = auto-submit
+---
+```
+
+### Shim Pattern (multi-platform agents)
 
 Use the Shim Pattern when an agent must work across both Claude Code and GitHub Copilot from
 a single shared body. Each agent is three files:
@@ -59,45 +123,6 @@ Read and follow the agent instructions at: ~/.agents/custom_agents/<name>/<name>
 
 Shims use `~` (never an expanded absolute path) for cross-OS portability.
 
-## Key File Structures
-
-### Custom Agent (`.agent.md`)
-
-```yaml
----
-name: "Agent Name"
-description: "Shown in agents dropdown"
-argument-hint: "Optional input hint"
-model: "Claude Sonnet 4.6 (copilot)" # optional — pin a specific model; see copilot-model-selection skill for guidance
-tools: ["read", "search", "edit"]    # minimum necessary
-agents: ["subagent-name"]            # explicitly set to [] when no subagents are needed
-user-invocable: false                # explicitly set to show/hide from picker (false for subagents and handoff targets)
-handoffs:
-  - label: "Button label"
-    agent: "target-agent"
-    prompt: "Pre-filled prompt text"
-    send: false                      # true = auto-submit
----
-```
-
-### Agent Skill (`SKILL.md`)
-
-```yaml
----
-name: skill-name          # must match parent directory name exactly (lowercase, hyphens)
-description: >            # max 1024 chars — Copilot uses this for relevance matching
-  What the skill does and when to use it. Be specific about both capabilities
-  and use cases.
-user-invocable: false     # hide from / menu; model still loads automatically
-disable-model-invocation: true  # only allow explicit /slash invocation; model won't auto-load
----
-```
-
-The `name` field **must** match the parent directory name exactly or the skill will not load.
-
-> **`user-invocable: false`** hides the skill from the `/` slash command menu but Copilot will still load it automatically when the description matches the context.
-> **`disable-model-invocation: true`** goes further — it prevents Copilot from loading the skill automatically; it can only be loaded via an explicit `/` invocation. Use this when you want full manual control over when the skill is applied.
-
 ### Prompt File (`.prompt.md`)
 
 ```yaml
@@ -105,14 +130,6 @@ The `name` field **must** match the parent directory name exactly or the skill w
 description: "Short description"
 agent: agent              # ask | agent | plan | <custom-agent-name>
 tools: ["read", "edit"]   # overrides the referenced agent's tool list if specified
----
-```
-
-### Instruction File (`.instructions.md`)
-
-```yaml
----
-applyTo: "src/**/*.ts"   # glob pattern — omit to apply to all files globally
 ---
 ```
 
@@ -133,9 +150,7 @@ applyTo: "src/**/*.ts"   # glob pattern — omit to apply to all files globally
 
 Hooks fire automatically on agent lifecycle events without user interaction.
 
-### Agent-scoped hooks
-
-A custom agent can include `hooks:` in its YAML frontmatter to define hooks that apply only to that agent.
+A custom agent can include `hooks:` in its YAML frontmatter to define hooks that apply only to that agent:
 
 ```yaml
 ---
@@ -147,6 +162,31 @@ hooks:
       command: "echo 'Welcome to the session!'"
 ---
 ```
+
+### `.github/copilot-instructions.md` — Migrate to AGENTS.md
+
+`.github/copilot-instructions.md` is the Copilot-only predecessor to `AGENTS.md` for global project instructions. If found in a repository, recommend migrating to `AGENTS.md`.
+
+**Migration:** Move its contents into a root `AGENTS.md`. The root `AGENTS.md` is equivalent in scope and is recognised by both Copilot and Claude Code.
+
+### Instruction Files (`.instructions.md`) — Migrate to AGENTS.md
+
+`.instructions.md` files provide Copilot-only, glob-scoped instructions. If found in a repository, recommend migrating to `AGENTS.md`.
+
+```yaml
+---
+applyTo: "src/**/*.ts"   # glob pattern — omit to apply to all files globally
+---
+```
+
+**Migration:** Move directory-scoped instructions into `AGENTS.md` files placed in the relevant subdirectories. Retain `.instructions.md` files only as a last resort — where the `applyTo` glob pattern is essential and cannot be replicated by subdirectory placement.
+
+---
+
+## Base Directory
+
+- To customise Copilot for a specific project, add files to the `.github` directory in the root of that project. E.g. `.github/agents/my-agent.agent.md`, `.github/skills/my-skill/SKILL.md`, `.github/prompts/my-prompt.prompt.md`, `.github/instructions/my-instructions.instructions.md`, `.github/hooks/my-hook.json`.
+- To share customisations across multiple projects, but only for the current user, add files to under the user home directory. E.g. `~/.copilot/agents/my-agent.agent.md`, `~/.copilot/skills/my-skill/SKILL.md`, `~/.copilot/prompts/my-prompt.prompt.md`, `~/.copilot/instructions/my-instructions.instructions.md`, `~/.copilot/hooks/my-hook.json`.
 
 ## Handoffs vs. Inline Subagents
 

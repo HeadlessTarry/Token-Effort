@@ -16,22 +16,89 @@ compatibility: Designed for Claude Code (Anthropic)
 
 ## Decision Framework: Which format to use?
 
+**Always prefer cross-platform formats.** They work across both Claude Code and GitHub Copilot and are the default recommendation for any new customisation.
+
+### Cross-Platform (preferred)
+
+| Format | Use when… | File location |
+|---|---|---|
+| **Skill** (`SKILL.md`) | You need portable, reusable domain knowledge or a specialised workflow that Claude should load automatically when relevant | `<base dir>/skills/<name>/SKILL.md` |
+| **AGENTS.md** | You need always-on instructions that apply across the whole project **or** are scoped to a specific subdirectory | `AGENTS.md` (project root) or `<subdir>/AGENTS.md` |
+
+### Platform-Specific (Claude Code only)
+
 | Format | Use when… | File location |
 |---|---|---|
 | **Agent** (`.md`) | You need a persistent persona across a conversation, tool restrictions, model preferences, or subagent orchestration | `<base dir>/agents/*.md` |
-| **Skill** (`SKILL.md`) | You need portable, reusable domain knowledge or a specialised workflow that Claude should load automatically when relevant | `<base dir>/skills/<name>/SKILL.md` |
-| **CLAUDE.md** | You need always-on instructions applied to every session for a user or project | `~/.claude/CLAUDE.md` (user) or `CLAUDE.md` (project root) |
-| **`.claude/rules/`** | You need modular, optionally path-scoped rules that extend CLAUDE.md for a project or user | `<base dir>/rules/*.md` |
 | **Hook** | You need automated actions triggered by agent lifecycle events | `hooks:` key in `settings.json`, or `hooks:` frontmatter in an agent/skill file |
 
-**Default: prefer the simplest format.** If no tool restrictions or persistent persona are needed, a skill or CLAUDE.md addition is almost always better than an agent.
+> Claude agents can be made cross-platform using the Shim Pattern — see Platform-Specific Features below.
 
-## Base Directory
+---
 
-- To customise Claude Code for a specific project, add files to the `.claude` directory in the root of that project. E.g. `.claude/agents/my-agent.md`, `.agents/skills/my-skill/SKILL.md`, `CLAUDE.md`.
-- To share customisations across multiple projects, but only for the current user, add files under the user home directory. E.g. `~/.claude/agents/my-agent.md`, `~/.agents/skills/my-skill/SKILL.md`, `~/.claude/CLAUDE.md`.
+## Cross-Platform Features
 
-## Shim Pattern (multi-platform agents)
+### AGENTS.md — Unified Instructions
+
+`AGENTS.md` is the standard way to provide always-on project instructions. It is recognised by **both Claude Code and GitHub Copilot**, making it the single source of truth for a repository.
+
+#### Placement
+
+| File | Scope |
+|---|---|
+| `AGENTS.md` at the repository root | Global instructions for the entire project |
+| `<subdir>/AGENTS.md` (e.g. `src/AGENTS.md`) | Instructions scoped to that directory and its children only |
+
+Subdirectory `AGENTS.md` files are additive — they layer on top of the root `AGENTS.md`.
+
+### Skill (`SKILL.md`)
+
+```yaml
+---
+name: skill-name          # must match parent directory name exactly (lowercase, hyphens)
+description: >            # used for relevance matching when Claude auto-loads the skill
+  What the skill does and when to use it. Be specific about both capabilities
+  and use cases.
+user-invocable: false     # hide from slash command menu; Claude still auto-loads based on description
+disable-model-invocation: true  # prevent auto-loading; only explicit /slash invocation
+---
+```
+
+The `name` field **must** match the parent directory name exactly or the skill will not load.
+
+> **`user-invocable: false`** hides the skill from the `/` slash command menu but Claude will still load it automatically when the description matches the context.
+> **`disable-model-invocation: true`** prevents Claude from loading the skill automatically; it can only be loaded via an explicit `/` invocation. Use this when you want full manual control over when the skill is applied.
+
+---
+
+## Platform-Specific Features
+
+> These formats are Claude Code only. Prefer cross-platform equivalents where possible. If you encounter `CLAUDE.md` or `.claude/rules/` files in a repository, recommend migrating their contents to `AGENTS.md` — see the migration guides below.
+
+### Agent (`.md`)
+
+```yaml
+---
+name: "Agent Name"
+description: "Shown in /agents list; also used to match when Claude auto-selects agents"
+model: claude-sonnet-4-6       # optional — pin a specific model; see claude-model-selection skill
+tools: [read, write, edit, bash, glob, grep, web_search, agent]  # minimum necessary
+disallowedTools: [bash]        # optional — explicitly deny tools
+permissionMode: acceptEdits    # optional — default | acceptEdits | dontAsk | bypassPermissions | plan
+maxTurns: 10                   # optional — cap agentic turns
+skills: [my-skill]             # optional — preload skill content at startup
+hooks:                         # optional — lifecycle hooks scoped to this agent only
+  PreToolUse:
+    - matcher: "Bash"
+      hooks:
+        - type: command
+          command: "./scripts/check.sh"
+isolation: worktree            # optional — run in isolated git worktree
+background: false              # optional — run as background task by default
+---
+```
+
+### Shim Pattern (multi-platform agents)
 
 Use the Shim Pattern when an agent must work across both Claude Code and GitHub Copilot from
 a single shared body. Each agent is three files:
@@ -57,80 +124,6 @@ Read and follow the agent instructions at: ~/.agents/custom_agents/<name>/<name>
 ```
 
 Shims use `~` (never an expanded absolute path) for cross-OS portability.
-
-## Key File Structures
-
-### Agent (`.md`)
-
-```yaml
----
-name: "Agent Name"
-description: "Shown in /agents list; also used to match when Claude auto-selects agents"
-model: claude-sonnet-4-6       # optional — pin a specific model; see claude-model-selection skill
-tools: [read, write, edit, bash, glob, grep, web_search, agent]  # minimum necessary
-disallowedTools: [bash]        # optional — explicitly deny tools
-permissionMode: acceptEdits    # optional — default | acceptEdits | dontAsk | bypassPermissions | plan
-maxTurns: 10                   # optional — cap agentic turns
-skills: [my-skill]             # optional — preload skill content at startup
-hooks:                         # optional — lifecycle hooks scoped to this agent only
-  PreToolUse:
-    - matcher: "Bash"
-      hooks:
-        - type: command
-          command: "./scripts/check.sh"
-isolation: worktree            # optional — run in isolated git worktree
-background: false              # optional — run as background task by default
----
-```
-
-### Skill (`SKILL.md`)
-
-```yaml
----
-name: skill-name          # must match parent directory name exactly (lowercase, hyphens)
-description: >            # used for relevance matching when Claude auto-loads the skill
-  What the skill does and when to use it. Be specific about both capabilities
-  and use cases.
-user-invocable: false     # hide from slash command menu; Claude still auto-loads based on description
-disable-model-invocation: true  # prevent auto-loading; only explicit /slash invocation
----
-```
-
-The `name` field **must** match the parent directory name exactly or the skill will not load.
-
-> **`user-invocable: false`** hides the skill from the `/` slash command menu but Claude will still load it automatically when the description matches the context.
-> **`disable-model-invocation: true`** prevents Claude from loading the skill automatically; it can only be loaded via an explicit `/` invocation. Use this when you want full manual control over when the skill is applied.
-
-### CLAUDE.md
-
-No frontmatter. Plain markdown. Content is applied as always-on context for every session in its scope (user-level or project-level).
-
-Supports `@path/to/file` imports to include content from other files:
-
-```markdown
-# My Project Guidelines
-
-@docs/architecture.md
-
-Always write tests before implementation.
-```
-
-### `.claude/rules/`
-
-Modular alternative to a monolithic CLAUDE.md. All `.md` files in `.claude/rules/` are discovered recursively and loaded at launch. Rules without `paths:` frontmatter load unconditionally; rules with `paths:` load on demand when Claude reads matching files:
-
-```markdown
----
-paths:
-  - "src/api/**/*.ts"
----
-
-# API Rules
-
-- All endpoints must include input validation.
-```
-
-User-level rules go in `~/.claude/rules/` and apply to every project.
 
 ### Hooks
 
@@ -178,6 +171,50 @@ The `matcher` field is a **regex** matched against the tool name. Tool names are
 | `WorktreeCreate` / `WorktreeRemove` | When a worktree is created/removed |
 | `SessionEnd` | When the session terminates |
 | `Elicitation` / `ElicitationResult` | MCP server input requests |
+
+### CLAUDE.md — Migrate to AGENTS.md
+
+`CLAUDE.md` is the Claude-only predecessor to `AGENTS.md`. If found in a repository, recommend migrating to `AGENTS.md`.
+
+No frontmatter. Plain markdown. Content is applied as always-on context for every session in its scope (user-level or project-level). Supports `@path/to/file` imports:
+
+```markdown
+# My Project Guidelines
+
+@docs/architecture.md
+
+Always write tests before implementation.
+```
+
+**Migration:** Move project-wide instructions into a root `AGENTS.md`. Retain `CLAUDE.md` only for instructions that are genuinely Claude-specific (e.g. referencing hooks, skills, or agent names) and cannot meaningfully apply to other platforms.
+
+### `.claude/rules/` — Migrate to AGENTS.md
+
+`.claude/rules/` is the Claude-only modular rules system. If found in a repository, recommend migrating to `AGENTS.md`.
+
+Rules are `.md` files discovered recursively under `.claude/rules/`. Rules without `paths:` frontmatter load unconditionally; rules with `paths:` load on demand when Claude reads a matching file:
+
+```markdown
+---
+paths:
+  - "src/api/**/*.ts"
+---
+
+# API Rules
+
+- All endpoints must include input validation.
+```
+
+User-level rules go in `~/.claude/rules/` and apply to every project.
+
+**Migration:** Move directory-scoped rules into `AGENTS.md` files placed in the relevant subdirectories. Retain `.claude/rules/` files only as a last resort — where the `paths:` glob is essential and cannot be replicated by subdirectory placement.
+
+---
+
+## Base Directory
+
+- To customise Claude Code for a specific project, add files to the `.claude` directory in the root of that project. E.g. `.claude/agents/my-agent.md`, `.agents/skills/my-skill/SKILL.md`, `CLAUDE.md`.
+- To share customisations across multiple projects, but only for the current user, add files under the user home directory. E.g. `~/.claude/agents/my-agent.md`, `~/.agents/skills/my-skill/SKILL.md`, `~/.claude/CLAUDE.md`.
 
 ## Subagent Pattern
 
