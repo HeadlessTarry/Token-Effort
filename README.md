@@ -16,7 +16,7 @@ A collection of Claude Code agents and skills that do just enough to avoid being
 2. Run the installer:
 
    ```bash
-   ./install.sh
+   ./install.sh --copy
    ```
 
 Everything under `claude/` gets copied to `~/.claude/`. That's it.
@@ -26,29 +26,18 @@ Everything under `claude/` gets copied to `~/.claude/`. That's it.
 ```
 claude/
 ├── agents/      →  ~/.claude/agents/
+├── commands/    →  ~/.claude/commands/
+├── hooks/       →  ~/.claude/hooks/
+├── scripts/     →  ~/.claude/scripts/
 ├── skills/      →  ~/.claude/skills/
 └── ...
 ```
 
 Add something here, run `./install.sh`, it appears in Claude Code. Profound.
 
-## 🤖 Agents
-
-| Agent | What it does |
-|---|---|
-| *(none yet)* | Coming soon, probably |
-
-## 🧠 Skills
-
-| Skill | What it does |
-|---|---|
-| **fix-issues** | Fetches open GitHub issues labelled `claude` and fixes them — one branch, one PR each. |
-
 ## ➕ Adding Things
 
 Drop files under `claude/` mirroring where they should land in `~/.claude/`. Re-run `./install.sh` to deploy.
-
-Agents go in `claude/agents/`. Skills go in `claude/skills/`. Claude Code docs cover the rest.
 
 ## 💻 Windows Note
 
