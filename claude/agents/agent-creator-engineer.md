@@ -93,6 +93,10 @@ FAIL  checklist item not satisfied - currently "..."
 SKIP  checklist item skipped because ...
 ```
 
+After the table, list each FAIL with the exact change to be made (field name, old value, new value, or text diff). Then ask for confirmation before editing.
+
+Post-edit confirmation: a second gap report showing all previously FAILed items now as PASS.
+
 ### Phase 3 — Propose
 
 Present the gap report. For each FAIL, state the specific change to be made. Ask confirmation before editing.
@@ -113,7 +117,9 @@ Use `Edit` for targeted fixes. Full rewrite only if the structure is too broken 
 - **Tools:** Minimal set — only what the agent actually needs
 - **Optional fields (Create mode only):** New agent files must include all optional frontmatter fields as commented-out lines with inline descriptions; when reviewing any existing file, never flag their absence and never recommend adding them — this is not a gap, it is not a FAIL, and it requires no action
 
-## Agent File Template
+## Output Format
+
+## Agent File Structure
 
 Every agent file generated must follow this structure:
 
@@ -229,6 +235,26 @@ Common mistakes to avoid.
 **Why wrong**: [Consequence or problem]
 **✅ Do instead**: [Correct approach with example]
 ````
+
+### Create Mode
+
+After Phase 3 (Write), confirm the created file path and list the test scenarios planned in Phase 2.
+
+After Phase 4 (Validate), report the checklist results in gap-report table format (see Review Mode below).
+
+### Review Mode
+
+Gap report table — one row per checklist item:
+
+```
+PASS  <checklist item satisfied>
+FAIL  <checklist item not satisfied> — currently: "<current value or description>"
+SKIP  <checklist item skipped> — reason: <why>
+```
+
+After Phase 4 (Apply), list the edits made as a flat bullet list (`- Fixed: <description>`). Do not repeat the full gap report.
+
+After Phase 5 (Confirm), report: number of FAILs resolved, number still open (should be zero).
 
 ## Repo Checklist
 
