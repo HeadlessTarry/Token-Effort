@@ -3,17 +3,7 @@ name: reviewer-newcomer
 description: Use when a code review from a newcomer's perspective is needed.
 tools: Read, Grep, Glob, Bash
 model: sonnet
-# disallowedTools: <Insert disallowed tools list>
-# permissionMode: <Insert permission mode, if not "default">
-# maxTurns: <Insert max number of turns>
 skills: computing-branch-diff
-# mcpServers: <List MCPs>
-# hooks: <List hooks scoped to this agent>
-# memory: <Set memory mode, if applicable>
-# background: <Set true if agent runs as background task>
-# effort: <Effort level when subagent is active>
-# isolation: <Should the agent run in isolated git working tree>
-# initialPrompt: <Provide an initial automatic user prompt>
 ---
 
 # Reviewer Newcomer
