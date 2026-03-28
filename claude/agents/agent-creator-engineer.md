@@ -75,7 +75,26 @@ Create `claude/agents/<name>.md` using the Agent File Template below. Follow the
 
 ### Phase 4 — Validate
 
-Run the Repo Checklist. Fix any gaps before reporting done.
+**Step 1 — Initial validation**
+
+Run the Repo Checklist. Fix any gaps found.
+
+**Step 2 — Review & Feedback loop** (up to 5 iterations)
+
+Switch into Review mode and audit the file you just wrote. For each iteration:
+
+1. Run the full Review mode audit (Phases 1–2): produce a gap report for the current file.
+2. If the gap report contains FAILs, apply the fixes (Review Phase 4 — Apply) and update the file.
+3. Before applying fixes in any iteration after the first: compare the new FAILs against all fixes applied in previous iterations. If any new FAIL contradicts a previous fix (i.e., the review is asking you to undo or reverse a change already made in response to an earlier iteration), **abort the loop immediately** and report the inconsistency:
+   - State which items conflict.
+   - State which iteration introduced each conflicting directive.
+   - Do not apply any further changes. Ask the user how to proceed.
+4. If the gap report is all PASSes, exit the loop early.
+5. Repeat for a maximum of 5 iterations total.
+
+**Step 3 — Final validation**
+
+Run the Repo Checklist one final time. Report the results in gap-report table format.
 
 ## Review Mode
 
