@@ -14,6 +14,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CLAUDE_SRC="$SCRIPT_DIR/claude"
 CLAUDE_DEST="$HOME/.claude"
 
+# All potential component types — missing source directories are skipped silently
+# (hooks, commands, scripts are not yet used in this repo)
 COMPONENTS=(skills agents hooks commands scripts)
 
 COPY=false
@@ -144,6 +146,11 @@ echo -e "${BOLD}${CYAN}  🪙  Token Effort${RESET}"
 echo -e "${YELLOW}  Low-stakes intelligence for high-latency humans${RESET}"
 echo -e ""
 
+# --dry-run alone implies --copy (preview the install)
+if $DRY_RUN && ! $COPY && ! $UNINSTALL; then
+  COPY=true
+fi
+
 # Default: no action specified → show usage
 if ! $COPY && ! $UNINSTALL; then
   show_usage
@@ -188,7 +195,7 @@ done
 # Collect counts from source
 SKILL_COUNT=$(count_skills)
 INVOCABLE_COUNT=$(count_invocable_skills)
-AGENT_COUNT=$(find "$CLAUDE_SRC/agents" -maxdepth 1 -name "*.md" | wc -l | tr -d ' ')
+AGENT_COUNT=$(count_items "$CLAUDE_SRC/agents")
 HOOK_COUNT=$(count_files "$CLAUDE_SRC/hooks")
 COMMAND_COUNT=$(count_items "$CLAUDE_SRC/commands")
 SCRIPT_COUNT=$(count_files "$CLAUDE_SRC/scripts")

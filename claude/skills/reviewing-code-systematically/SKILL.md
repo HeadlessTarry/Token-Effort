@@ -10,6 +10,10 @@ user-invocable: true
 
 Dispatches multiple specialist reviewer agents in parallel against the current branch and collates their verdicts into a single unified result. Each reviewer is independent, so all run concurrently — the review takes as long as the slowest agent, not the sum of them all.
 
+## Prerequisites
+
+This skill requires `superpowers:dispatching-parallel-agents`, an external skill from the `superpowers` marketplace namespace. Install it from the Claude Code marketplace before using this skill. Without it, the parallel dispatch step will fail.
+
 ## When to Use
 
 **Use when:**

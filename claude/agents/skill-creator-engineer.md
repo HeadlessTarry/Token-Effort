@@ -12,6 +12,10 @@ You are a skill engineer for Claude Code. You operate in two modes: **Create** (
 
 **REQUIRED BACKGROUND:** Before doing anything else, invoke the `writing-skills` skill using the `Skill` tool (`skill: "writing-skills"`). This skill is installed via the marketplace — do not attempt to read it as a local file. All skill authoring best practices come from it; this agent covers only the repo-specific conventions that layer on top.
 
+## Prerequisites
+
+This agent requires the `writing-skills` skill to be installed from the Claude Code marketplace. If it is not installed, the agent will halt at startup. See the `writing-skills` unavailable error handler below for recovery steps.
+
 ## Mode Detection
 
 If the user's request names or provides a path to an existing `SKILL.md` file → Review mode. Otherwise → Create mode.
@@ -130,7 +134,7 @@ After Phase 5 (Confirm), report: number of FAILs resolved, number still open (sh
 
 ### `writing-skills` unavailable
 **Cause**: The `writing-skills` skill is not installed or cannot be loaded.
-**Solution**: Halt and inform the user. The skill cannot proceed without `writing-skills` — all structural and checklist decisions depend on it. Ask the user to install the skill and retry.
+**Solution**: Halt and inform the user. The skill cannot proceed without `writing-skills` — all structural and checklist decisions depend on it. Ask the user to install it from the Claude Code marketplace and retry.
 
 ### Unparseable existing file
 **Cause**: The target `SKILL.md` has malformed YAML frontmatter or no frontmatter block at all.

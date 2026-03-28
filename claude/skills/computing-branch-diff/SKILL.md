@@ -9,6 +9,8 @@ description: Use when a subagent needs to know what changed on the current branc
 
 Produces the merge-base, full diff, changed file list, and commit list for the current branch relative to its base. Delegates all logic to a script — one Bash call, no approval chain. Handles base-branch detection, upstream fallback, `LARGE_DIFF_FILE` offloading, and `STATUS=empty` for branches with no unique commits.
 
+This skill ships with two companion scripts — `branch-diff.sh` (Bash) and `branch-diff.ps1` (PowerShell) — which must be present in the same installed directory. They are installed automatically by the Token-Effort install script.
+
 ## When NOT to Use
 
 - **Detached HEAD** — `git rev-parse --abbrev-ref HEAD` returns `HEAD`; base branch detection will likely fail with exit 1.
@@ -73,6 +75,8 @@ abc123 commit message
 # bash: /tmp/branch-diff-XXXXXX.patch
 # PowerShell: %TEMP%\tmpXXXX.tmp.patch
 ```
+
+The 1000-line threshold exists to avoid exceeding agent context limits — diffs above this size are written to a temp file instead of inlined.
 
 **Always report `BASE` and `MERGE_BASE`** so the calling agent can use them for further operations (e.g. `git show "$MERGE_BASE":path/to/file`).
 

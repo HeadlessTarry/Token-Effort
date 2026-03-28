@@ -11,6 +11,7 @@ function Invoke-Git {
         Write-Error "git $($GitArgs -join ' ') failed: $errMsg"
         exit 2
     }
+    # Filter out ErrorRecord objects (stderr captured via 2>&1) — return stdout lines only on success
     return $output | Where-Object { $_ -isnot [System.Management.Automation.ErrorRecord] }
 }
 
@@ -21,7 +22,9 @@ $base = $null
 
 # Step 1: upstream tracking branch — only if it diverges from HEAD
 if ($current -ne 'HEAD') {
-    $upstream = Invoke-Git 'rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{upstream}'
+    # expected to fail when no upstream is set — do not route through Invoke-Git
+    $upstream = & git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>$null
+    if ($LASTEXITCODE -ne 0) { $upstream = $null }
     if ($upstream) {
         $upstreamMergeBase = Invoke-Git 'merge-base', 'HEAD', $upstream
         $headHash = Invoke-Git 'rev-parse', 'HEAD'
@@ -90,6 +93,7 @@ Write-Output '--- DIFF ---'
 $diffOutput = Invoke-Git 'diff', $mergeBase, 'HEAD'
 $lineCount = ($diffOutput | Measure-Object -Line).Lines
 
+# Diffs over 1000 lines are offloaded to a temp file to avoid exceeding the agent's context window
 if ($lineCount -gt 1000) {
     $tmpFile = [System.IO.Path]::GetTempFileName() + '.patch'
     $diffOutput | Set-Content -Path $tmpFile -Encoding UTF8

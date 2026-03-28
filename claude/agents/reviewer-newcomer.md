@@ -1,6 +1,6 @@
 ---
 name: reviewer-newcomer
-description: Use when a code review from a newcomer's perspective is needed.
+description: Use when reviewing source files for naming clarity, missing comments, implicit assumptions, and error message quality.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 ---

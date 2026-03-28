@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # branch-diff.sh — compute the branch diff relative to its base
 # Exit codes: 0 = success, 1 = base branch not detected (ask user), 2 = unexpected error
-set -uo pipefail
+set -euo pipefail
 trap 'echo "ERROR: unexpected failure at line $LINENO (exit $?)" >&2; exit 2' ERR
 
 # --- Base branch detection ---
@@ -75,6 +75,7 @@ echo "--- DIFF ---"
 DIFF_OUTPUT=$(git diff "$MERGE_BASE" HEAD)
 LINE_COUNT=$(printf '%s\n' "$DIFF_OUTPUT" | wc -l)
 
+# Diffs over 1000 lines are offloaded to a temp file to avoid exceeding the agent's context window
 if [ "$LINE_COUNT" -gt 1000 ]; then
   TMPFILE=$(mktemp /tmp/branch-diff-XXXXXX.patch)
   printf '%s\n' "$DIFF_OUTPUT" > "$TMPFILE"
