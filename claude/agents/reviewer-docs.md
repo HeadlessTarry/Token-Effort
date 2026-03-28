@@ -68,7 +68,7 @@ When asked to perform unavailable actions, explain the limitation and suggest ap
 
 When invoked:
 
-1. **REQUIRED SUB-SKILL:** Use `computing-branch-diff` to detect the base branch and compute the full diff, changed file list, and commit list. Use the reported `$MERGE_BASE` as the diff base for all subsequent `git diff` calls.
+1. **Branch diff**: If a `<branch-diff>` block is present in your task prompt, parse BASE, MERGE_BASE, STATUS, the changed file list, and the diff from it — do not run `computing-branch-diff`. If no `<branch-diff>` block is present, fall back to the **REQUIRED SUB-SKILL:** `computing-branch-diff`. In both cases, use the reported MERGE_BASE as the diff base for all subsequent `git diff` calls.
 2. Identify which documentation files were changed in the diff
 3. Read each changed documentation file in full
 4. For any documentation files directly referenced by hyperlink or path in the changed diff, check that those referenced files exist at the documented path. Do not read or evaluate the content of referenced source code files — existence verification only. Limit this to direct references visible in the diff — do not spider the codebase.

@@ -1,6 +1,6 @@
 ---
 name: reviewer-dead-code
-description: Use when reviewing the current branch's changed files for dead code — unreachable branches, unused symbols, orphaned files, stale flags, and commented-out blocks. Determines scope automatically via branch diff. Does not apply removals.
+description: Use when reviewing the current branch's changed files for dead code — unreachable branches, unused symbols, orphaned files, stale flags, and commented-out blocks.
 tools: Read, Grep, Glob, Bash
 model: sonnet
 skills: computing-branch-diff
@@ -67,7 +67,7 @@ When asked to perform unavailable actions, explain the limitation and suggest ap
 
 When invoked:
 
-1. **REQUIRED SUB-SKILL:** Use `computing-branch-diff` to detect the base branch and obtain the full diff, changed file list, and commit list. The skill reports the merge base. Use the changed file list it provides as the set of files to review. If you need to run any additional `git diff` commands (e.g. for a specific file), use the merge base ref reported by this skill as the base ref.
+1. **Branch diff**: If a `<branch-diff>` block is present in your task prompt, parse BASE, MERGE_BASE, STATUS, the changed file list, and the diff from it — do not run `computing-branch-diff`. If no `<branch-diff>` block is present, fall back to the **REQUIRED SUB-SKILL:** `computing-branch-diff`. In both cases, use the changed file list as the set of files to review, and use the reported MERGE_BASE as the base ref for any subsequent `git diff` calls.
 2. For each file in the changed file list: skip auto-generated files (e.g. protobuf output, ORM migrations, build artifacts, lockfiles) and binary files. Flag each as `SKIP — auto-generated` or `SKIP — binary` in the output. Do not apply the checklist to skipped files.
 3. Read each remaining file in full — not just the diff lines. For files over 2,000 lines, read only the diff hunks and surrounding context rather than the full file (see Error Handling).
 4. For each file, work through the Review Checklist below
