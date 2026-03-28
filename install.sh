@@ -188,7 +188,7 @@ done
 # Collect counts from source
 SKILL_COUNT=$(count_skills)
 INVOCABLE_COUNT=$(count_invocable_skills)
-AGENT_COUNT=$(count_items "$CLAUDE_SRC/agents")
+AGENT_COUNT=$(find "$CLAUDE_SRC/agents" -maxdepth 1 -name "*.md" | wc -l | tr -d ' ')
 HOOK_COUNT=$(count_files "$CLAUDE_SRC/hooks")
 COMMAND_COUNT=$(count_items "$CLAUDE_SRC/commands")
 SCRIPT_COUNT=$(count_files "$CLAUDE_SRC/scripts")
