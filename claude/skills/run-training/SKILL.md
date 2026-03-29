@@ -61,6 +61,7 @@ Plain markdown, no frontmatter:
    ```
 6. Copy current definition to `training/<type>/<name>/.training-results/best.md`.
 7. Report baseline score to user.
+8. **If baseline score is 1.0**, trigger the human gate immediately before entering the loop. Show the gate summary and ask: **continue**, **stop**, or **adjust**.
 
 ## Phase 4 — Training Loop
 
@@ -69,7 +70,7 @@ Plain markdown, no frontmatter:
 1. Load state from `training/<type>/<name>/.training-results/state.json`. **Never trust memory — always read from disk.**
 2. Load all eval files from `training/<type>/<name>/` (excluding `.training-results/`).
 3. Read `training/<type>/<name>/.training-results/best.md` as the starting point.
-4. Apply one mutation operator to produce a candidate definition (hold in memory — do not write to the live file):
+4. Apply one mutation operator to produce a candidate definition (hold in memory — do not write to the live file). **Before applying the mutation, state which operator you are choosing and explain why it addresses the observed failure pattern.**
 
    | Operator | When to use |
    |----------|-------------|
@@ -115,7 +116,7 @@ Report: baseline score → best score, total cycles run, mutations kept vs rever
 Ask: "Overwrite `<definition file path>` with the best candidate from this run?"
 
 - **Yes**: write `best.md` → the live definition file.
-- **No**: leave the original intact. Inform the user they can apply it manually.
+- **No**: leave the original intact. Inform the user that the best candidate was not applied, and provide both the live definition path and `training/<type>/<name>/.training-results/best.md` so they can apply it manually.
 
 **Never auto-apply without explicit user approval.**
 
