@@ -1,16 +1,16 @@
 ---
-name: running-autoresearch
+name: run-training
 description: Use when the user wants to iteratively improve a skill or agent definition through automated evaluation cycles against committed test cases.
 user-invocable: true
 ---
 
-# Autoresearch: Iterative Skill/Agent Improvement
+# Training: Iterative Skill/Agent Improvement
 
 ## Overview
 
-Applies the Karpathy "autoresearch" pattern to skill and agent definitions. Instead of tweaking ML training code, it mutates `SKILL.md` / agent `.md` files and scores each candidate against committed eval cases. Run for a single cycle (manual) or many cycles (autonomous).
+Applies the [Karpathy "autoresearch" pattern](https://github.com/karpathy/autoresearch) to skill and agent definitions. Instead of tweaking ML training code, it mutates `SKILL.md` / agent `.md` files and scores each candidate against committed eval cases. Run for a single cycle (manual) or many cycles (autonomous).
 
-**Usage:** `/running-autoresearch <name>` or `/running-autoresearch agent:<name>`
+**Usage:** `/run-training <name>` or `/run-training agent:<name>`
 
 ## Phase 1 — Target
 
@@ -25,8 +25,8 @@ If the definition file is missing, **stop and report the error**. Do not proceed
 
 ## Phase 2 — Eval Setup
 
-- **No `.md` eval files exist** in `training/<type>/<name>/` (excluding `.autoresearch/`): auto-generate 3–5 starter eval cases from the definition. Display them to the user. **Wait for approval/edits before continuing.**
-- **Evals already exist**: load all `.md` files from `training/<type>/<name>/` (excluding `.autoresearch/`). Report count to user.
+- **No `.md` eval files exist** in `training/<type>/<name>/` (excluding `.training-results/`): auto-generate 3–5 starter eval cases from the definition. Display them to the user. **Wait for approval/edits before continuing.**
+- **Evals already exist**: load all `.md` files from `training/<type>/<name>/` (excluding `.training-results/`). Report count to user.
 
 ### Eval file format
 
@@ -46,11 +46,11 @@ Plain markdown, no frontmatter:
 
 ## Phase 3 — Baseline
 
-1. **Clean up any previous run.** If `training/<type>/<name>/.autoresearch/` already exists, delete the entire directory and inform the user: "Removed stale `.autoresearch/` directory from a previous run." This prevents old state, candidates, or results from polluting the new session.
+1. **Clean up any previous run.** If `training/<type>/<name>/.training-results/` already exists, delete the entire directory and inform the user: "Removed stale `.training-results/` directory from a previous run." This prevents old state, candidates, or results from polluting the new session.
 2. Read the current definition file.
 3. For each eval file, simulate the scenario against the current definition: mark each pass criterion ✓ (pass) or ✗ (fail).
 4. Score = criteria passed / total criteria across all evals.
-5. Write initial state to `training/<type>/<name>/.autoresearch/state.json`:
+5. Write initial state to `training/<type>/<name>/.training-results/state.json`:
    ```json
    {
      "iteration": 0,
@@ -59,16 +59,16 @@ Plain markdown, no frontmatter:
      "cycles_without_improvement": 0
    }
    ```
-6. Copy current definition to `training/<type>/<name>/.autoresearch/best.md`.
+6. Copy current definition to `training/<type>/<name>/.training-results/best.md`.
 7. Report baseline score to user.
 
-## Phase 4 — Autoresearch Loop
+## Phase 4 — Training Loop
 
 **Each cycle:**
 
-1. Load state from `training/<type>/<name>/.autoresearch/state.json`. **Never trust memory — always read from disk.**
-2. Load all eval files from `training/<type>/<name>/` (excluding `.autoresearch/`).
-3. Read `training/<type>/<name>/.autoresearch/best.md` as the starting point.
+1. Load state from `training/<type>/<name>/.training-results/state.json`. **Never trust memory — always read from disk.**
+2. Load all eval files from `training/<type>/<name>/` (excluding `.training-results/`).
+3. Read `training/<type>/<name>/.training-results/best.md` as the starting point.
 4. Apply one mutation operator to produce a candidate definition (hold in memory — do not write to the live file):
 
    | Operator | When to use |
@@ -88,7 +88,7 @@ Plain markdown, no frontmatter:
    - **Score improved**: overwrite `best.md` with candidate, update `best_score`, reset `cycles_without_improvement` to 0. Mark as **kept**.
    - **Score did not improve**: discard candidate, increment `cycles_without_improvement`. Mark as **reverted**.
    - **The live definition file is NEVER modified during the loop.**
-8. Append to `training/<type>/<name>/.autoresearch/results.jsonl`:
+8. Append to `training/<type>/<name>/.training-results/results.jsonl`:
    ```
    {"iteration": N, "score": X.XX, "best_score": X.XX, "operator": "add-constraint", "kept": true/false, "failed_criteria": ["criterion text", ...]}
    ```
@@ -124,7 +124,7 @@ Ask: "Overwrite `<definition file path>` with the best candidate from this run?"
 All files are gitignored via `training/.gitignore`:
 
 ```
-training/<type>/<name>/.autoresearch/
+training/<type>/<name>/.training-results/
 ├── state.json      ← iteration, best score, cycles-without-improvement
 ├── best.md         ← best-scoring candidate seen so far
 └── results.jsonl   ← one entry per cycle
@@ -132,8 +132,8 @@ training/<type>/<name>/.autoresearch/
 
 ## Common Mistakes
 
-- **Not cleaning up a stale `.autoresearch/` directory** — always delete it at the start of Phase 3 so old state, candidates, and results cannot carry over into the new session.
-- **Modifying the live definition during the loop** — the loop only ever writes to `.autoresearch/best.md`.
+- **Not cleaning up a stale `.training-results/` directory** — always delete it at the start of Phase 3 so old state, candidates, and results cannot carry over into the new session.
+- **Modifying the live definition during the loop** — the loop only ever writes to `.training-results/best.md`.
 - **Trusting in-memory state** — always read `state.json` from disk at the start of each cycle.
 - **Evaluating the live definition during the loop** — always evaluate candidates against `best.md`.
 - **Auto-applying the best candidate** — Phase 6 requires explicit user approval.
@@ -141,7 +141,7 @@ training/<type>/<name>/.autoresearch/
 
 ## Eval
 
-- [ ] Deleted stale `.autoresearch/` directory (if present) before writing any new state in Phase 3
+- [ ] Deleted stale `.training-results/` directory (if present) before writing any new state in Phase 3
 - [ ] Resolved definition path and evals directory correctly for both skill and agent inputs
 - [ ] Stopped and reported error when definition file was missing
 - [ ] Auto-generated starter evals and waited for user approval when no evals existed

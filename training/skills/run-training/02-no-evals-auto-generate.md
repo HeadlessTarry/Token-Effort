@@ -1,5 +1,5 @@
 ## Scenario
-User runs `/running-autoresearch starting-git-branch`. The definition file exists. The `training/skills/starting-git-branch/` directory has no `.md` files (excluding `.autoresearch/`).
+User runs `/run-training starting-git-branch`. The definition file exists. The `training/skills/starting-git-branch/` directory has no `.md` files (excluding `.training-results/`).
 
 ## Expected Behavior
 Skill auto-generates 3–5 starter eval cases derived from the definition content. Displays them to the user in full. Explicitly waits for user approval or edits before writing files or continuing to Phase 3.
