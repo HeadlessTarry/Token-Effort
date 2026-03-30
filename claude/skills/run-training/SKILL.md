@@ -81,7 +81,7 @@ Plain markdown, no frontmatter:
    | `add-negative-example` | Explicit "do NOT do X" case |
    | `remove-bloat` | Trim contradictory or redundant instructions |
 
-   Select the operator based on failure patterns from the previous cycle. On cycle 1, analyse baseline eval results to choose.
+   Select the operator based on failure patterns from the previous cycle. On cycle 1, analyse baseline eval results to choose. **Do not reuse the same operator as the previous cycle if that cycle was not kept — a repeated operator against the same failure pattern is unlikely to score higher.**
 
 5. Evaluate the candidate: for each eval, mark each pass criterion ✓/✗.
 6. Score the candidate: criteria passed / total criteria.
@@ -105,7 +105,7 @@ Plain markdown, no frontmatter:
     |-------|-------|----------------|-------|
     | 1     | 0.72  | add-constraint | ✓     |
     ```
-    Ask: **continue** (run N more cycles), **stop**, or **adjust** (user edits evals or gives guidance).
+    Ask: **continue** (run N more cycles), **stop**, or **adjust** (user edits evals or gives guidance). When the user specifies N cycles to continue: run exactly N cycles, then pause at the human gate again — regardless of the 5-cycle boundary.
 
 ## Phase 5 — Completion
 
@@ -115,7 +115,7 @@ Report: baseline score → best score, total cycles run, mutations kept vs rever
 
 Ask: "Overwrite `<definition file path>` with the best candidate from this run?"
 
-- **Yes**: write `best.md` → the live definition file.
+- **Yes**: write `best.md` → the live definition file. **Write to exactly the path Phase 1 resolved — do not re-resolve, expand, or infer the path from the skill name or a known install location (e.g., `~/.claude/`). The destination is fixed at Phase 1.**
 - **No**: leave the original intact. Inform the user that the best candidate was not applied, and provide both the live definition path and `training/<type>/<name>/.training-results/best.md` so they can apply it manually.
 
 **Never auto-apply without explicit user approval.**
@@ -139,6 +139,7 @@ training/<type>/<name>/.training-results/
 - **Evaluating the live definition during the loop** — always evaluate candidates against `best.md`.
 - **Auto-applying the best candidate** — Phase 6 requires explicit user approval.
 - **Skipping the human gate** — pause at every 5 cycles and at 3 consecutive cycles without improvement.
+- **Re-resolving the apply path in Phase 6** — always write to exactly the path Phase 1 resolved. Never re-resolve, expand, or infer the destination from the skill name or a known install location like `~/.claude/`. The live definition path is determined once in Phase 1 and used verbatim in Phase 6.
 
 ## Eval
 
