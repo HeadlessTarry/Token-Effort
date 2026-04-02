@@ -32,11 +32,23 @@ claude/
 ├── agents/      →  ~/.claude/agents/
 ├── hooks/       →  ~/.claude/hooks/  +  entry added to ~/.claude/settings.json
 └── skills/      →  ~/.claude/skills/
+
+training/
+└── <type>/<name>/   →  eval cases for the /run-training skill (committed to git)
+
+documentation/
+└── *.md             →  guides and reference docs for this repo
 ```
 
-Add something here, run `./install.sh`, it appears in Claude Code. Profound.
+Add something `claude/*`, run `./install.sh`, it appears in Claude Code. Profound.
 
 Other supported types (`commands/`, `hooks/`, `scripts/`) can be added — the installer handles them automatically when the directory exists.
+
+## 🧪 Training
+
+Skills and agents in this repo can be iteratively improved using the `/run-training` skill, which evaluates definitions against committed test cases and proposes targeted mutations to improve them.
+
+See [documentation/training-guide.md](documentation/training-guide.md) for the full guide.
 
 ## ➕ Adding Things
 
