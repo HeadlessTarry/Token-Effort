@@ -21,6 +21,7 @@ jobs:
           prompt: "Triage all open issues in this repository."
           model: haiku
           allowed_tools: |
+            Bash(printenv *)
             mcp__plugin_github_github__list_issues
             mcp__plugin_github_github__issue_read
             mcp__plugin_github_github__search_issues

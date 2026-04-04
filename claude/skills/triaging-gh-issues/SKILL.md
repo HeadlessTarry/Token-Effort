@@ -52,7 +52,21 @@ Assign exactly one label per issue. When an issue could fit multiple labels, cho
 
 **If running in GitHub Actions** (`GITHUB_ACTIONS` is set and non-empty):
 
-Read the `GITHUB_REPOSITORY` environment variable — this is always set by the GitHub Actions runner in the format `owner/repo` (e.g. `TheTarry/Token-Effort`). Split on `/` to extract `$OWNER` (everything before the first `/`) and `$REPO` (everything after).
+To detect the GHA context, run the following expansion-free command:
+
+```bash
+printenv GITHUB_ACTIONS
+```
+
+If the output is non-empty, you are in GitHub Actions.
+
+Read the `GITHUB_REPOSITORY` environment variable using:
+
+```bash
+printenv GITHUB_REPOSITORY
+```
+
+This is always set by the GitHub Actions runner in the format `owner/repo` (e.g. `TheTarry/Token-Effort`). Split on `/` to extract `$OWNER` (everything before the first `/`) and `$REPO` (everything after).
 
 If `GITHUB_REPOSITORY` is empty or absent, stop immediately and report: "I could not determine the GitHub repository: the `GITHUB_REPOSITORY` environment variable is not set. Please check your workflow configuration." Do NOT call `git remote get-url origin` as a fallback.
 
@@ -141,14 +155,14 @@ Only include issues with action `apply` or `reclassify` in the triage list carri
 
 ### Phase 4 — Detect context
 
-Check the environment variable `GITHUB_ACTIONS`:
+Check the environment variable `GITHUB_ACTIONS` using the following expansion-free command:
 
 ```bash
-echo "${GITHUB_ACTIONS:-}"
+printenv GITHUB_ACTIONS
 ```
 
-- If it is set and non-empty → skip Phase 5 and go directly to Phase 6 (no confirmation required)
-- If it is not set or empty → continue to Phase 5
+- If the output is non-empty → skip Phase 5 and go directly to Phase 6 (no confirmation required)
+- If the output is empty → continue to Phase 5
 
 ### Phase 5 — Interactive confirmation (skipped in GitHub Actions)
 
@@ -223,6 +237,7 @@ Triage complete:
 - **Re-fetching issues during Phase 6** — use the triage list already assembled in Phases 2 and 3. Do not re-list issues.
 - **Using a hardcoded owner/repo** — in GitHub Actions, always derive from `GITHUB_REPOSITORY`; in interactive sessions, always derive from `git remote get-url origin`. Never hardcode the owner or repo.
 - **Falling back to `git remote` in GitHub Actions** — if `GITHUB_REPOSITORY` is missing in a GHA context, stop with an error. Do not call `git remote get-url origin` as a fallback.
+- **Using shell expansion syntax to read environment variables** — never use `${VARIABLE}`, `${VARIABLE:-}`, or any `${...}` form in bash commands. Claude Code's sandbox blocks these with a "Contains expansion" error. Always use `printenv VARIABLE` instead.
 - **Prompting for confirmation when there is nothing to confirm** — if all issues resolved to `no-change`, skip Phase 5 entirely. Do not display an empty summary table or ask the user to confirm a list with zero changes.
 - **Using `gh` CLI for issue operations** — all issue interactions (listing, reading, searching, writing labels, posting comments) must go through the MCP tools listed in the Prerequisites table. Never call `gh issue list`, `gh issue view`, `gh issue edit`, `gh label add`, or any other `gh` subcommand for issue operations, even if MCP tools seem unavailable or return unexpected results.
 
