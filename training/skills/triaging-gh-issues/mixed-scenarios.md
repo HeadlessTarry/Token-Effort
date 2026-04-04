@@ -9,13 +9,13 @@ Four open issues exist: #10 has no label and describes a request to add OAuth lo
 - #12 is classified as `bug`, label clearly wrong, action `reclassify`; added to summary table.
 - #13 classification is ambiguous relative to current label, action `no-change`; excluded from summary table.
 - Summary table shows only #10 and #12. User approves.
-- `issue_write` called for #10 (apply `enhancement`) and #12 (apply `bug`). `add_issue_comment` called for #12 only.
+- `gh issue edit --add-label` called for #10 (apply `enhancement`) and `gh issue edit --remove-label --add-label` for #12 (reclassify to `bug`). `gh issue comment` called for #12 only.
 
 ## Pass Criteria
 
 - [ ] Summary table contains exactly #10 and #12, and does not contain #11 or #13.
-- [ ] `issue_write` is called for #10 with label `enhancement`.
-- [ ] `issue_write` is called for #12 with label `bug`.
-- [ ] `issue_write` is never called for #11 or #13.
-- [ ] `add_issue_comment` is called for #12 and never called for #10, #11, or #13.
+- [ ] `gh issue edit --add-label` is called for #10 with label `enhancement`.
+- [ ] `gh issue edit` is called for #12 with label `bug`.
+- [ ] `gh issue edit` is never called for #11 or #13.
+- [ ] `gh issue comment` is called for #12 and never called for #10, #11, or #13.
 - [ ] Final report shows 1 applied, 1 reclassified, 2 unchanged, 0 failures.

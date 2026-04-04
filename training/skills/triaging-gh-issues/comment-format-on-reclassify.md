@@ -6,13 +6,13 @@ One open issue is currently labelled `bug`. Its title is "Update the README with
 
 - The issue is classified as `documentation`.
 - Because the current label (`bug`) is clearly wrong, the action is `reclassify`.
-- `issue_write` is called to update the label to `documentation`.
-- `add_issue_comment` is called with a comment that begins with "**Label updated by automated triage**" and mentions both the old label (`bug`) and the new label (`documentation`).
+- `gh issue edit --remove-label bug --add-label documentation` is called to update the label.
+- `gh issue comment` is called with a comment that begins with "**Label updated by automated triage**" and mentions both the old label (`bug`) and the new label (`documentation`).
 
 ## Pass Criteria
 
-- [ ] `issue_write` is called to set the label to `documentation`.
-- [ ] `add_issue_comment` is called exactly once for this issue.
+- [ ] `gh issue edit` is called to set the label to `documentation`.
+- [ ] `gh issue comment` is called exactly once for this issue.
 - [ ] The comment text starts with "**Label updated by automated triage**".
 - [ ] The comment text references the old label `bug`.
 - [ ] The comment text references the new label `documentation`.

@@ -70,11 +70,4 @@ runs:
           Read and follow the skill defined in `Token-Effort/claude/skills/${{ inputs.skill_name }}/SKILL.md`.
           ${{ inputs.prompt }}
         claude_args: ${{ steps.build_args.outputs.value }}
-        settings: |
-          {
-            "env": {
-              "GITHUB_ACTIONS": "true",
-              "GITHUB_REPOSITORY": "${{ github.repository }}"
-            }
-          }
         show_full_output: true

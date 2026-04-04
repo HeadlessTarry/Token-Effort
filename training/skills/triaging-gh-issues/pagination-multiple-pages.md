@@ -1,21 +1,19 @@
 ## Scenario
 
-The skill is invoked in a GitHub Actions environment (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=TheTarry/Token-Effort`). The repository has 105 unlabelled open issues, all of which are clearly feature requests (enhancements). The first call to `mcp__plugin_github_github__list_issues` returns 100 issues with `pageInfo.hasNextPage = true` and `pageInfo.endCursor = "cursor_abc123"`. A second call with `after = "cursor_abc123"` returns the remaining 5 issues with `pageInfo.hasNextPage = false`.
+The skill is invoked in a GitHub Actions environment (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=TheTarry/Token-Effort`). The repository has 105 unlabelled open issues, all of which are clearly feature requests (enhancements). A single call to `gh issue list --limit 1000` returns all 105 issues in one response.
 
 ## Expected Behaviour
 
-- The skill calls `mcp__plugin_github_github__list_issues` a first time and receives 100 issues plus pagination info indicating there are more.
-- Detecting `hasNextPage = true`, the skill calls `mcp__plugin_github_github__list_issues` again with `after` set to the returned `endCursor`.
-- The second call returns 5 more issues with `hasNextPage = false`, ending pagination.
-- All 105 issues are accumulated into a single list before classification begins.
+- The skill calls `gh issue list --repo TheTarry/Token-Effort --state open --limit 1000 --json number,title,body,labels` exactly once.
+- All 105 issues are returned in that single response and accumulated into a list before classification begins.
+- No second or subsequent `gh issue list` call is made.
 - The skill classifies and labels all 105 issues as `enhancement`.
-- The `gh` CLI is never invoked for any operation.
+- No `mcp__` tool is invoked for any operation.
 
 ## Pass Criteria
 
-- [ ] `mcp__plugin_github_github__list_issues` is called at least twice (paginating until `hasNextPage = false`)
-- [ ] The second `list_issues` call includes `after` set to the `endCursor` value from the first response
-- [ ] All 105 issues are classified (not just the first 100)
-- [ ] `mcp__plugin_github_github__issue_write` is called 105 times (once per issue)
-- [ ] The `gh` CLI is never invoked for any issue operation
+- [ ] `gh issue list` is called exactly once (no repeated or paginated calls)
+- [ ] All 105 issues are classified (not just a subset)
+- [ ] `gh issue edit --add-label` is called 105 times (once per issue)
+- [ ] No `mcp__` tool is invoked for any issue operation
 - [ ] Final report shows 105 applied, 0 reclassified, 0 unchanged, 0 failures

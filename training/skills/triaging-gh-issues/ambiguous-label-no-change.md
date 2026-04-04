@@ -12,7 +12,7 @@ One open issue is currently labelled `enhancement`. Its body reads: "It would be
 ## Pass Criteria
 
 - [ ] The issue is not included in the summary table shown to the user.
-- [ ] `issue_write` is never called for this issue.
-- [ ] `add_issue_comment` is never called for this issue.
+- [ ] `gh issue edit` is never called for this issue.
+- [ ] `gh issue comment` is never called for this issue.
 - [ ] Final report shows 0 applied, 0 reclassified, 1 unchanged, 0 failures.
 - [ ] No confirmation table or prompt is displayed (there is nothing to confirm)

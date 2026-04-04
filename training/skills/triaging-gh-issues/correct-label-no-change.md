@@ -11,8 +11,8 @@ Three open issues exist, each already correctly labelled: issue #1 is labelled `
 
 ## Pass Criteria
 
-- [ ] `issue_write` is never called for any of the three issues.
-- [ ] `add_issue_comment` is never called for any of the three issues.
+- [ ] `gh issue edit` is never called for any of the three issues.
+- [ ] `gh issue comment` is never called for any of the three issues.
 - [ ] Final report shows 0 applied, 0 reclassified, 3 unchanged, 0 failures.
 - [ ] The skill does not prompt the user for confirmation (GHA context, and nothing to confirm).
-- [ ] `list_issues` was called with no label filter (all labelled issues were included in the fetch)
+- [ ] `gh issue list` was called with no label filter (all labelled issues were included in the fetch)

@@ -7,10 +7,10 @@ The skill is invoked in a GitHub Actions environment. `GITHUB_ACTIONS` is set to
 - The skill detects that `GITHUB_REPOSITORY` is missing or empty.
 - Execution stops immediately with an error message indicating the repository could not be determined.
 - `git remote get-url origin` is NOT called as a fallback.
-- `list_issues` is never called.
+- `gh issue list` is never called.
 
 ## Pass Criteria
 
-- [ ] Execution stopped without calling `list_issues`
+- [ ] Execution stopped without calling `gh issue list`
 - [ ] An error was reported indicating `GITHUB_REPOSITORY` was missing or could not be read
 - [ ] `git remote get-url origin` was NOT called

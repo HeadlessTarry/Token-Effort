@@ -23,17 +23,9 @@ Fetches all open GitHub issues, classifies each one by reading its content and s
 
 ## Prerequisites
 
-The following MCP tools must be available in the session:
+The `gh` CLI must be authenticated and available in the session. All GitHub issue operations use `gh` commands via `Bash`. No MCP tools are used or required.
 
-| Tool | Purpose |
-|------|---------|
-| `mcp__plugin_github_github__list_issues` | Fetch all open issues |
-| `mcp__plugin_github_github__issue_read` | Read issue title and body |
-| `mcp__plugin_github_github__search_issues` | Duplicate detection |
-| `mcp__plugin_github_github__issue_write` | Apply label |
-| `mcp__plugin_github_github__add_issue_comment` | Post reclassification comment |
-
-> **Important:** These MCP tools are the **only permitted** mechanism for all GitHub issue operations in this skill. Do **not** use the `gh` CLI (`gh issue list`, `gh issue view`, `gh issue edit`, `gh label`, `gh search issues`, etc.) for any issue operation, even as a fallback or alternative.
+> **Important:** Do **not** use MCP tools (`mcp__plugin_github_github__*`) for any issue operation, even if they appear to be available.
 
 ## Labels
 
@@ -86,17 +78,17 @@ Store as `$OWNER` and `$REPO`. If the command fails or the URL cannot be parsed,
 
 ### Phase 2 — Fetch ALL open issues
 
-Call `mcp__plugin_github_github__list_issues` with:
-- `owner`: `$OWNER`
-- `repo`: `$REPO`
-- `state`: `open`
-- `perPage`: `100`
+Run:
+
+```bash
+gh issue list --repo $OWNER/$REPO --state open --limit 1000 --json number,title,body,labels
+```
+
+This returns a JSON array. Each element contains `number`, `title`, `body`, and `labels` (array of label objects with a `name` field).
 
 Do NOT filter by label — retrieve all open issues regardless of their current labels.
 
-Paginate until all issues are collected: if the response's `pageInfo.hasNextPage` is `true`, call `list_issues` again with `after` set to `pageInfo.endCursor`, repeating until `hasNextPage` is `false`. Accumulate all issues across pages into a single list before proceeding.
-
-If the accumulated list is empty, report: "No open issues found." and stop.
+If the array is empty, report: "No open issues found." and stop.
 
 ### Phase 3 — Classify each issue
 
@@ -104,20 +96,17 @@ For each issue in the list, perform the following steps in order. Process all is
 
 #### Step 3a — Read the full issue
 
-Call `mcp__plugin_github_github__issue_read` with:
-- `owner`: `$OWNER`
-- `repo`: `$REPO`
-- `issue_number`: the issue number
+Use the `title`, `body`, and `labels` already present in the Phase 2 JSON response. No additional read call is needed.
 
-Capture the title and body. Also note the issue's current labels (may be empty).
+Note the issue's current labels (may be empty).
 
 #### Step 3b — Search for duplicates
 
-Call `mcp__plugin_github_github__search_issues` with:
-- `owner`: `$OWNER`
-- `repo`: `$REPO`
-- `query`: the first 10–12 significant words of the issue title and description
-- `state`: `all` (search both open and closed issues)
+Run:
+
+```bash
+gh search issues "<first 10-12 significant words of title and description>" --repo $OWNER/$REPO --state all --json number,title --limit 20
+```
 
 Review the results. An issue is a duplicate if:
 - The title and description are substantially the same as this issue, AND
@@ -151,7 +140,7 @@ Compare the classified label to the issue's current label(s):
 
 Only include issues with action `apply` or `reclassify` in the triage list carried forward to Phase 4.
 
-> **Read/search failure handling:** If `issue_read` or `search_issues` fails for a specific issue, skip that issue, record it as a read failure, and continue to the next issue. Include read failures in the final report under a "Read errors: N" line.
+> **Search failure handling:** If `gh search issues` fails for a specific issue, skip the duplicate check for that issue (treat as no duplicate found) and continue. Record it as a search error in the final report.
 
 ### Phase 4 — Detect context
 
@@ -198,16 +187,24 @@ Wait for the user's response before proceeding.
 
 For each issue in the approved triage list (action `apply` or `reclassify`):
 
-1. Call `mcp__plugin_github_github__issue_write` with:
-   - `owner`: `$OWNER`
-   - `repo`: `$REPO`
-   - `issue_number`: the issue number
-   - `labels`: a single-element array containing the assigned label string
+1. Apply the label:
 
-2. If the action was `reclassify` (the issue had a non-empty previous label), call `mcp__plugin_github_github__add_issue_comment` with the body:
+   - For `apply` (no previous label):
+     ```bash
+     gh issue edit $N --repo $OWNER/$REPO --add-label "<label>"
+     ```
 
-   > **Label updated by automated triage**
-   > This issue was originally filed under the `{old_label}` type. Following re-analysis, it has been reclassified as `{new_label}`. The original issue description may not follow the standard template for `{new_label}` issues.
+   - For `reclassify` (issue had a non-empty previous label):
+     ```bash
+     gh issue edit $N --repo $OWNER/$REPO --remove-label "<old_label>" --add-label "<new_label>"
+     ```
+
+2. If the action was `reclassify`, post a comment:
+
+   ```bash
+   gh issue comment $N --repo $OWNER/$REPO --body "**Label updated by automated triage**
+   This issue was originally filed under the \`{old_label}\` type. Following re-analysis, it has been reclassified as \`{new_label}\`. The original issue description may not follow the standard template for \`{new_label}\` issues."
+   ```
 
    Do NOT post a comment for `apply` actions (issues that had no previous label).
 
@@ -225,21 +222,21 @@ Triage complete:
 
 ## Common Mistakes
 
-- **Filtering by label in Phase 2** — `list_issues` must NOT use a label filter. Fetch all open issues.
+- **Filtering by label in Phase 2** — `gh issue list` must NOT use a label filter. Fetch all open issues.
 - **Including no-change issues in the summary** — issues where the current label already matches the classification must be silently skipped and excluded from the summary table.
 - **Re-labelling ambiguous issues** — only reclassify when the existing label is CLEARLY wrong. When in doubt, leave the label unchanged.
 - **Posting a comment on newly labelled issues** — comments are only for `reclassify` actions (previous label existed). Do not post a comment when applying a label for the first time.
-- **Applying labels before approval** — Phase 6 must not run until the user has confirmed in Phase 5 (unless `GITHUB_ACTIONS` is set). Do not call `issue_write` during classification.
+- **Applying labels before approval** — Phase 6 must not run until the user has confirmed in Phase 5 (unless `GITHUB_ACTIONS` is set). Do not call `gh issue edit` during classification.
 - **Skipping the duplicate search** — every issue must go through Step 3b even if the title seems clearly a bug or enhancement. Duplicates take precedence.
 - **Assigning multiple labels** — each issue gets exactly one label. Choose the most specific.
 - **Stopping after the first issue** — classify all issues in one pass before presenting the summary. Do not pause for approval between individual issues.
 - **Failing silently on write errors** — report each failure individually; do not abort the entire batch because one call fails.
-- **Re-fetching issues during Phase 6** — use the triage list already assembled in Phases 2 and 3. Do not re-list issues.
+- **Re-fetching issues during Phase 6** — use the triage list already assembled in Phases 2 and 3. Do not re-run `gh issue list`.
 - **Using a hardcoded owner/repo** — in GitHub Actions, always derive from `GITHUB_REPOSITORY`; in interactive sessions, always derive from `git remote get-url origin`. Never hardcode the owner or repo.
 - **Falling back to `git remote` in GitHub Actions** — if `GITHUB_REPOSITORY` is missing in a GHA context, stop with an error. Do not call `git remote get-url origin` as a fallback.
 - **Using shell expansion syntax to read environment variables** — never use `${VARIABLE}`, `${VARIABLE:-}`, or any `${...}` form in bash commands. Claude Code's sandbox blocks these with a "Contains expansion" error. Always use `printenv VARIABLE` instead.
 - **Prompting for confirmation when there is nothing to confirm** — if all issues resolved to `no-change`, skip Phase 5 entirely. Do not display an empty summary table or ask the user to confirm a list with zero changes.
-- **Using `gh` CLI for issue operations** — all issue interactions (listing, reading, searching, writing labels, posting comments) must go through the MCP tools listed in the Prerequisites table. Never call `gh issue list`, `gh issue view`, `gh issue edit`, `gh label add`, or any other `gh` subcommand for issue operations, even if MCP tools seem unavailable or return unexpected results.
+- **Using MCP tools for issue operations** — all issue interactions (listing, searching, writing labels, posting comments) must use `gh` CLI commands. Never call `mcp__plugin_github_github__list_issues`, `mcp__plugin_github_github__issue_read`, `mcp__plugin_github_github__search_issues`, `mcp__plugin_github_github__issue_write`, `mcp__plugin_github_github__add_issue_comment`, or any other `mcp__` tool for issue operations.
 
 ## Eval
 
@@ -247,10 +244,10 @@ Triage complete:
 - [ ] In GitHub Actions context: if `GITHUB_REPOSITORY` was empty/absent, execution stopped with an error and `git remote get-url origin` was NOT called
 - [ ] In interactive context (`GITHUB_ACTIONS` not set): owner and repo were derived from `git remote get-url origin`, not hardcoded
 - [ ] If the remote URL could not be parsed (interactive context), execution stopped and the user was asked to provide the owner/repo
-- [ ] `list_issues` was called with `state: open` and NO label filter — all open issues were fetched
+- [ ] `gh issue list` was called with `--state open`, `--limit 1000`, and NO label filter — all open issues were fetched in a single call
 - [ ] If zero open issues were returned, execution stopped with "No open issues found."
-- [ ] `issue_read` was called for every open issue
-- [ ] `search_issues` was called for every open issue using the first 10–12 significant words of the title
+- [ ] No separate per-issue read call was made — title, body, and labels were taken from the Phase 2 JSON response
+- [ ] `gh search issues` was called for every open issue using the first 10–12 significant words of the title
 - [ ] `duplicate` label was assigned when a matching issue was found, regardless of other signals
 - [ ] Exactly one label was assigned per issue
 - [ ] Issues where the current label already matches the classified label were assigned action `no-change` and excluded from the summary and from all writes
@@ -259,10 +256,12 @@ Triage complete:
 - [ ] The `GITHUB_ACTIONS` environment variable was checked before Phase 5
 - [ ] If `GITHUB_ACTIONS` was set and non-empty, Phase 5 was skipped and changes were applied directly
 - [ ] If `GITHUB_ACTIONS` was not set, the summary table was displayed and the user was asked to confirm before any writes occurred
-- [ ] `issue_write` was NOT called for `no-change` issues
-- [ ] `issue_write` was called with a single-element `labels` array for each `apply` and `reclassify` issue
-- [ ] `add_issue_comment` was called for every `reclassify` issue (previous label existed) after the label was updated
-- [ ] `add_issue_comment` was NOT called for `apply` issues (no previous label)
-- [ ] If `issue_read` or `search_issues` failed for a specific issue, that issue was skipped and recorded as a read error without aborting the batch
-- [ ] Each `issue_write` or `add_issue_comment` failure was reported individually without aborting the remaining batch
+- [ ] `gh issue edit` was NOT called for `no-change` issues
+- [ ] For `apply` issues: `gh issue edit --add-label` was called with the assigned label
+- [ ] For `reclassify` issues: `gh issue edit --remove-label <old> --add-label <new>` was called
+- [ ] `gh issue comment` was called for every `reclassify` issue (previous label existed) after the label was updated
+- [ ] `gh issue comment` was NOT called for `apply` issues (no previous label)
+- [ ] If `gh search issues` failed for a specific issue, that issue's duplicate check was skipped without aborting the batch
+- [ ] Each `gh issue edit` or `gh issue comment` failure was reported individually without aborting the remaining batch
 - [ ] Final summary reported counts for: labels applied (new), labels updated (reclassified), issues unchanged, and failures
+- [ ] No `mcp__` tool was called at any point

@@ -12,15 +12,15 @@ The skill displays a summary table and waits for user input. The user responds "
 - The user responds "edit: change #20 to documentation".
 - The skill updates the proposed label for #20 to `documentation` and re-displays the summary table with the updated label.
 - The user responds "yes".
-- `issue_write` is called for #20 with label `documentation` (the user's override, not `enhancement`).
-- `issue_write` is called for #21 with label `bug`.
-- `add_issue_comment` is never called for either issue (both are `apply` actions on previously unlabelled issues).
+- `gh issue edit --add-label` is called for #20 with label `documentation` (the user's override, not `enhancement`).
+- `gh issue edit --add-label` is called for #21 with label `bug`.
+- `gh issue comment` is never called for either issue (both are `apply` actions on previously unlabelled issues).
 
 ## Pass Criteria
 
 - [ ] A summary table is displayed before any write is attempted.
 - [ ] The table is re-displayed after the user responds "edit: change #20 to documentation".
-- [ ] `issue_write` is called for #20 with label `documentation` (not `enhancement`).
-- [ ] `issue_write` is called for #21 with label `bug`.
-- [ ] `add_issue_comment` is never called for either issue.
+- [ ] `gh issue edit --add-label` is called for #20 with label `documentation` (not `enhancement`).
+- [ ] `gh issue edit --add-label` is called for #21 with label `bug`.
+- [ ] `gh issue comment` is never called for either issue.
 - [ ] Final report shows 2 applied (new), 0 reclassified, 0 unchanged, 0 failures.

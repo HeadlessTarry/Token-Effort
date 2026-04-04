@@ -22,8 +22,9 @@ jobs:
           model: haiku
           allowed_tools: |
             Bash(printenv *)
-            mcp__plugin_github_github__list_issues
-            mcp__plugin_github_github__issue_read
-            mcp__plugin_github_github__search_issues
-            mcp__plugin_github_github__issue_write
-            mcp__plugin_github_github__add_issue_comment
+            Bash(git remote get-url *)
+            Bash(gh issue list *)
+            Bash(gh issue view *)
+            Bash(gh search issues *)
+            Bash(gh issue edit *)
+            Bash(gh issue comment *)
