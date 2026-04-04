@@ -1,16 +1,18 @@
 ## Scenario
-The user runs `/triaging-gh-issues`. There are 3 unlabelled open issues: #50, #51, #52.
-Classification completes and the user approves. During Phase 6, the `issue_write` call
-for #51 returns an error (e.g. "403 Forbidden"). The calls for #50 and #52 succeed.
 
-## Expected Behavior
-The skill reports the failure for #51 individually, continues to apply the label to #52,
-and includes a "Failed: #51 (reason)" line in the final report alongside the successful
-applications. It does NOT abort the batch when #51 fails.
+Two unlabelled open issues exist in GHA context (`GITHUB_ACTIONS=true`). Both are classified with action `apply` — the first is clearly a bug report and the second is clearly a feature request. When `issue_write` is called for the first issue it succeeds; when called for the second issue it returns a 403 Forbidden error.
+
+## Expected Behaviour
+
+- The skill applies the label for the first issue successfully.
+- When `issue_write` fails for the second issue, the skill reports that failure individually (e.g. prints an error message for that issue) but does not abort the run.
+- Processing continues to completion after the failure.
+- The final report correctly counts 1 applied, 0 reclassified, 0 unchanged, and 1 failure.
 
 ## Pass Criteria
-- [ ] `issue_write` was called for #50 and succeeded
-- [ ] `issue_write` was called for #51 and the failure was caught and reported
-- [ ] `issue_write` was called for #52 after #51's failure (batch not aborted)
-- [ ] The final report included both successful label lines and a failure line for #51
-- [ ] The total count in the final report reflected only the successfully applied labels
+
+- [ ] `issue_write` is called for the second issue, and when it returns a 403 error, the skill does not abort — execution continues rather than stopping at the failure.
+- [ ] An error or failure message is reported for the second issue specifically.
+- [ ] `issue_write` is called for the first issue and returns successfully.
+- [ ] The run reaches a final report rather than aborting mid-batch.
+- [ ] Final report shows 1 applied, 0 reclassified, 0 unchanged, 1 failure.

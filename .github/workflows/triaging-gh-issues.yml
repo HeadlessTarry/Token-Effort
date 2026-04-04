@@ -1,0 +1,19 @@
+name: Triage GitHub Issues
+
+on:
+  schedule:
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Run triaging-gh-issues skill
+        uses: TheTarry/Token-Effort/.github/actions/run-skill@main
+        with:
+          skill_name: triaging-gh-issues
+          prompt: "Triage all open issues in this repository."
+          anthropic_api_key: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
