@@ -16,6 +16,7 @@ jobs:
       - name: ✨ Run skill
         uses: TheTarry/Token-Effort/.github/actions/run-skill@main
         with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           skill_name: triaging-gh-issues
           prompt: "Triage all open issues in this repository."
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          plugins: "github@claude-plugins-official"

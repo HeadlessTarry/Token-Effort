@@ -15,6 +15,10 @@ inputs:
       Must be a trusted, hardcoded value — not derived from user-supplied content.
     required: false
     default: "Apply the skill"
+  plugins:
+    description: "Newline-separated list of Claude Code plugin names to install (e.g., 'code-review@claude-code-plugins\nfeature-dev@claude-code-plugins')"
+    required: false
+    default: ""
   claude_code_oauth_token:
     description: Claude Code OAuth token
     required: true
@@ -43,3 +47,4 @@ runs:
         prompt: |
           Read and follow the skill defined in `Token-Effort/claude/skills/${{ inputs.skill_name }}/SKILL.md`.
           ${{ inputs.prompt }}
+        plugins: ${{ inputs.plugins }}
