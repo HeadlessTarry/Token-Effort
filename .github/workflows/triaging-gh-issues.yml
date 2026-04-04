@@ -7,11 +7,12 @@ on:
 
 jobs:
   triage:
+    name: 🔍 Triage
     runs-on: ubuntu-latest
     permissions:
       issues: write
     steps:
-      - name: Run triaging-gh-issues skill
+      - name: ✨ Run skill
         uses: TheTarry/Token-Effort/.github/actions/run-skill@main
         with:
           skill_name: triaging-gh-issues
