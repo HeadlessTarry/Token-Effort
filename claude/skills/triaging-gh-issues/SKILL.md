@@ -33,6 +33,8 @@ The following MCP tools must be available in the session:
 | `mcp__plugin_github_github__issue_write` | Apply label |
 | `mcp__plugin_github_github__add_issue_comment` | Post reclassification comment |
 
+> **Important:** These MCP tools are the **only permitted** mechanism for all GitHub issue operations in this skill. Do **not** use the `gh` CLI (`gh issue list`, `gh issue view`, `gh issue edit`, `gh label`, `gh search issues`, etc.) for any issue operation, even as a fallback or alternative.
+
 ## Labels
 
 | Label | When to assign |
@@ -222,6 +224,7 @@ Triage complete:
 - **Using a hardcoded owner/repo** — in GitHub Actions, always derive from `GITHUB_REPOSITORY`; in interactive sessions, always derive from `git remote get-url origin`. Never hardcode the owner or repo.
 - **Falling back to `git remote` in GitHub Actions** — if `GITHUB_REPOSITORY` is missing in a GHA context, stop with an error. Do not call `git remote get-url origin` as a fallback.
 - **Prompting for confirmation when there is nothing to confirm** — if all issues resolved to `no-change`, skip Phase 5 entirely. Do not display an empty summary table or ask the user to confirm a list with zero changes.
+- **Using `gh` CLI for issue operations** — all issue interactions (listing, reading, searching, writing labels, posting comments) must go through the MCP tools listed in the Prerequisites table. Never call `gh issue list`, `gh issue view`, `gh issue edit`, `gh label add`, or any other `gh` subcommand for issue operations, even if MCP tools seem unavailable or return unexpected results.
 
 ## Eval
 
