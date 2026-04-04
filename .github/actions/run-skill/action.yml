@@ -1,0 +1,45 @@
+name: Run Claude Skill
+description: >
+  Checks out a skill from the central TheTarry/Token-Effort skills repo and runs it via
+  Claude Code. Only use this action with trusted, hardcoded inputs — skill_name and prompt
+  are interpolated directly into the Claude prompt and must not be derived from untrusted
+  sources such as issue titles or PR descriptions.
+
+inputs:
+  skill_name:
+    description: Name of the skill to run (e.g. "triaging-gh-issues"). Must be a trusted, hardcoded value.
+    required: true
+  prompt:
+    description: >
+      Additional context appended after the skill instruction when invoking Claude.
+      Must be a trusted, hardcoded value — not derived from user-supplied content.
+    required: false
+    default: "Apply the skill"
+  anthropic_api_key:
+    description: Anthropic API key
+    required: true
+  claude_args:
+    description: Optional extra Claude Code CLI arguments
+    required: false
+    default: "--max-turns 10 --model claude-sonnet-4-6"
+
+runs:
+  using: composite
+  steps:
+    - name: ⤵️ Checkout repository
+      uses: actions/checkout@v6
+
+    - name: 🪙 Checkout Token-Effort
+      uses: actions/checkout@v6
+      with:
+        repository: TheTarry/Token-Effort
+        path: Token-Effort
+
+    - name: 🤖 Run Claude Skill
+      uses: anthropics/claude-code-action@v1
+      with:
+        anthropic_api_key: ${{ inputs.anthropic_api_key }}
+        claude_args: ${{ inputs.claude_args }}
+        prompt: |
+          Read and follow the skill defined in `Token-Effort/claude/skills/${{ inputs.skill_name }}/SKILL.md`.
+          ${{ inputs.prompt }}
