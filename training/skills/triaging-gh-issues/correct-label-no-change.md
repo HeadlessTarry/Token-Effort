@@ -1,6 +1,6 @@
 ## Scenario
 
-Three open issues exist, each already correctly labelled: issue #1 is labelled `bug` and describes a login failure error, issue #2 is labelled `enhancement` and requests a new export feature, and issue #3 is labelled `documentation` and asks for updated API reference docs. The `GITHUB_ACTIONS` environment variable is set to `true`.
+Three open issues exist, each already correctly labelled: issue #1 is labelled `bug` and describes a login failure error, issue #2 is labelled `enhancement` and requests a new export feature, and issue #3 is labelled `documentation` and asks for updated API reference docs. The `GITHUB_ACTIONS` environment variable is set to `true` and `GITHUB_REPOSITORY` is set to `TheTarry/Token-Effort`.
 
 ## Expected Behaviour
 

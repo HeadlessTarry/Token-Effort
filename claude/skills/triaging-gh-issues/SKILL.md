@@ -48,6 +48,14 @@ Assign exactly one label per issue. When an issue could fit multiple labels, cho
 
 ### Phase 1 — Resolve the repository
 
+**If running in GitHub Actions** (`GITHUB_ACTIONS` is set and non-empty):
+
+Read the `GITHUB_REPOSITORY` environment variable — this is always set by the GitHub Actions runner in the format `owner/repo` (e.g. `TheTarry/Token-Effort`). Split on `/` to extract `$OWNER` (everything before the first `/`) and `$REPO` (everything after).
+
+If `GITHUB_REPOSITORY` is empty or absent, stop immediately and report: "I could not determine the GitHub repository: the `GITHUB_REPOSITORY` environment variable is not set. Please check your workflow configuration." Do NOT call `git remote get-url origin` as a fallback.
+
+**Otherwise** (interactive / local session, `GITHUB_ACTIONS` is not set):
+
 Run the following Bash command to get the remote URL and extract the owner/repo:
 
 ```bash
@@ -211,13 +219,16 @@ Triage complete:
 - **Stopping after the first issue** — classify all issues in one pass before presenting the summary. Do not pause for approval between individual issues.
 - **Failing silently on write errors** — report each failure individually; do not abort the entire batch because one call fails.
 - **Re-fetching issues during Phase 6** — use the triage list already assembled in Phases 2 and 3. Do not re-list issues.
-- **Using a hardcoded owner/repo** — always derive from `git remote get-url origin` at runtime.
+- **Using a hardcoded owner/repo** — in GitHub Actions, always derive from `GITHUB_REPOSITORY`; in interactive sessions, always derive from `git remote get-url origin`. Never hardcode the owner or repo.
+- **Falling back to `git remote` in GitHub Actions** — if `GITHUB_REPOSITORY` is missing in a GHA context, stop with an error. Do not call `git remote get-url origin` as a fallback.
 - **Prompting for confirmation when there is nothing to confirm** — if all issues resolved to `no-change`, skip Phase 5 entirely. Do not display an empty summary table or ask the user to confirm a list with zero changes.
 
 ## Eval
 
-- [ ] Owner and repo were derived from `git remote get-url origin`, not hardcoded
-- [ ] If the remote URL could not be parsed, execution stopped and the user was asked to provide the owner/repo
+- [ ] In GitHub Actions context (`GITHUB_ACTIONS` set): owner and repo were derived from `GITHUB_REPOSITORY`, not from `git remote get-url origin`
+- [ ] In GitHub Actions context: if `GITHUB_REPOSITORY` was empty/absent, execution stopped with an error and `git remote get-url origin` was NOT called
+- [ ] In interactive context (`GITHUB_ACTIONS` not set): owner and repo were derived from `git remote get-url origin`, not hardcoded
+- [ ] If the remote URL could not be parsed (interactive context), execution stopped and the user was asked to provide the owner/repo
 - [ ] `list_issues` was called with `state: open` and NO label filter — all open issues were fetched
 - [ ] If zero open issues were returned, execution stopped with "No open issues found."
 - [ ] `issue_read` was called for every open issue

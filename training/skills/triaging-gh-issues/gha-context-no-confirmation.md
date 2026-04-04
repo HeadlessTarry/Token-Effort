@@ -1,6 +1,6 @@
 ## Scenario
 
-Two unlabelled open issues exist: one clearly describes a missing feature (a request to add CSV export), and the other clearly describes a typo in the documentation. The `GITHUB_ACTIONS` environment variable is set to `true`.
+Two unlabelled open issues exist: one clearly describes a missing feature (a request to add CSV export), and the other clearly describes a typo in the documentation. The `GITHUB_ACTIONS` environment variable is set to `true` and `GITHUB_REPOSITORY` is set to `TheTarry/Token-Effort`.
 
 ## Expected Behaviour
 

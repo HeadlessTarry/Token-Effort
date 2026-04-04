@@ -1,6 +1,6 @@
 ## Scenario
 
-One open issue is currently labelled `enhancement`. Its title is "App crashes on startup" and its body describes a null-pointer exception stack trace — unambiguously a bug. The `GITHUB_ACTIONS` environment variable is set to `true`.
+One open issue is currently labelled `enhancement`. Its title is "App crashes on startup" and its body describes a null-pointer exception stack trace — unambiguously a bug. The `GITHUB_ACTIONS` environment variable is set to `true` and `GITHUB_REPOSITORY` is set to `TheTarry/Token-Effort`.
 
 ## Expected Behaviour
 

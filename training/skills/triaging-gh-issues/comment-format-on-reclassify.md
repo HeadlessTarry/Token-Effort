@@ -1,6 +1,6 @@
 ## Scenario
 
-One open issue is currently labelled `bug`. Its title is "Update the README with installation steps" and its body asks for clearer setup documentation — clearly a documentation request, not a bug. The `GITHUB_ACTIONS` environment variable is set to `true`.
+One open issue is currently labelled `bug`. Its title is "Update the README with installation steps" and its body asks for clearer setup documentation — clearly a documentation request, not a bug. The `GITHUB_ACTIONS` environment variable is set to `true` and `GITHUB_REPOSITORY` is set to `TheTarry/Token-Effort`.
 
 ## Expected Behaviour
 
