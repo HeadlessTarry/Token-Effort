@@ -142,6 +142,8 @@ echo "${GITHUB_ACTIONS:-}"
 
 ### Phase 5 — Interactive confirmation (skipped in GitHub Actions)
 
+If the triage list contains no issues with action `apply` or `reclassify` (all issues resolved to `no-change`), skip Phase 5 entirely — there is nothing to confirm. Proceed directly to the final report in Phase 6 (which will also be a no-op).
+
 Display a summary table of all issues with action `apply` or `reclassify`:
 
 ```
@@ -210,6 +212,7 @@ Triage complete:
 - **Failing silently on write errors** — report each failure individually; do not abort the entire batch because one call fails.
 - **Re-fetching issues during Phase 6** — use the triage list already assembled in Phases 2 and 3. Do not re-list issues.
 - **Using a hardcoded owner/repo** — always derive from `git remote get-url origin` at runtime.
+- **Prompting for confirmation when there is nothing to confirm** — if all issues resolved to `no-change`, skip Phase 5 entirely. Do not display an empty summary table or ask the user to confirm a list with zero changes.
 
 ## Eval
 
