@@ -16,11 +16,12 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      VERSION: ${{ inputs.version }}
     steps:
       - name: Validate SemVer format
         run: |
-          if ! echo "${{ inputs.version }}" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "Error: '${{ inputs.version }}' is not a valid SemVer string (expected X.Y.Z)"
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Error: '$VERSION' is not a valid SemVer string (expected X.Y.Z)"
             exit 1
           fi
 
@@ -31,7 +32,7 @@ jobs:
 
       - name: Patch plugin.json version
         run: |
-          jq --arg version "${{ inputs.version }}" '.version = $version' \
+          jq --arg version "$VERSION" '.version = $version' \
             plugins/token-effort/.claude-plugin/plugin.json > plugin.json.tmp
           mv plugin.json.tmp plugins/token-effort/.claude-plugin/plugin.json
 
@@ -40,18 +41,23 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add plugins/token-effort/.claude-plugin/plugin.json
-          git commit -m "chore: release v${{ inputs.version }}"
-          git push
+          git commit -m "chore: release v$VERSION"
+          git push origin HEAD
+
+      - name: Check tag does not exist
+        run: |
+          if git ls-remote --tags origin "refs/tags/v$VERSION" | grep -q .; then
+            echo "Tag v$VERSION already exists. Aborting."
+            exit 1
+          fi
 
       - name: Create git tag
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "v${{ inputs.version }}"
-          git push origin "v${{ inputs.version }}"
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
 
       - name: Create GitHub release
         run: |
-          gh release create "v${{ inputs.version }}" \
+          gh release create "v$VERSION" \
             --generate-notes \
-            --title "v${{ inputs.version }}"
+            --title "v$VERSION"
