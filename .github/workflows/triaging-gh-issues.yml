@@ -22,27 +22,6 @@ jobs:
           # Obtain a token with access to the owner-level resources (i.e. GH projects)
           owner: ${{ github.repository_owner }}
 
-      - name: 🔍 Diagnose project access
-        env:
-          GH_TOKEN: ${{ steps.project-manager-token.outputs.token }}
-        run: |
-          echo "--- gh project list ---"
-          gh project list --owner HeadlessTarry --format json --limit 100
-          echo "--- issue projectItems (GraphQL) ---"
-          gh api graphql -f query='
-          query {
-            repository(owner: "HeadlessTarry", name: "Token-Effort") {
-              issue(number: 27) {
-                projectItems(first: 10) {
-                  nodes {
-                    id
-                    project { id number title }
-                  }
-                }
-              }
-            }
-          }'
-
       - name: ✨ Run skill
         uses: HeadlessTarry/Token-Effort/.github/actions/run-skill@main
         with:
