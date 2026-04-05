@@ -46,7 +46,7 @@ jobs:
       - name: ✨ Run skill
         uses: HeadlessTarry/Token-Effort/.github/actions/run-skill@main
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ steps.project-manager-token.outputs.token }}
           skill_name: triaging-gh-issues
           prompt: "Triage all open issues in this repository."

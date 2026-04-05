@@ -23,8 +23,8 @@ inputs:
     description: "Newline-separated list of Claude Code tools which are allowed to be used during this action (e.g. 'Read\nWrite\nEdit')"
     required: false
     default: ""
-  anthropic_api_key:
-    description: Anthropic API key
+  claude_code_oauth_token:
+    description: Claude Code OAuth token
     required: true
   github_token:
     description: The token to use to authenticate GitHub interactions that are triggered from within Claude
@@ -72,7 +72,7 @@ runs:
         # Any `gh` CLI commands issued by the skill will use the provided token
         GH_TOKEN: ${{ inputs.github_token != '' && inputs.github_token || env.GH_TOKEN }}
       with:
-        anthropic_api_key: ${{ inputs.anthropic_api_key }}
+        claude_code_oauth_token: ${{ inputs.claude_code_oauth_token }}
         github_token: ${{ inputs.github_token }}
         prompt: |
           Read and follow the skill defined in `Token-Effort/claude/skills/${{ inputs.skill_name }}/SKILL.md`.
