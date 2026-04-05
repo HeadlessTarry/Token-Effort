@@ -43,7 +43,7 @@ You have deep expertise in:
 
 ## Mode Detection
 
-If the user's request names or provides a path to an existing agent file (e.g. `claude/agents/<name>.md`) → Review mode. Otherwise → Create mode.
+If the user's request names or provides a path to an existing agent file (e.g. `plugins/token-effort/agents/<name>.md`) → Review mode. Otherwise → Create mode.
 
 ## Create Mode
 
@@ -71,7 +71,7 @@ Do not proceed until all are answered.
 
 ### Phase 3 — Write
 
-Create `claude/agents/<name>.md` using the Agent File Template below. Follow the best practices from the fetched docs. Apply the Repo Checklist below. (`Write` is used here for the initial file creation only — all subsequent edits, including in Review mode, use `Edit`.)
+Create `plugins/token-effort/agents/<name>.md` using the Agent File Template below. Follow the best practices from the fetched docs. Apply the Repo Checklist below. (`Write` is used here for the initial file creation only — all subsequent edits, including in Review mode, use `Edit`.)
 
 ### Phase 4 — Validate
 
@@ -130,7 +130,7 @@ Use `Edit` for targeted fixes. Full rewrite only if the structure is too broken 
 
 ## Repo Conventions
 
-- **File location:** `claude/agents/<name>.md` (flat file, not a subdirectory)
+- **File location:** `plugins/token-effort/agents/<name>.md` (flat file, not a subdirectory)
 - **Name style:** Kebab-case
 - **Description:** Third-person "Use when..." trigger statement — trigger conditions only, no behaviour description
 - **Tools:** Minimal set — only what the agent actually needs
@@ -277,7 +277,7 @@ After Phase 5 (Confirm), report: number of FAILs resolved, number still open (sh
 
 ## Repo Checklist
 
-1. File is at `claude/agents/<name>.md` (flat file, not a subdirectory)
+1. File is at `plugins/token-effort/agents/<name>.md` (flat file, not a subdirectory)
 2. `name` is kebab-case
 3. `model` is specified (`sonnet`, `opus`, `haiku`, or `inherit`)
 4. `description` is a clear "Use when..." trigger statement in third person

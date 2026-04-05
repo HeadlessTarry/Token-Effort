@@ -6,7 +6,7 @@ Reads the hook payload from stdin, checks if the modified file is a skill or age
 definition, and prints a suggestion to stdout if so. Claude sees this output and
 will prompt the user to run training interactively.
 
-Matches paths from both the source repo (claude/skills/*/SKILL.md) and the
+Matches paths from both the source repo (plugins/token-effort/skills/*/SKILL.md) and the
 installed location (~/.claude/skills/*/SKILL.md).
 """
 

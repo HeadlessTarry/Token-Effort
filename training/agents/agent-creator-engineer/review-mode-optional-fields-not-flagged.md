@@ -1,5 +1,5 @@
 ## Scenario
-The user asks the agent to review `claude/agents/reviewer-dead-code.md`. The file has
+The user asks the agent to review `plugins/token-effort/agents/reviewer-dead-code.md`. The file has
 no commented-out optional frontmatter fields (no `# disallowedTools`, `# maxTurns`, etc.).
 
 ## Expected Behavior

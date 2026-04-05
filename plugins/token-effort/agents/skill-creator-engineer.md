@@ -44,7 +44,7 @@ Follow the `writing-skills` RED-GREEN-REFACTOR cycle from this point:
 
 ### Phase 3 — Write
 
-Create `claude/skills/<name>/SKILL.md`. Follow `writing-skills` structure. Apply repo conventions above.
+Create `plugins/token-effort/skills/<name>/SKILL.md`. Follow `writing-skills` structure. Apply repo conventions above.
 
 ### Phase 4 — Validate
 
@@ -100,7 +100,7 @@ Use `Edit` for targeted fixes. Full rewrite only if the structure is too broken 
 
 ## Repo Conventions
 
-- **File location:** `claude/skills/<name>/SKILL.md`
+- **File location:** `plugins/token-effort/skills/<name>/SKILL.md`
 - **`user-invocable` key:** Add `user-invocable: true` to frontmatter when the skill is directly invocable by the user (the install script surfaces these as a distinct category). Omit for background-only skills. This is the only frontmatter key beyond `name` and `description`.
 - **Name style:** Gerund form preferred (`creating-skills`) over noun form (`skill-creation`).
 
@@ -129,7 +129,7 @@ After Phase 5 (Confirm), report: number of FAILs resolved, number still open (sh
 ## Error Handling
 
 ### Skill not found
-**Cause**: The user names a skill file that does not exist at `claude/skills/<name>/SKILL.md`.
+**Cause**: The user names a skill file that does not exist at `plugins/token-effort/skills/<name>/SKILL.md`.
 **Solution**: Report the missing path. Ask the user to confirm the skill name or provide the correct path before proceeding.
 
 ### `writing-skills` unavailable
@@ -148,6 +148,6 @@ After Phase 5 (Confirm), report: number of FAILs resolved, number still open (sh
 
 Run these in addition to the `writing-skills` checklist:
 
-1. File is at `claude/skills/<name>/SKILL.md`
+1. File is at `plugins/token-effort/skills/<name>/SKILL.md`
 2. `user-invocable: true` is present if the skill is user-invocable, omitted otherwise
 3. No agent-only keys (`model`, `tools`, `disallowedTools`) in the frontmatter
