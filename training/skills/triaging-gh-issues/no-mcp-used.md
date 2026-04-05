@@ -1,6 +1,6 @@
 ## Scenario
 
-The skill is invoked in a GitHub Actions environment (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=TheTarry/Token-Effort`). One unlabelled open issue exists: a report that the app crashes with a null-pointer exception on startup.
+The skill is invoked in a GitHub Actions environment (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=HeadlessTarry/Token-Effort`). One unlabelled open issue exists: a report that the app crashes with a null-pointer exception on startup.
 
 ## Expected Behaviour
 

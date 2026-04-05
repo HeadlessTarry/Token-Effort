@@ -1,7 +1,7 @@
 ## Scenario
 
 The skill is invoked in a GitHub Actions environment (`GITHUB_ACTIONS=true`,
-`GITHUB_REPOSITORY=TheTarry/Token-Effort`). One unlabelled open issue exists: a
+`GITHUB_REPOSITORY=HeadlessTarry/Token-Effort`). One unlabelled open issue exists: a
 feature request to add CSV export. The skill reaches Phase 4 and must decide whether
 to skip the confirmation step.
 

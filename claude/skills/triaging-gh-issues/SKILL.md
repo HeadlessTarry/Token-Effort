@@ -58,7 +58,7 @@ Read the `GITHUB_REPOSITORY` environment variable using:
 printenv GITHUB_REPOSITORY
 ```
 
-This is always set by the GitHub Actions runner in the format `owner/repo` (e.g. `TheTarry/Token-Effort`). Split on `/` to extract `$OWNER` (everything before the first `/`) and `$REPO` (everything after).
+This is always set by the GitHub Actions runner in the format `owner/repo` (e.g. `HeadlessTarry/Token-Effort`). Split on `/` to extract `$OWNER` (everything before the first `/`) and `$REPO` (everything after).
 
 If `GITHUB_REPOSITORY` is empty or absent, stop immediately and report: "I could not determine the GitHub repository: the `GITHUB_REPOSITORY` environment variable is not set. Please check your workflow configuration." Do NOT call `git remote get-url origin` as a fallback.
 

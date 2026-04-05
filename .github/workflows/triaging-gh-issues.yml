@@ -27,11 +27,11 @@ jobs:
           GH_TOKEN: ${{ steps.project-manager-token.outputs.token }}
         run: |
           echo "--- gh project list ---"
-          gh project list --owner TheTarry --format json --limit 100
+          gh project list --owner HeadlessTarry --format json --limit 100
           echo "--- issue projectItems (GraphQL) ---"
           gh api graphql -f query='
           query {
-            repository(owner: "TheTarry", name: "Token-Effort") {
+            repository(owner: "HeadlessTarry", name: "Token-Effort") {
               issue(number: 27) {
                 projectItems(first: 10) {
                   nodes {
@@ -44,7 +44,7 @@ jobs:
           }'
 
       - name: ✨ Run skill
-        uses: TheTarry/Token-Effort/.github/actions/run-skill@main
+        uses: HeadlessTarry/Token-Effort/.github/actions/run-skill@main
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ steps.project-manager-token.outputs.token }}

@@ -1,6 +1,6 @@
 ## Scenario
 
-GHA context (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=TheTarry/Token-Effort`). One unlabelled open issue (#42) has the title "App crashes with NullPointerException on startup" and a body containing a full stack trace. The classification is unambiguously `bug` with confidence above 80%.
+GHA context (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=HeadlessTarry/Token-Effort`). One unlabelled open issue (#42) has the title "App crashes with NullPointerException on startup" and a body containing a full stack trace. The classification is unambiguously `bug` with confidence above 80%.
 
 The issue belongs to exactly one GitHub project (project number 1, titled "Roadmap"). That project's Status field includes a "Brainstorming" single-select option.
 

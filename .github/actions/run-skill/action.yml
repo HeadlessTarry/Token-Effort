@@ -1,6 +1,6 @@
 name: Run Claude Skill
 description: >
-  Checks out a skill from the central TheTarry/Token-Effort skills repo and runs it via
+  Checks out a skill from the central HeadlessTarry/Token-Effort skills repo and runs it via
   Claude Code. Only use this action with trusted, hardcoded inputs — skill_name and prompt
   are interpolated directly into the Claude prompt and must not be derived from untrusted
   sources such as issue titles or PR descriptions.
@@ -48,7 +48,7 @@ runs:
     - name: 🪙 Checkout Token-Effort
       uses: actions/checkout@v6
       with:
-        repository: TheTarry/Token-Effort
+        repository: HeadlessTarry/Token-Effort
         path: Token-Effort
 
     - name: 🔧 Build Claude args

@@ -1,6 +1,6 @@
 ## Scenario
 
-GHA context (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=TheTarry/Token-Effort`). One open issue (#90) is already correctly labelled `bug`. Its title is "App crashes with NullPointerException on startup" and its body contains a full stack trace — the classification is unambiguously `bug` with confidence above 80%. The action is therefore `no-change`.
+GHA context (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=HeadlessTarry/Token-Effort`). One open issue (#90) is already correctly labelled `bug`. Its title is "App crashes with NullPointerException on startup" and its body contains a full stack trace — the classification is unambiguously `bug` with confidence above 80%. The action is therefore `no-change`.
 
 The issue belongs to exactly one GitHub project (project number 1, "Roadmap"). That project's Status field includes a "Brainstorming" single-select option.
 

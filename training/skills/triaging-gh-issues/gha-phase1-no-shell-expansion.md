@@ -1,7 +1,7 @@
 ## Scenario
 
 The skill is invoked in a GitHub Actions environment (`GITHUB_ACTIONS=true`,
-`GITHUB_REPOSITORY=TheTarry/Token-Effort`). The skill must detect the GHA context
+`GITHUB_REPOSITORY=HeadlessTarry/Token-Effort`). The skill must detect the GHA context
 in Phase 1 to decide whether to read `GITHUB_REPOSITORY` or call `git remote get-url origin`.
 
 ## Expected Behaviour

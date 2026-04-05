@@ -9,7 +9,7 @@ A collection of Claude Code agents and skills that do just enough to avoid being
 1. Clone the repo:
 
    ```bash
-   git clone https://github.com/TheTarry/Token-Effort.git
+   git clone https://github.com/HeadlessTarry/Token-Effort.git
    cd Token-Effort
    ```
 

@@ -1,6 +1,6 @@
 ## Scenario
 
-GHA context (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=TheTarry/Token-Effort`). One unlabelled open issue (#60) has the title "Login fails with 500 error every time" and a body with a clear error message and reproduction steps. Classification is unambiguously `bug` with confidence above 80%.
+GHA context (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=HeadlessTarry/Token-Effort`). One unlabelled open issue (#60) has the title "Login fails with 500 error every time" and a body with a clear error message and reproduction steps. Classification is unambiguously `bug` with confidence above 80%.
 
 `gh project list` returns an empty list — there are no GitHub projects associated with this owner.
 

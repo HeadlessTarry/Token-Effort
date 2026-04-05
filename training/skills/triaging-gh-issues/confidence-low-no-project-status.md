@@ -1,6 +1,6 @@
 ## Scenario
 
-GHA context (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=TheTarry/Token-Effort`). One unlabelled open issue (#50) has the vague title "Improve the thing" and a body that reads: "It would be nice to make this better — maybe a new page, or maybe just update the docs for it." The classification is ambiguous enough that confidence is 70% or lower.
+GHA context (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=HeadlessTarry/Token-Effort`). One unlabelled open issue (#50) has the vague title "Improve the thing" and a body that reads: "It would be nice to make this better — maybe a new page, or maybe just update the docs for it." The classification is ambiguous enough that confidence is 70% or lower.
 
 The issue belongs to exactly one GitHub project that has a "Brainstorming" status option.
 

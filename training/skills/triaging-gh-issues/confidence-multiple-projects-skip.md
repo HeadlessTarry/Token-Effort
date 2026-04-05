@@ -1,6 +1,6 @@
 ## Scenario
 
-GHA context (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=TheTarry/Token-Effort`). One unlabelled open issue (#70) has the title "Add CSV export to the reports page" and a clear feature request body. Classification is unambiguously `enhancement` with confidence above 80%.
+GHA context (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=HeadlessTarry/Token-Effort`). One unlabelled open issue (#70) has the title "Add CSV export to the reports page" and a clear feature request body. Classification is unambiguously `enhancement` with confidence above 80%.
 
 `gh project list` (or querying project items) reveals that issue #70 appears in two different GitHub projects: project 1 ("Roadmap") and project 2 ("Q3 Sprint").
 

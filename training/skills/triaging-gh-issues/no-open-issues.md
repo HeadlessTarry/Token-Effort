@@ -1,6 +1,6 @@
 ## Scenario
 
-The skill is invoked in a GitHub Actions environment (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=TheTarry/Token-Effort`). The call to `gh issue list` returns an empty array — there are no open issues in the repository.
+The skill is invoked in a GitHub Actions environment (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=HeadlessTarry/Token-Effort`). The call to `gh issue list` returns an empty array — there are no open issues in the repository.
 
 ## Expected Behaviour
 

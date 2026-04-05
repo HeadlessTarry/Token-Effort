@@ -1,6 +1,6 @@
 ## Scenario
 
-Two unlabelled open issues exist in GHA context (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=TheTarry/Token-Effort`). Both are classified with action `apply` — the first is clearly a bug report and the second is clearly a feature request. When `gh issue edit --add-label` is called for the first issue it succeeds; when called for the second issue it returns a 403 Forbidden error.
+Two unlabelled open issues exist in GHA context (`GITHUB_ACTIONS=true`, `GITHUB_REPOSITORY=HeadlessTarry/Token-Effort`). Both are classified with action `apply` — the first is clearly a bug report and the second is clearly a feature request. When `gh issue edit --add-label` is called for the first issue it succeeds; when called for the second issue it returns a 403 Forbidden error.
 
 ## Expected Behaviour
 
