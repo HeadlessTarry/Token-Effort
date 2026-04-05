@@ -10,7 +10,7 @@ user-invocable: true
 
 Fetches all open GitHub issues, classifies each one by reading its content and searching for duplicates, then determines whether to apply a new label or correct an existing one. Issues that already have the correct label are skipped silently. Presents a summary of proposed changes and waits for user confirmation before applying any writes (unless running in GitHub Actions, where it applies changes immediately). For each issue, a confidence score is produced reflecting how certain the classification is.
 
-**Usage:** `/triaging-gh-issues`
+**Usage:** `/triaging-gh-issues [--advance-status]`
 
 ## When to Use
 
@@ -241,6 +241,8 @@ Triage complete:
 
 ### Phase 6b — Update GitHub project status
 
+**This phase only runs when `--advance-status` was passed at invocation.** If it was not passed, skip this phase entirely.
+
 For **every** classified issue where **confidence > 80%** — regardless of action (`apply`, `reclassify`, or `no-change`) — advance its GitHub project status one column to the right:
 
 1. List all projects for the owner:
@@ -274,6 +276,7 @@ For **every** classified issue where **confidence > 80%** — regardless of acti
    - If the issue's current status (from step 2) is null/empty → skip silently. Do not call `gh project item-edit`.
    - Find the index of the current status name in the `options` array. If not found → skip silently.
    - If the current status is the **last** option (no next column exists) → skip silently. Do not call `gh project item-edit`.
+   - If the current status is **not** the first option (index > 0) → skip silently. Do not call `gh project item-edit`.
    - Otherwise, the target option is `options[current_index + 1]`.
 
 5. Update the project item to the next status option:
@@ -310,6 +313,8 @@ If any `gh project` call fails for an individual issue, skip that issue's projec
 - **Calling `gh project item-edit` when the issue has no current status set** — if the item's `status` field is null/empty, skip silently. Do not call `gh project item-edit`.
 - **Calling `gh project item-edit` when the issue is already at the last column** — if the current status is the last option in the `options` array, there is no next column. Skip silently.
 - **Setting a hardcoded target status name** — do not look for a specific option by name. Always determine the target by finding the current status index and advancing to `options[index + 1]`.
+- **Updating project status when `--advance-status` was not specified** — Phase 6b must be skipped entirely unless `--advance-status` was passed at invocation. Do not call any `gh project` commands if the flag is absent.
+- **Calling `gh project item-edit` when the issue is not in the first column** — the status may only be advanced when the issue's current status is the first option (index 0) in the Status field options array. Issues already past the first column must be skipped silently.
 
 ## Eval
 
@@ -340,9 +345,11 @@ If any `gh project` call fails for an individual issue, skip that issue's projec
 - [ ] Each `gh issue edit` or `gh issue comment` failure was reported individually without aborting the remaining batch
 - [ ] Final summary reported counts for: labels applied (new), labels updated (reclassified), issues unchanged, and failures
 - [ ] No `mcp__` tool was called at any point
-- [ ] For issues with confidence > 80% belonging to exactly one GitHub project whose current status is not the last column: `gh project list`, `gh project item-list`, `gh project field-list`, and `gh project item-edit` were called — this applies to `apply`, `reclassify`, AND `no-change` issues
+- [ ] If `--advance-status` was not specified, Phase 6b was skipped entirely — no `gh project` commands were called
+- [ ] For issues with confidence > 80% belonging to exactly one GitHub project whose current status is the first option (index 0) and `--advance-status` was specified: `gh project list`, `gh project item-list`, `gh project field-list`, and `gh project item-edit` were called — this applies to `apply`, `reclassify`, AND `no-change` issues
 - [ ] `gh project item-edit` was NOT called for issues with confidence ≤ 80%
 - [ ] `gh project item-edit` was NOT called when the issue belonged to zero or more than one GitHub project
 - [ ] `gh project item-edit` was NOT called when the issue had no current status set in the project
 - [ ] `gh project item-edit` was NOT called when the issue's current status was the last option in the Status field
+- [ ] `gh project item-edit` was NOT called when the issue's current status was not the first option (index > 0) in the Status field
 - [ ] The target status was determined by advancing one position in the ordered `options` array — not by searching for a hardcoded name
