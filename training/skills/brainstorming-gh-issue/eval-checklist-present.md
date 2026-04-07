@@ -5,14 +5,14 @@ The `brainstorming-gh-issue` SKILL.md is reviewed for its Eval section, which is
 ## Expected Behaviour
 
 - The SKILL.md contains an "Eval" section with a checklist of binary pass/fail criteria.
-- The criteria cover all major behaviours: issue resolution, re-entry detection, brainstorming handoff overrides, spec comment format, label management, and negative behaviours (no MCP, no file writes, no premature posting).
+- The criteria cover all major behaviours: issue resolution, re-entry detection, brainstorming handoff instructions, spec comment format, label management, Phase 4 file handling, and negative behaviours (no MCP, no premature posting).
 
 ## Pass Criteria
 
 - [ ] An "Eval" section exists in the SKILL.md with at least 8 checkbox criteria.
 - [ ] At least one criterion covers issue resolution from args or branch.
 - [ ] At least one criterion covers re-entry detection via the spec comment marker.
-- [ ] At least one criterion covers the instruction to skip the spec file write.
+- [ ] At least one criterion covers the Phase 3 handoff instruction to stop after step 8 and not invoke `writing-plans`.
 - [ ] At least one criterion covers the spec comment format (marker, heading, footer).
 - [ ] At least one criterion covers `pending-review` label management.
-- [ ] At least one negative criterion (e.g. "no MCP tool was called" or "no file was written to disk").
+- [ ] At least one negative criterion (e.g. "no MCP tool was called" or "Phase 4 ran `git rm`").
