@@ -36,5 +36,4 @@ jobs:
             Upon completion, write a brief markdown summary of your activity to the GitHub Actions step summary using: SUMMARY_FILE=$(printenv GITHUB_STEP_SUMMARY) && echo "**[Claude]** {Activity summary}" >> "$SUMMARY_FILE"
           claude_args: >-
             --model haiku
-            --allowedTools
-            Bash(printenv *),Bash(git remote get-url *),Bash(gh issue list *),Bash(gh issue view *),Bash(gh search issues *),Bash(gh issue edit *),Bash(gh issue comment *),Bash(gh project list *),Bash(gh project item-list *),Bash(gh project field-list *),Bash(gh project item-edit *)
+            --allowedTools Bash(printenv *),Bash(git remote get-url *),Bash(gh issue list *),Bash(gh issue view *),Bash(gh search issues *),Bash(gh issue edit *),Bash(gh issue comment *),Bash(gh project list *),Bash(gh project item-list *),Bash(gh project field-list *),Bash(gh project item-edit *)
