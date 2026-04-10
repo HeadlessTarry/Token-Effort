@@ -36,7 +36,7 @@ Conduct a **conversational** interview — one question at a time, letting each 
 
 **If a template was found:** use its sections to frame the questions in order.
 
-**Built-in fallback question set** (used when no template found, or as a baseline when a template lacks certain sections):
+**Built-in fallback question set** (used when no template found):
 
 1. **Describe the bug** — what's happening?
 2. **Steps to reproduce** — numbered steps to reliably trigger it
@@ -71,10 +71,10 @@ Format collected answers into an issue body:
 <actual>
 
 **Error Logs**
-<logs or "N/A">
+<logs>
 
 **Environment**
-<environment details or "N/A">
+<environment details>
 
 **Screenshots**
 <!-- Add screenshots here via the GitHub web UI -->
