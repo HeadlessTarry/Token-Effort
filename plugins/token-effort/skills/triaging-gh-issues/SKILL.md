@@ -243,49 +243,13 @@ Triage complete:
 
 **This phase only runs when `--advance-status` was passed at invocation.** If it was not passed, skip this phase entirely.
 
-For **every** classified issue where **confidence > 80%** — regardless of action (`apply`, `reclassify`, or `no-change`) — advance its GitHub project status one column to the right:
+For **every** classified issue where **confidence > 80%** — regardless of action (`apply`, `reclassify`, or `no-change`) — advance its GitHub project status one column to the right by invoking:
 
-1. List all projects for the owner:
+```
+token-effort:move-issue-status <issue-number>
+```
 
-   ```bash
-   gh project list --owner $OWNER --format json --limit 100
-   ```
-
-2. For each project returned, check whether the issue appears in it:
-
-   ```bash
-   gh project item-list <project-number> --owner $OWNER --format json --limit 1000
-   ```
-
-   Filter items whose `content.number` matches the issue number. Collect the matching item IDs, project numbers, **and the item's current `status` name**.
-
-3. Count how many projects contain this issue:
-   - **Zero** → skip silently. Do not call `gh project item-edit`.
-   - **More than one** → skip silently. Do not call `gh project item-edit`.
-   - **Exactly one** → continue to step 4.
-
-4. Get the fields for that project to determine the next status option:
-
-   ```bash
-   gh project field-list <project-number> --owner $OWNER --format json
-   ```
-
-   Find the field named `Status` with type `single_select`. Its `options` array is in board-display order (left to right).
-
-   - If no Status field exists → skip silently. Do not call `gh project item-edit`.
-   - If the issue's current status (from step 2) is null/empty → skip silently. Do not call `gh project item-edit`.
-   - Find the index of the current status name in the `options` array. If not found → skip silently.
-   - If the current status is the **last** option (no next column exists) → skip silently. Do not call `gh project item-edit`.
-   - If the current status is **not** the first option (index > 0) → skip silently. Do not call `gh project item-edit`.
-   - Otherwise, the target option is `options[current_index + 1]`.
-
-5. Update the project item to the next status option:
-
-   ```bash
-   gh project item-edit --project-id <project-id> --id <item-id> --field-id <status-field-id> --single-select-option-id <next-option-id>
-   ```
-
-If any `gh project` call fails for an individual issue, skip that issue's project status update and continue — do not abort the batch.
+No explicit status argument is passed; this uses advance mode. The skill handles all preconditions (single-project membership, first-column check, null status check, last-column check) internally and skips silently if any condition is not met.
 
 > **Confidence threshold:** Only issues with confidence **strictly greater than 80%** trigger the project status update. Issues with confidence ≤ 80% skip Phase 6b entirely, even if they belong to exactly one project. This applies equally to `apply`, `reclassify`, and `no-change` issues.
 
@@ -307,14 +271,9 @@ If any `gh project` call fails for an individual issue, skip that issue's projec
 - **Prompting for confirmation when there is nothing to confirm** — if all issues resolved to `no-change`, skip Phase 5 entirely. Do not display an empty summary table or ask the user to confirm a list with zero changes.
 - **Using MCP tools for issue operations** — all issue interactions (listing, searching, writing labels, posting comments) must use `gh` CLI commands. Never call `mcp__plugin_github_github__list_issues`, `mcp__plugin_github_github__issue_read`, `mcp__plugin_github_github__search_issues`, `mcp__plugin_github_github__issue_write`, `mcp__plugin_github_github__add_issue_comment`, or any other `mcp__` tool for issue operations.
 - **Omitting the Confidence column from the summary table** — the triage summary table must always include a `Confidence` column showing the % value for each `apply` or `reclassify` issue.
-- **Updating project status for low-confidence issues** — `gh project item-edit` must NOT be called for issues with confidence ≤ 80%, even if they belong to exactly one project.
-- **Calling `gh project item-edit` when issue belongs to zero or multiple projects** — skip silently when the issue count is not exactly one.
+- **Updating project status for low-confidence issues** — `token-effort:move-issue-status` must NOT be called for issues with confidence ≤ 80%. Only invoke it when confidence is strictly greater than 80%.
 - **Skipping the project status update for `no-change` issues** — Phase 6b applies to ALL classified issues with confidence > 80%, not just `apply` and `reclassify`. A `no-change` issue with high confidence should still have its project status advanced.
-- **Calling `gh project item-edit` when the issue has no current status set** — if the item's `status` field is null/empty, skip silently. Do not call `gh project item-edit`.
-- **Calling `gh project item-edit` when the issue is already at the last column** — if the current status is the last option in the `options` array, there is no next column. Skip silently.
-- **Setting a hardcoded target status name** — do not look for a specific option by name. Always determine the target by finding the current status index and advancing to `options[index + 1]`.
-- **Updating project status when `--advance-status` was not specified** — Phase 6b must be skipped entirely unless `--advance-status` was passed at invocation. Do not call any `gh project` commands if the flag is absent.
-- **Calling `gh project item-edit` when the issue is not in the first column** — the status may only be advanced when the issue's current status is the first option (index 0) in the Status field options array. Issues already past the first column must be skipped silently.
+- **Updating project status when `--advance-status` was not specified** — Phase 6b must be skipped entirely unless `--advance-status` was passed at invocation. Do not invoke `token-effort:move-issue-status` if the flag is absent.
 
 ## Eval
 
@@ -345,11 +304,6 @@ If any `gh project` call fails for an individual issue, skip that issue's projec
 - [ ] Each `gh issue edit` or `gh issue comment` failure was reported individually without aborting the remaining batch
 - [ ] Final summary reported counts for: labels applied (new), labels updated (reclassified), issues unchanged, and failures
 - [ ] No `mcp__` tool was called at any point
-- [ ] If `--advance-status` was not specified, Phase 6b was skipped entirely — no `gh project` commands were called
-- [ ] For issues with confidence > 80% belonging to exactly one GitHub project whose current status is the first option (index 0) and `--advance-status` was specified: `gh project list`, `gh project item-list`, `gh project field-list`, and `gh project item-edit` were called — this applies to `apply`, `reclassify`, AND `no-change` issues
-- [ ] `gh project item-edit` was NOT called for issues with confidence ≤ 80%
-- [ ] `gh project item-edit` was NOT called when the issue belonged to zero or more than one GitHub project
-- [ ] `gh project item-edit` was NOT called when the issue had no current status set in the project
-- [ ] `gh project item-edit` was NOT called when the issue's current status was the last option in the Status field
-- [ ] `gh project item-edit` was NOT called when the issue's current status was not the first option (index > 0) in the Status field
-- [ ] The target status was determined by advancing one position in the ordered `options` array — not by searching for a hardcoded name
+- [ ] If `--advance-status` was not specified, Phase 6b was skipped entirely — `token-effort:move-issue-status` was NOT called
+- [ ] `token-effort:move-issue-status <N>` (no explicit status) was called for each classified issue with confidence > 80%, regardless of action (`apply`, `reclassify`, or `no-change`)
+- [ ] `token-effort:move-issue-status` was NOT called for issues with confidence ≤ 80%
