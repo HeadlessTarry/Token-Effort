@@ -26,7 +26,7 @@ plugins/token-effort/
 training/
 └── <type>/<name>/   →  eval cases for the /run-training skill
 
-documentation/
+docs/
 └── *.md             →  guides and reference docs
 ```
 
@@ -34,7 +34,7 @@ documentation/
 
 Skills and agents in this repo can be iteratively improved using the `/run-training` skill, which evaluates definitions against committed test cases and proposes targeted mutations to improve them.
 
-See [documentation/training-guide.md](documentation/training-guide.md) for the full guide.
+See [docs/training-guide.md](docs/training-guide.md) for the full guide.
 
 ## 🏷️ Releases
 
