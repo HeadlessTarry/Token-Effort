@@ -83,7 +83,9 @@ spec context. When standalone, prompt for all fields.
 - Construct the full URL: `https://github.com/<owner>/<repo>/issues/<N>`
 
 **2. Slug**
-- Suggest a kebab-case slug derived from the issue title or spec headline
+- `/build` context: derive slug from the spec headline
+- Standalone with issue number: fetch title via `gh issue view <N> --json title -q .title`, then derive slug from that title
+- Standalone without issue: ask the user for a short description to derive the slug from
 - Show: `Suggested slug: \`<slug>\` — press Enter to accept or type a new one:`
 - Confirmed slug is used as the filename suffix
 
