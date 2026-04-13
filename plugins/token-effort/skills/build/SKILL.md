@@ -122,15 +122,16 @@ Check for:
 
 Fix any issues found directly. Report a brief summary of findings, or "No security issues found" if the review was clean.
 
-### Phase 9 — Record decisions (optional)
+### Phase 9 — Record decisions
 
-Attempt to invoke: `token-effort:recording-decisions`
+Invoke: `token-effort:recording-decisions`
 
-If the skill is not available, log the following named warning and continue:
+If the skill is not available, **stop immediately** with:
 
-> "⚠️ Phase 9 skipped: `token-effort:recording-decisions` skill not available (planned; see issue #49)"
+> "❌ Phase 9 blocked: `token-effort:recording-decisions` skill is required but not available.
+>  Install the skill before continuing the build."
 
-Do not block on this phase.
+Do not proceed to Phase 10 until this phase completes successfully.
 
 ### Phase 10 — Finish development branch
 
@@ -144,7 +145,8 @@ This step creates the pull request. It runs exactly once, here, at the end of th
 - **Omitting the suppression instruction from the Phase 4 prompt** — the verbatim instruction `"Do not invoke finishing-a-development-branch — this will be handled by the calling skill after all review steps complete."` must be included in the execution skill invocation. Paraphrasing it or omitting it is incorrect.
 - **Calling `finishing-a-development-branch` inside the Phase 4 execution skill** — the PR creation step belongs at Phase 10 and only there. The suppression instruction in Phase 4 enforces this; do not override it.
 - **Choosing `subagent-driven-development` for moderate-scope plans** — the default is `executing-plans`. Only switch to `subagent-driven-development` when all three conditions (independent tasks, 5+ subsystems, explicitly large/complex scope) are met simultaneously.
-- **Silently skipping Phase 5 or Phase 9** — these are optional phases but must log a named warning when skipped. Do not silently continue without the warning.
+- **Silently skipping Phase 5** — Phase 5 is optional but must log a named warning when skipped. Do not silently continue without the warning.
+- **Continuing past Phase 9 when `recording-decisions` is unavailable** — Phase 9 is a hard block. If the skill is not installed, stop with the error message. Do not warn and continue.
 - **Passing the full raw comment body to `writing-plans`** — strip the `<!-- brainstorming-gh-issue:spec -->` marker line before passing the spec body. Do not include the marker in the context.
 - **Not stripping the leading `#` from the issue number** — `gh issue view` requires a bare integer. Strip any `#` prefix before constructing the command.
 - **Using MCP tools for issue operations** — all GitHub interactions must use `gh` CLI commands. Never call `mcp__plugin_github_github__*` tools for any operation.
@@ -169,7 +171,8 @@ This step creates the pull request. It runs exactly once, here, at the end of th
 - [ ] Invoked `token-effort:reviewing-code-systematically`
 - [ ] Addressed BLOCK or NEEDS_CHANGES findings before continuing past Phase 7
 - [ ] Performed inline security review after code review; reported a summary
-- [ ] Attempted `token-effort:recording-decisions` and skipped with named warning if absent
+- [ ] Invoked `token-effort:recording-decisions` and blocked with error message if not available
+- [ ] Did not proceed to Phase 10 when `recording-decisions` was unavailable
 - [ ] Invoked `superpowers:finishing-a-development-branch` exactly once, at Phase 10
 - [ ] `finishing-a-development-branch` was NOT called by the execution skills in Phase 4
 - [ ] No MCP tools used at any point
