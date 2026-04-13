@@ -17,7 +17,7 @@ jobs:
         id: project-manager-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ vars.PROJECT_MANAGER_APP_ID }}
+          client-id: ${{ vars.PROJECT_MANAGER_APP_ID }}
           private-key: ${{ secrets.PROJECT_MANAGER_PRIVATE_KEY }}
           # Obtain a token with access to the owner-level resources (i.e. GH projects)
           owner: ${{ github.repository_owner }}
@@ -30,10 +30,10 @@ jobs:
           plugin_marketplaces: https://github.com/HeadlessTarry/Token-Effort.git
           plugins: token-effort
           prompt: |
-            Use the `token-effort:triaging-gh-issues` skill.
-            --advance-status Triage all open issues in this repository.
+            Use the `token-effort:triaging-gh-issues` skill with `--advance-status`.
+            Triage all open issues in this repository.
 
             Upon completion, write a brief markdown summary of your activity to the GitHub Actions step summary using: SUMMARY_FILE=$(printenv GITHUB_STEP_SUMMARY) && echo "**[Claude]** {Activity summary}" >> "$SUMMARY_FILE"
           claude_args: >-
-            --model haiku
-            --allowedTools Bash(printenv *),Bash(git remote get-url *),Bash(gh issue list *),Bash(gh issue view *),Bash(gh search issues *),Bash(gh issue edit *),Bash(gh issue comment *),Bash(gh project list *),Bash(gh project item-list *),Bash(gh project field-list *),Bash(gh project item-edit *)
+            --model sonnet
+            --allowedTools Skill,Bash(printenv *),Bash(git remote get-url *),Bash(gh issue list *),Bash(gh issue view *),Bash(gh search issues *),Bash(gh issue edit *),Bash(gh issue comment *),Bash(gh project list *),Bash(gh project item-list *),Bash(gh project field-list *),Bash(gh project item-edit *)

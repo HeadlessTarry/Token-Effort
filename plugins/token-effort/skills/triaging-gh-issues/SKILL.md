@@ -243,11 +243,14 @@ Triage complete:
 
 **This phase only runs when `--advance-status` was passed at invocation.** If it was not passed, skip this phase entirely.
 
-For **every** classified issue where **confidence > 80%** — regardless of action (`apply`, `reclassify`, or `no-change`) — advance its GitHub project status one column to the right by invoking:
+For **every** classified issue where **confidence > 80%** — regardless of action (`apply`, `reclassify`, or `no-change`) — advance its GitHub project status one column to the right. Process each issue **one at a time** in the following sequence:
 
-```
-token-effort:move-issue-status <issue-number>
-```
+1. Invoke the `token-effort:move-issue-status` skill using the Skill tool:
+   ```
+   token-effort:move-issue-status <issue-number>
+   ```
+2. The skill will return detailed instructions. **Execute every phase those instructions describe** — including all `gh project` Bash commands (`gh project list`, `gh project item-list`, `gh project field-list`, `gh project item-edit`) — before moving on to the next issue.
+3. Do not call the Skill tool for the next issue until the current issue's execution is fully complete (all phases run, result reported).
 
 No explicit status argument is passed; this uses advance mode. The skill handles all preconditions (single-project membership, first-column check, null status check, last-column check) internally and skips silently if any condition is not met.
 
@@ -274,6 +277,7 @@ No explicit status argument is passed; this uses advance mode. The skill handles
 - **Updating project status for low-confidence issues** — `token-effort:move-issue-status` must NOT be called for issues with confidence ≤ 80%. Only invoke it when confidence is strictly greater than 80%.
 - **Skipping the project status update for `no-change` issues** — Phase 6b applies to ALL classified issues with confidence > 80%, not just `apply` and `reclassify`. A `no-change` issue with high confidence should still have its project status advanced.
 - **Updating project status when `--advance-status` was not specified** — Phase 6b must be skipped entirely unless `--advance-status` was passed at invocation. Do not invoke `token-effort:move-issue-status` if the flag is absent.
+- **Batch-calling `token-effort:move-issue-status` for multiple issues without executing each sub-skill's phases** — for each issue, call the Skill tool, then execute every phase the returned skill describes (including all `gh project` Bash commands), before invoking the skill for the next issue. Do not make multiple Skill tool calls in succession without executing the returned instructions first.
 
 ## Eval
 
@@ -306,4 +310,5 @@ No explicit status argument is passed; this uses advance mode. The skill handles
 - [ ] No `mcp__` tool was called at any point
 - [ ] If `--advance-status` was not specified, Phase 6b was skipped entirely — `token-effort:move-issue-status` was NOT called
 - [ ] `token-effort:move-issue-status <N>` (no explicit status) was called for each classified issue with confidence > 80%, regardless of action (`apply`, `reclassify`, or `no-change`)
+- [ ] Each invocation of `token-effort:move-issue-status` completed in full (all phases executed, including all `gh project` Bash commands) before the skill was invoked for the next issue
 - [ ] `token-effort:move-issue-status` was NOT called for issues with confidence ≤ 80%
