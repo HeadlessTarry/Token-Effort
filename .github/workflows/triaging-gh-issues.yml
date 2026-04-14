@@ -17,7 +17,7 @@ jobs:
         id: project-manager-token
         uses: actions/create-github-app-token@v3
         with:
-          client-id: ${{ vars.PROJECT_MANAGER_APP_ID }}
+          client-id: ${{ vars.PROJECT_MANAGER_CLIENT_ID }}
           private-key: ${{ secrets.PROJECT_MANAGER_PRIVATE_KEY }}
           # Obtain a token with access to the owner-level resources (i.e. GH projects)
           owner: ${{ github.repository_owner }}

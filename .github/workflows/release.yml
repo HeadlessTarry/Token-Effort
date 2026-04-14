@@ -30,7 +30,7 @@ jobs:
         id: release-manager-token
         uses: actions/create-github-app-token@v3
         with:
-          client-id: ${{ vars.RELEASE_MANAGER_APP_ID }}
+          client-id: ${{ vars.RELEASE_MANAGER_CLIENT_ID }}
           private-key: ${{ secrets.RELEASE_MANAGER_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
