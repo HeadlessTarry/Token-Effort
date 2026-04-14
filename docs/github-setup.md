@@ -10,14 +10,15 @@ This guide covers the GitHub infrastructure required to run the Token-Effort aut
 
 Use this checklist to see what you still need to set up. Each item links to the detailed section below.
 
-- [ ] GitHub organisation (or personal account — see [Personal Account Alternative](#personal-account-alternative))
-- [ ] "Project Manager" GitHub App created and installed on the repository
-- [ ] GitHub Project board with Status field: `New` → `Brainstorming` → `Building` → `Done`
-- [ ] Issue labels: `enhancement`, `bug`, `documentation`, `duplicate`, `pending-review`
-- [ ] Repository secret: `PROJECT_MANAGER_PRIVATE_KEY`
-- [ ] Repository secret: `CLAUDE_CODE_OAUTH_TOKEN`
-- [ ] Repository variable: `PROJECT_MANAGER_APP_ID`
-- [ ] Triage workflow added to `.github/workflows/`
+- [ ] [GitHub organisation](#1-github-organisation) (or personal account — see [Personal Account Alternative](#personal-account-alternative))
+- [ ] ["Project Manager" GitHub App](#2-project-manager-github-app) created and installed on the repository
+- [ ] [GitHub Project board](#3-github-project-board) with Status field: `New` → `Brainstorming` → `Building` → `Done`
+- [ ] [Project board linked to the repository](#3-github-project-board) (Settings → Linked repositories)
+- [ ] [Issue labels](#4-issue-labels): `enhancement`, `bug`, `documentation`, `duplicate`, `pending-review`
+- [ ] [Repository secret](#5-repository-secrets--variables): `PROJECT_MANAGER_PRIVATE_KEY`
+- [ ] [Repository secret](#5-repository-secrets--variables): `CLAUDE_CODE_OAUTH_TOKEN`
+- [ ] [Repository variable](#5-repository-secrets--variables): `PROJECT_MANAGER_APP_ID`
+- [ ] [Triage workflow](#6-triage-workflow) added to `.github/workflows/`
 
 ---
 
@@ -51,7 +52,7 @@ The Project Manager GitHub App is used by the triage workflow to authenticate wi
    - **Repository permissions → Issues:** Read & Write
    - **Organization permissions → Projects:** Read & Write
 5. Click **Create GitHub App**.
-6. On the app's settings page, note the **App ID** — you will need it later.
+6. On the app's settings page, note the **Client ID** (labelled `Client ID`, formatted as `Iv1.xxxxxxxxxx`) — you will need it later. This is distinct from the numeric **App ID** shown just above it; the workflow requires the Client ID.
 7. Scroll down to **Private keys** and click **Generate a private key**. A `.pem` file will download — keep it safe.
 8. Go to the app's **Install App** tab and install it on your target repository.
 
@@ -107,14 +108,14 @@ The triage workflow uses one repository variable and two secrets. Add them under
 
 | Variable | Value |
 |----------|-------|
-| `PROJECT_MANAGER_APP_ID` | The App ID from the GitHub App settings page (step 2.6 above) |
+| `PROJECT_MANAGER_APP_ID` | The **Client ID** from the GitHub App General settings page (step 2.6 above — the `Iv1.` prefixed string, not the numeric App ID) |
 
 ### Secrets (Secrets tab)
 
 | Secret | Value |
 |--------|-------|
 | `PROJECT_MANAGER_PRIVATE_KEY` | Full contents of the `.pem` file downloaded in step 2.7 above |
-| `CLAUDE_CODE_OAUTH_TOKEN` | Your Claude Code OAuth token |
+| `CLAUDE_CODE_OAUTH_TOKEN` | Your Claude Code OAuth token — generated during Claude Code setup. Run `claude auth status` to surface the token, or see the [Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code) for your version. |
 
 > **On a personal account?** Replace the `PROJECT_MANAGER_APP_ID` variable and `PROJECT_MANAGER_PRIVATE_KEY` secret with a single `GITHUB_PAT` secret — see [Personal Account Alternative](#personal-account-alternative).
 
@@ -128,8 +129,15 @@ The triage workflow runs automatically every Monday at 4am UTC and can also be t
 
 **Steps:**
 
-1. Copy the workflow file from this repository into your own at `.github/workflows/triaging-gh-issues.yml`.
-2. View the latest version: [triaging-gh-issues.yml on main](https://github.com/HeadlessTarry/Token-Effort/blob/main/.github/workflows/triaging-gh-issues.yml).
+1. Download the workflow file into your repository:
+
+   ```bash
+   mkdir -p .github/workflows && curl -sSL https://raw.githubusercontent.com/HeadlessTarry/Token-Effort/main/.github/workflows/triaging-gh-issues.yml -o .github/workflows/triaging-gh-issues.yml
+   ```
+
+   Alternatively, view the [latest version on main](https://github.com/HeadlessTarry/Token-Effort/blob/main/.github/workflows/triaging-gh-issues.yml) and copy its contents manually into `.github/workflows/triaging-gh-issues.yml` in your repository.
+
+2. Leave the `plugin_marketplaces` and `plugins` inputs as-is — they point to the Token-Effort plugin and should not be changed.
 
 ---
 
@@ -145,15 +153,29 @@ GitHub Apps require organisation-level permissions to access GitHub Projects. Pe
    - Go to **Settings** → **Developer settings** → **Personal access tokens** → **Tokens (classic)** → **Generate new token**.
    - Select scopes: `repo` (full control) and `project` (full control of projects).
 2. Store the PAT as a repository secret named `GITHUB_PAT` (under **Settings** → **Secrets and variables** → **Actions** → **Secrets**).
-3. Update the triage workflow — remove the `Authenticate as Project Manager` step and change the `github_token` input:
+3. Update the triage workflow — remove the `🔑 Authenticate as Project Manager` step (the `actions/create-github-app-token` block) and change the `github_token` input:
 
-```yaml
-# Change from:
-github_token: ${{ steps.project-manager-token.outputs.token }}
+   Remove this block entirely:
 
-# To:
-github_token: ${{ secrets.GITHUB_PAT }}
-```
+   ```yaml
+         - name: 🔑 Authenticate as Project Manager
+           id: project-manager-token
+           uses: actions/create-github-app-token@v3
+           with:
+             client-id: ${{ vars.PROJECT_MANAGER_APP_ID }}
+             private-key: ${{ secrets.PROJECT_MANAGER_PRIVATE_KEY }}
+             owner: ${{ github.repository_owner }}
+   ```
+
+   Then change the `github_token` input in the `Run skill` step:
+
+   ```yaml
+   # Change from:
+   github_token: ${{ steps.project-manager-token.outputs.token }}
+
+   # To:
+   github_token: ${{ secrets.GITHUB_PAT }}
+   ```
 
 > **Security note:** Classic PATs are broadly scoped compared to GitHub Apps. Rotate them regularly and use the minimum required scopes.
 
@@ -170,9 +192,12 @@ gh label list
 # Confirm the project board is visible
 gh project list --owner <your-org>
 
-# Trigger the triage workflow manually and check the Actions tab for results
-gh workflow run triaging-gh-issues.yml
+# Trigger the triage workflow manually (run from inside a cloned copy of your repo,
+# or pass --repo explicitly)
+gh workflow run triaging-gh-issues.yml --repo <your-org>/<your-repo>
 ```
+
+After triggering the workflow, open the **Actions** tab in your repository and select the **Triage GitHub Issues** run. Claude will post a markdown summary to the step summary once it completes — a successful run will show a brief activity report under the `✨ Run skill` step.
 
 ---
 
@@ -183,4 +208,4 @@ This guide does not cover:
 - Installing the Token-Effort plugin in Claude Code
 - Configuring Claude Code itself (model settings, permissions)
 - Setting up the Release Manager GitHub App
-- Creating issue templates (`.github/ISSUE_TEMPLATE/`)
+- Creating issue templates — not required for triage to run, but recommended. This repository's templates at [`.github/ISSUE_TEMPLATE/`](https://github.com/HeadlessTarry/Token-Effort/tree/main/.github/ISSUE_TEMPLATE) can be used as a starting point.
