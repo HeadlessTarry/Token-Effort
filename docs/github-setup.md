@@ -74,7 +74,7 @@ The project board tracks issue status through the workflow lifecycle. The triage
    - `Building`
    - `Done`
 
-> **Important:** The field must be named exactly `Status` (case-sensitive). The triage skill searches for this field by name.
+> **Important:** The field must be named exactly `Status` (case-sensitive). The `move-issue-status` skill searches for this field by name.
 
 ---
 
