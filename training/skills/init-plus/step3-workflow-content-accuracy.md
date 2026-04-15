@@ -17,3 +17,4 @@ the correct action versions, schedule (0 4 * * 1), allowedTools list, and prompt
 - [ ] Prompt instructs to use token-effort:triaging-gh-issues with --advance-status
 - [ ] allowedTools includes Skill and the set of Bash(gh ...) permissions
 - [ ] claude_args includes --model sonnet
+- [ ] Prompt block includes the GITHUB_STEP_SUMMARY write pattern: SUMMARY_FILE=$(printenv GITHUB_STEP_SUMMARY) && echo ...

@@ -10,4 +10,3 @@ git add, git commit, or git push commands. The user is left to decide what to co
 - [ ] Did NOT run git commit
 - [ ] Did NOT run git push
 - [ ] Completion summary does not mention committing or pushing
-- [ ] Summary implies the user should commit the created files themselves

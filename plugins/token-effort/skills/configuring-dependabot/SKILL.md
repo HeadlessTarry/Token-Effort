@@ -83,6 +83,8 @@ Write the file with one entry per detected ecosystem. Always use `directory: /`.
 
 All other ecosystems detected by this skill (`npm`, `pip`, `bundler`, `gomod`, `cargo`) **do** support cooldown and must include the full `cooldown` block.
 
+The cooldown values below are project-defined defaults, not GitHub defaults. Update both this file and the corresponding training eval (`training/skills/configuring-dependabot/single-ecosystem-npm.md`) if you change them.
+
 Example output for a repo with `npm` (supports cooldown) and `github-actions` (does not):
 
 ```yaml

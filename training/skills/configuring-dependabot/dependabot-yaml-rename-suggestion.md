@@ -11,6 +11,6 @@ proceed (which would write the new file as .github/dependabot.yml).
 ## Pass Criteria
 - [ ] Detected .github/dependabot.yaml (the .yaml variant)
 - [ ] Warned the user that .github/dependabot.yaml exists and the canonical filename is .github/dependabot.yml
-- [ ] Suggested renaming / aligning to the expected .yml filename
+- [ ] Suggested the user delete or rename the `.yaml` file to avoid having two configs
 - [ ] Did NOT silently overwrite or ignore the .yaml file
 - [ ] Asked for user confirmation before proceeding

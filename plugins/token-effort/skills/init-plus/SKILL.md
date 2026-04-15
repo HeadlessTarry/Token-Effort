@@ -164,6 +164,7 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ steps.project-manager-token.outputs.token }}
+          # Always references the Token-Effort plugin source — correct even when deploying to other repos
           plugin_marketplaces: https://github.com/HeadlessTarry/Token-Effort.git
           plugins: token-effort
           prompt: |
@@ -279,7 +280,7 @@ Print a summary of all selected steps:
 - Dependabot: delegated to /configuring-dependabot
 ```
 
-Adjust each line to reflect the actual outcome (e.g. "created", "skipped (overwrite declined)", "skipped (prerequisites not met)", "not installed (recommended)").
+Adjust each line to reflect the actual outcome (e.g. "created", "skipped (overwrite declined)", "skipped (prerequisites not met)", "not installed (recommended)"). Include only the steps the user selected — omit unselected steps from the summary entirely.
 
 No git commit is made. The user decides what to commit.
 
