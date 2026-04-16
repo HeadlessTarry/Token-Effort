@@ -75,21 +75,7 @@ If `CLAUDE.md` exists:
 
 Wait for confirmation. If the user says no, note "CLAUDE.md: skipped (overwrite declined)" in the summary and move on.
 
-Write `CLAUDE.md` with:
-
-```markdown
-# 🏗️ Architecture
-
-<!-- Describe the high-level structure of this project here. -->
-
-## 🔑 Key Commands
-
-<!-- List the most important commands for developing, testing, and running this project. -->
-
-## 📚 Documentation Index
-
-<!-- Link to key docs, ADRs, and external references here. -->
-```
+Invoke `/init` via the Skill tool (`skill: "init"`) to generate `CLAUDE.md`. Do not write `CLAUDE.md` directly or use a hardcoded template — `/init` analyses the project and produces contextual content.
 
 ---
 
@@ -292,6 +278,7 @@ No git commit is made. The user decides what to commit.
 - **Blocking on Step 3 prerequisites** — if the user says prerequisites are not set up, note it in the summary and continue. Do not halt the skill.
 - **Blocking on Step 2 "no"** — if the user says the superpowers plugin is not installed, note it and continue. Do not halt.
 - **Performing Dependabot logic directly in Step 5** — always delegate to `token-effort:configuring-dependabot`. Do not scan ecosystems or write `dependabot.yml` yourself.
+- **Writing `CLAUDE.md` directly in Step 1** — always delegate to `/init` via the Skill tool. Do not write the file directly or use a hardcoded template.
 - **Omitting skipped steps from the summary** — every selected step must appear in the summary, even if skipped or declined.
 
 ## Eval
@@ -303,7 +290,8 @@ No git commit is made. The user decides what to commit.
 - [ ] Executed only the selected steps
 - [ ] Executed steps in order 1→5 regardless of input order
 - [ ] Step 1: Warned and confirmed before overwriting `CLAUDE.md`
-- [ ] Step 1: Wrote `CLAUDE.md` with the correct three-section template
+- [ ] Step 1: Invoked `/init` via Skill tool to generate `CLAUDE.md`
+- [ ] Step 1: Did not write `CLAUDE.md` directly or use a hardcoded template
 - [ ] Step 2: Printed superpowers install recommendation with GitHub URL
 - [ ] Step 2: Asked if installed; did not block on "no" or "skip"
 - [ ] Step 3: Referenced `docs/github-setup.md` for prerequisites
