@@ -77,8 +77,6 @@ The project board tracks issue status through the workflow lifecycle. The triage
 
 > **Important:** The field must be named exactly `Status` (case-sensitive). The `move-issue-status` skill searches for this field by name.
 
-> **Planning column:** Issues move here when `token-effort:planning-gh-issue` is invoked to write and review an implementation plan. The `pending-review` label is applied once the plan is posted, and the issue advances to `Building` after the plan is approved.
-
 ---
 
 ## 🏷️ 4. Issue Labels
