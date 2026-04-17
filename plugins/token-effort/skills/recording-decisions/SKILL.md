@@ -9,7 +9,7 @@ user-invocable: true
 ## Overview
 
 Guides the user through creating an Architecture Decision Record (ADR) and commits
-it to `docs/decisions/`. When called from `/build`, auto-populates fields from the
+it to `docs/decisions/`. When called from `/token-effort:building-gh-issue`, auto-populates fields from the
 spec in context. When called standalone, prompts all fields interactively.
 
 **Usage:** `/token-effort:recording-decisions`
@@ -74,33 +74,33 @@ Extract `YYYY` (year) and `MM` (zero-padded month) for the filename prefix.
 
 ### Phase 2 — Collect and confirm fields
 
-Present each field in order. When running inside `/build`, auto-populate from the
+Present each field in order. When running inside `/token-effort:building-gh-issue`, auto-populate from the
 spec context. When standalone, prompt for all fields.
 
 **1. Issue number and title**
-- `/build` context: read issue number and title from context
+- `/token-effort:building-gh-issue` context: read issue number and title from context
 - Standalone: "What is the GitHub issue number for this decision? (e.g. 42)"
 - Construct the full URL: `https://github.com/<owner>/<repo>/issues/<N>`
 
 **2. Slug**
-- `/build` context: derive slug from the spec headline
+- `/token-effort:building-gh-issue` context: derive slug from the spec headline
 - Standalone with issue number: fetch title via `gh issue view <N> --json title -q .title`, then derive slug from that title
 - Standalone without issue: ask the user for a short description to derive the slug from
 - Show: `Suggested slug: \`<slug>\` — press Enter to accept or type a new one:`
 - Confirmed slug is used as the filename suffix
 
 **3. Context**
-- `/build`: auto-populate from the spec's Context / problem statement section
+- `/token-effort:building-gh-issue`: auto-populate from the spec's Context / problem statement section
 - Show the text and ask: `Context (from spec) — press Enter to accept or paste a replacement:`
 - Standalone: "Describe what problem prompted this decision:"
 
 **4. Decision**
-- `/build`: auto-populate from the spec's recommended approach section
+- `/token-effort:building-gh-issue`: auto-populate from the spec's recommended approach section
 - Same confirmation pattern as Context
 - Standalone: "Describe what was decided and why:"
 
 **5. Consequences**
-- `/build`: auto-populate from the spec's trade-offs / limitations section
+- `/token-effort:building-gh-issue`: auto-populate from the spec's trade-offs / limitations section
 - Same confirmation pattern as Context
 - Standalone: "Describe the trade-offs, known limitations, or anything that should inform future work:"
 
@@ -185,7 +185,7 @@ Report the committed file path to the user.
 
 - [ ] Resolved owner/repo from `git remote get-url origin`
 - [ ] Used current year and zero-padded month for filename prefix
-- [ ] Presented each field for confirmation with auto-population when in `/build` context
+- [ ] Presented each field for confirmation with auto-population when in `/token-effort:building-gh-issue` context
 - [ ] Prompted all fields interactively when called standalone
 - [ ] Scanned `docs/decisions/` for potentially related ADRs and presented shortlist
 - [ ] Verified existence of any user-supplied filenames before accepting them

@@ -10,7 +10,7 @@ user-invocable: true
 
 Fetches a GitHub issue and its approved design spec, moves the issue to **Planning** status, then invokes `superpowers:writing-plans` to run an interactive planning session. After the user approves the plan, posts it as a comment on the issue and applies the `pending-review` label.
 
-**Usage:** `/planning-gh-issue [<issue-number>]`
+**Usage:** `/token-effort:planning-gh-issue [<issue-number>]`
 
 ## ⚙️ When to Use
 
@@ -25,6 +25,9 @@ Fetches a GitHub issue and its approved design spec, moves the issue to **Planni
 ## Prerequisites
 
 The `gh` CLI must be authenticated and available in the session. All GitHub operations use `gh` commands via Bash. No MCP tools are used or required.
+
+The following `superpowers` skill must be installed:
+- `superpowers:writing-plans`
 
 > **Important:** Do **not** use MCP tools (`mcp__plugin_github_github__*`) for any issue operation, even if they appear to be available.
 
