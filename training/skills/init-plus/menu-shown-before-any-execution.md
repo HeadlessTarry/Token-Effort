@@ -7,7 +7,7 @@ executing any step. It does not begin writing files, asking step-specific questi
 or invoking sub-skills until the user has replied with their selection.
 
 ## Pass Criteria
-- [ ] Presented the complete 5-item menu before executing any step
+- [ ] Presented the complete 6-item menu before executing any step
 - [ ] Waited for user input before starting any step
 - [ ] Did NOT write any files before receiving the selection
 - [ ] Did NOT ask any step-specific questions (e.g. superpowers install) before the menu selection
