@@ -36,6 +36,5 @@ The implementation uses a direct markdown template, not sub-skill delegation. Th
 
 **Limitations and trade-offs:**
 - Users must manually run `/init-plus` and select Step 6 to bootstrap `/verify` for each project — it does not happen automatically
-- Training examples for `init-plus` (in `training/skills/init-plus/`) must be updated to reference six steps instead of five, or risk training models on outdated skill specs
 - The generated `/verify` skill is simple and synchronous — future needs for conditional command paths, parameterized checks, or asynchronous execution would require template refinement
 - Step 6 interviews in free-form order but stores commands as a numbered list; if a user later wants to reorder commands, they must edit `.claude/skills/verify/SKILL.md` manually
