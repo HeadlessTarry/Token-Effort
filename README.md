@@ -64,9 +64,7 @@ Common workflows through the plugin ecosystem. Issue status labels (ðŸ“‹ New, ðŸ
 ```mermaid
 graph LR
     A["Plugin Installed"] --> B["/init-plus"]
-    B --> C["CLAUDE.md Created"]
-    C --> D["/configuring-dependabot (via wizard)"]
-    D --> E["Ready for Use"]
+    B --> C["Ready for Use"]
 ```
 
 ### Feature Development & Bug Fix Workflow
