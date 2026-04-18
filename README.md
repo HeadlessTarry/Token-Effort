@@ -11,7 +11,7 @@ claude plugin marketplace add HeadlessTarry/Token-Effort
 claude plugin install token-effort@token-effort
 ```
 
-After install, Claude Code will list `token-effort` in your active plugins. You'll also need a GitHub Project board with status columns: **New**, **Brainstorming**, **Planning**, **Building**, **Done** — configure this in your repository settings before using workflow skills.
+After install, Claude Code will list `token-effort` in your active plugins. You'll also need a GitHub Project board - see [github-setup.md](docs/github-setup.md) for more detail.
 
 Skills become `/token-effort:triaging-gh-issues`, `/token-effort:computing-branch-diff`, etc.
 
