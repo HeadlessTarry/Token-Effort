@@ -1,6 +1,6 @@
 {
   "name": "token-effort",
   "description": "Low-stakes intelligence for high-latency humans — agents, skills, and hooks for Claude Code",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "repository": "https://github.com/HeadlessTarry/Token-Effort"
 }
