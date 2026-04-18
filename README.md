@@ -11,6 +11,8 @@ claude plugin marketplace add HeadlessTarry/Token-Effort
 claude plugin install token-effort@token-effort
 ```
 
+After install, Claude Code will list `token-effort` in your active plugins. You'll also need a GitHub Project board with status columns: **New**, **Brainstorming**, **Planning**, **Building**, **Done** — configure this in your repository settings before using workflow skills.
+
 Skills become `/token-effort:triaging-gh-issues`, `/token-effort:computing-branch-diff`, etc.
 
 ## 📚 Documentation Index
@@ -26,11 +28,11 @@ Skills become `/token-effort:triaging-gh-issues`, `/token-effort:computing-branc
 | [init-plus](plugins/token-effort/skills/init-plus/SKILL.md) | Interactive repository setup with CLAUDE.md and workflows |
 | [move-issue-status](plugins/token-effort/skills/move-issue-status/SKILL.md) | Move issues between project board statuses |
 | [planning-gh-issue](plugins/token-effort/skills/planning-gh-issue/SKILL.md) | Write implementation plans for approved GitHub issues |
-| [propose-feature](plugins/token-effort/skills/propose-feature/SKILL.md) | File new feature requests through guided interview |
+| [proposing-feature](plugins/token-effort/skills/propose-feature/SKILL.md) | File new feature requests through guided interview |
 | [recording-decisions](plugins/token-effort/skills/recording-decisions/SKILL.md) | Record Architecture Decision Records (ADRs) in docs/decisions |
-| [report-bug](plugins/token-effort/skills/report-bug/SKILL.md) | File new bug reports through guided interview |
+| [reporting-bug](plugins/token-effort/skills/report-bug/SKILL.md) | File new bug reports through guided interview |
 | [reviewing-code-systematically](plugins/token-effort/skills/reviewing-code-systematically/SKILL.md) | Perform comprehensive code reviews on branches or main |
-| [triaging-gh-issues](plugins/token-effort/skills/triaging-gh-issues/SKILL.md) | Triage open issues: label and correct issue labels |
+| [triaging-gh-issues](plugins/token-effort/skills/triaging-gh-issues/SKILL.md) | Triage open issues: classify, label, and optionally advance project board status |
 
 ### 🤖 Agents
 
@@ -39,16 +41,23 @@ Skills become `/token-effort:triaging-gh-issues`, `/token-effort:computing-branc
 | [agent-creator-engineer](plugins/token-effort/agents/agent-creator-engineer.md) | Create new or improve existing Claude Code agent definitions |
 | [reviewer-dead-code](plugins/token-effort/agents/reviewer-dead-code.md) | Review files for dead code, unused symbols, and stale flags |
 | [reviewer-docs](plugins/token-effort/agents/reviewer-docs.md) | Review documentation for quality and accuracy |
-| [reviewer-newcomer](plugins/token-effort/agents/reviewer-newcomer.md) | Review source for clarity, comments, and assumptions |
+| [reviewer-newcomer](plugins/token-effort/agents/reviewer-newcomer.md) | Review source for clarity, comments, assumptions, and error message quality |
 | [skill-creator-engineer](plugins/token-effort/agents/skill-creator-engineer.md) | Create new or improve existing skill definitions |
 
 ### 🪝 Hooks
 
-Hooks configure automation triggers in [plugins/token-effort/hooks/hooks.json](plugins/token-effort/hooks/hooks.json).
+Hooks configure automation triggers in [plugins/token-effort/hooks/hooks.json](plugins/token-effort/hooks/hooks.json). The `PreToolUse` hook on Bash calls `compound_bash_allow.py`, which validates and allowlists compound bash commands before execution — this runs automatically after plugin installation.
+
+### Standalone Skills
+
+The following skills are used independently, not as part of the issue lifecycle workflows below:
+
+- **computing-branch-diff** — Used by code review agents to compute and analyze changes between branches
+- **reviewing-code-systematically** — Dispatches parallel reviewer agents to evaluate code quality and documentation
 
 ## 🔄 Workflows
 
-Three common workflows through the plugin ecosystem:
+Common workflows through the plugin ecosystem. Issue status labels (📋 New, 🧠 Brainstorming, 📐 Planning, 🏗️ Building, ✅ Done) correspond to GitHub Project board status columns. Each skill automatically advances the issue status on completion using `/move-issue-status`.
 
 ### Repository Initialization
 
@@ -56,32 +65,16 @@ Three common workflows through the plugin ecosystem:
 graph LR
     A["Plugin Installed"] --> B["/init-plus"]
     B --> C["CLAUDE.md Created"]
-    C --> D{"/configuring-dependabot"}
+    C --> D["/configuring-dependabot (via wizard)"]
     D --> E["Ready for Use"]
 ```
 
-### Feature Development
+### Feature Development & Bug Fix Workflow
 
 ```mermaid
 graph LR
-    A["Feature Idea"] --> B["/propose-feature"]
-    B --> C["📋 New"]
-    C --> D["/triaging-gh-issues"]
-    D --> E["🧠 Brainstorming"]
-    E --> F["/brainstorming-gh-issue"]
-    F --> G["📐 Planning"]
-    G --> H["/planning-gh-issue"]
-    H --> I["🏗️ Building"]
-    I --> J["/building-gh-issue + agents"]
-    J --> K["✅ Done"]
-```
-
-### Bug Fix
-
-```mermaid
-graph LR
-    A["Bug Found"] --> B["/report-bug"]
-    B --> C["📋 New"]
+    A1["/propose-feature"] --> C["📋 New"]
+    A2["/report-bug"] --> C
     C --> D["/triaging-gh-issues"]
     D --> E["🧠 Brainstorming"]
     E --> F["/brainstorming-gh-issue"]
@@ -100,7 +93,7 @@ plugins/token-effort/
 ├── skills/      →  skill definitions
 └── hooks/       →  hooks + hook declarations
 
-.claude/skills/run-training/   →  local skill (training evals live in this repo)
+.claude/skills/run-training/   →  local skill for training evals (not distributed)
 
 training/
 └── <type>/<name>/   →  eval cases for the /run-training skill
@@ -108,6 +101,8 @@ training/
 docs/
 └── *.md             →  guides and reference docs
 ```
+
+**Local vs. Plugin Skills:** Skills in `.claude/skills/` are local to this repository only and are not distributed with the plugin. Plugin skills live in `plugins/token-effort/skills/` and are packaged for distribution.
 
 ## 🧪 Training
 
