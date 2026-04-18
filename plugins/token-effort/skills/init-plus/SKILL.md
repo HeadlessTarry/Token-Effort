@@ -1,6 +1,6 @@
 ---
 name: init-plus
-description: Interactive repo setup wizard. Offers to create CLAUDE.md, recommend the superpowers plugin, create an auto-triage GitHub Actions workflow, create GitHub issue templates, and configure Dependabot. Use when setting up a new or existing repository.
+description: Interactive repo setup wizard. Offers to create CLAUDE.md, recommend the superpowers plugin, create an auto-triage GitHub Actions workflow, create GitHub issue templates, configure Dependabot, and bootstrap a /verify skill. Use when setting up a new or existing repository.
 user-invocable: true
 
 # Init Plus
@@ -85,7 +85,7 @@ Print:
 Ask:
 > "Is everything in `docs/github-setup.md` configured? [yes/no/skip]"
 
-If the user says no or skips, note "Triage workflow: skipped (prerequisites not met)" in the summary and continue to Step 4.
+If the user says no or skips, print: "> Complete the setup in `docs/github-setup.md`, then re-run `/token-effort:init-plus` and select Step 3 to continue." Note "Triage workflow: skipped (prerequisites not met)" in the summary and continue to Step 4.
 If `.github/workflows/triaging-gh-issues.yml` exists:
 > "`.github/workflows/triaging-gh-issues.yml` already exists. Overwrite? [yes/no]"
 
@@ -225,8 +225,8 @@ Note "`/verify`: skipped (no commands provided)" in the summary and continue.
 Otherwise, confirm the list back to the user:
 
 > "I'll configure `/verify` with these commands in order:
-> 1. `<cmd>`
-> 2. `<cmd>`
+> 1. `<command 1>`
+> 2. `<command 2>`
 > ...
 > Is that correct? [yes/no]"
 
@@ -247,9 +247,10 @@ Run all project checks to confirm changes are working correctly.
 ## Commands
 
 Run each of the following commands. Report the result of each (pass/fail and any output).
-If any command fails, stop immediately and report the failure clearly before continuing.
+If any command fails, stop and report the failure. Do not run any remaining commands.
 1. `<command 1>`
 2. `<command 2>`
+(Add one line per additional command)
 ~~~
 
 Note "`/verify`: created" in the summary.
