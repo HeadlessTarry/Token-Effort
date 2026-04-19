@@ -146,7 +146,9 @@ Report key:
 - **Writing duplicate ecosystem entries** — if both `requirements.txt` and `pyproject.toml` exist, write only one `pip` entry. If both `Gemfile` and `*.gemspec` exist, write only one `bundler` entry.
 - **Ignoring `.github/dependabot.yaml`** — always check for the `.yaml` variant (wrong extension) in addition to `.yml`. Warn the user if it exists.
 - **Writing the file when no ecosystems are detected** — if the scan finds no indicators, output the "no ecosystems" message and stop without writing.
-- **Skipping the overwrite confirmation** — always warn and ask if `.github/dependabot.yml` (or `.yaml`) exists.
+- **Prompting for whole-file overwrite when `.github/dependabot.yml` exists** — use the append-only merge path instead. The whole-file overwrite prompt has been removed; only per-ecosystem conflict prompts are used.
+- **Skipping the conflict prompt when an ecosystem is present with different settings** — always ask the user per-conflicting-ecosystem. Never silently overwrite or silently skip a conflicting entry.
+- **Failing to detect `.pre-commit-config.yaml`** — this file maps to the `pre-commit` ecosystem. It must be checked in Phase 1 alongside all other indicator files.
 - **Using a non-root directory** — always use `directory: /` unless the user specifies otherwise.
 
 ## Eval
@@ -156,7 +158,12 @@ Report key:
 - [ ] Reported "no ecosystems detected" and stopped (no file written) when none found
 - [ ] Checked for both `.github/dependabot.yml` and `.github/dependabot.yaml`
 - [ ] Warned about `.github/dependabot.yaml` (wrong extension) and asked before proceeding
-- [ ] Warned about existing `.github/dependabot.yml` and asked before overwriting
+- [ ] When `.github/dependabot.yml` exists: read file and classified each detected ecosystem as New / Identical / Conflicting before writing
+- [ ] Detected `pre-commit` ecosystem when `.pre-commit-config.yaml` is present; no cooldown block written for `pre-commit`
+- [ ] Appended only New ecosystems; left Identical entries untouched without any overwrite prompt
+- [ ] Asked user per-conflicting-ecosystem (not a whole-file overwrite prompt)
+- [ ] Completion report distinguishes added / updated / retained; omits zero-item categories
+- [ ] Reported "already up to date" when all detected ecosystems were Identical
 - [ ] Wrote one entry per detected ecosystem with `schedule.interval: weekly`
 - [ ] Included cooldown block only for ecosystems that support it (not github-actions)
 - [ ] Used `directory: /` for all ecosystems
