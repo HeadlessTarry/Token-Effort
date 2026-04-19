@@ -41,6 +41,7 @@ Use the Glob tool to check for each of the following patterns from the repo root
 | `go.mod` | `gomod` |
 | `Cargo.toml` | `cargo` |
 | `.github/workflows/*.yml` | `github-actions` (include whenever any workflow file exists) |
+| `.pre-commit-config.yaml` | `pre-commit` |
 
 Collect all **unique** matching ecosystems into an ordered list (preserve detection order above).
 
