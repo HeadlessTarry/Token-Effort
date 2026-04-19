@@ -1,13 +1,14 @@
 ## Scenario
-A repository has .github/workflows/ci.yml and .github/dependabot.yml already present.
+A repository has .github/workflows/ci.yml. An existing .github/dependabot.yml is present
+containing only a github-actions entry with the standard weekly schedule (no cooldown).
 
 ## Expected Behavior
-The skill detects github-actions, then checks for an existing dependabot.yml, warns the
-user it already exists, and asks for confirmation before overwriting. If the user says no,
-the skill stops without writing.
+The skill detects github-actions. Phase 2 reads the existing file, classifies github-actions
+as Identical, and stops cleanly without writing — no whole-file overwrite prompt is shown.
 
 ## Pass Criteria
-- [ ] Warned user that .github/dependabot.yml already exists
-- [ ] Asked "Overwrite? [yes/no]" before writing
-- [ ] Did NOT overwrite the file when user said no
-- [ ] Stopped cleanly without error when user declined
+- [ ] Detected github-actions ecosystem from .github/workflows/ci.yml
+- [ ] Read the existing .github/dependabot.yml and extracted package-ecosystem values
+- [ ] Classified github-actions as Identical (no whole-file overwrite prompt shown)
+- [ ] Did NOT write or modify the file
+- [ ] Reported that the file is already up to date

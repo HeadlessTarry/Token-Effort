@@ -28,9 +28,9 @@ Skills become `/token-effort:triaging-gh-issues`, `/token-effort:computing-branc
 | [init-plus](plugins/token-effort/skills/init-plus/SKILL.md) | Interactive repository setup with CLAUDE.md and workflows |
 | [move-issue-status](plugins/token-effort/skills/move-issue-status/SKILL.md) | Move issues between project board statuses |
 | [planning-gh-issue](plugins/token-effort/skills/planning-gh-issue/SKILL.md) | Write implementation plans for approved GitHub issues |
-| [proposing-feature](plugins/token-effort/skills/propose-feature/SKILL.md) | File new feature requests through guided interview |
+| [propose-feature](plugins/token-effort/skills/propose-feature/SKILL.md) | File new feature requests through guided interview |
 | [recording-decisions](plugins/token-effort/skills/recording-decisions/SKILL.md) | Record Architecture Decision Records (ADRs) in docs/decisions |
-| [reporting-bug](plugins/token-effort/skills/report-bug/SKILL.md) | File new bug reports through guided interview |
+| [report-bug](plugins/token-effort/skills/report-bug/SKILL.md) | File new bug reports through guided interview |
 | [reviewing-code-systematically](plugins/token-effort/skills/reviewing-code-systematically/SKILL.md) | Perform comprehensive code reviews on branches or main |
 | [triaging-gh-issues](plugins/token-effort/skills/triaging-gh-issues/SKILL.md) | Triage open issues: classify, label, and optionally advance project board status |
 

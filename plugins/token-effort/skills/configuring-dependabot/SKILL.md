@@ -41,6 +41,7 @@ Use the Glob tool to check for each of the following patterns from the repo root
 | `go.mod` | `gomod` |
 | `Cargo.toml` | `cargo` |
 | `.github/workflows/*.yml` | `github-actions` (include whenever any workflow file exists) |
+| `.pre-commit-config.yaml` | `pre-commit` |
 
 Collect all **unique** matching ecosystems into an ordered list (preserve detection order above).
 
@@ -60,15 +61,33 @@ Check for **both** `.github/dependabot.yml` and `.github/dependabot.yaml`.
 
   Ask: "Proceed? [yes/no]" — if the user says no, stop without writing.
 
-- If `.github/dependabot.yml` exists: warn the user:
+- If `.github/dependabot.yml` exists, apply an **append-only merge**:
 
-  > "`.github/dependabot.yml` already exists. Overwrite? [yes/no]"
+  1. **Read** the file and extract all `package-ecosystem:` values from the `updates:` list using text matching.
+  2. **Classify** each detected ecosystem into one of three buckets:
+     - **New** — not present in the existing file → will be appended in Phase 3
+     - **Identical** — present and matches the standard config (weekly schedule + correct cooldown presence/absence for this ecosystem) → skip silently
+     - **Conflicting** — present but differs from standard config (e.g. different schedule interval, unexpected cooldown block) → needs user decision
+  3. **Resolve conflicts** — for each conflicting ecosystem, ask:
 
-  Wait for user confirmation. If the user says no or skips, stop without writing.
+     > "`<ecosystem>` is already configured but differs from the standard settings. Overwrite with standard config, or retain your existing entry?"
+
+     Ask one ecosystem at a time. Collect all decisions before writing anything.
+
+  If all detected ecosystems are Identical (nothing new, nothing conflicting), report:
+
+  > "`.github/dependabot.yml` is already up to date. No changes made."
+
+  Then stop without writing.
 
 ### Phase 3 — Write `.github/dependabot.yml`
 
-Write the file with one entry per detected ecosystem. Always use `directory: /`.
+**When no existing file is present:** write the full file from scratch with one entry per detected ecosystem. Always use `directory: /`.
+
+**When an existing file is present (from the Phase 2 merge):**
+- **New** ecosystems: append their YAML block to the end of the `updates:` list
+- **Overwrite** decisions: replace the conflicting entry's block in-place (from its `  - package-ecosystem:` line to the line before the next `  - package-ecosystem:` entry, or the end of the `updates:` list)
+- **Identical** and **Retain** entries: leave the file untouched
 
 **Cooldown support:** Only include the `cooldown` block for ecosystems that support it. The following ecosystems do **NOT** support cooldown and must not have a `cooldown` block:
 
@@ -108,7 +127,18 @@ updates:
 
 After writing, report:
 
+**Fresh file (no prior file existed):**
 > "Written `.github/dependabot.yml` with entries for: [comma-separated list of ecosystems]."
+
+**Existing file updated:**
+> "Updated `.github/dependabot.yml`: added [ecosystems], updated [ecosystems], retained [ecosystems]."
+
+Report key:
+- **added** = new ecosystems appended
+- **updated** = conflicting ecosystems the user chose to overwrite
+- **retained** = conflicting ecosystems the user chose to keep as-is
+- Identical entries are silently skipped and do not appear in the report
+- Omit any category with zero items
 
 ## Common Mistakes
 
@@ -116,17 +146,24 @@ After writing, report:
 - **Writing duplicate ecosystem entries** — if both `requirements.txt` and `pyproject.toml` exist, write only one `pip` entry. If both `Gemfile` and `*.gemspec` exist, write only one `bundler` entry.
 - **Ignoring `.github/dependabot.yaml`** — always check for the `.yaml` variant (wrong extension) in addition to `.yml`. Warn the user if it exists.
 - **Writing the file when no ecosystems are detected** — if the scan finds no indicators, output the "no ecosystems" message and stop without writing.
-- **Skipping the overwrite confirmation** — always warn and ask if `.github/dependabot.yml` (or `.yaml`) exists.
+- **Prompting for whole-file overwrite when `.github/dependabot.yml` exists** — use the append-only merge path instead. The whole-file overwrite prompt has been removed; only per-ecosystem conflict prompts are used.
+- **Skipping the conflict prompt when an ecosystem is present with different settings** — always ask the user per-conflicting-ecosystem. Never silently overwrite or silently skip a conflicting entry.
+- **Failing to detect `.pre-commit-config.yaml`** — this file maps to the `pre-commit` ecosystem. It must be checked in Phase 1 alongside all other indicator files.
 - **Using a non-root directory** — always use `directory: /` unless the user specifies otherwise.
 
 ## Eval
 
-- [ ] Scanned all six ecosystem indicator patterns using Glob
+- [ ] Scanned all seven ecosystem indicator patterns using Glob
 - [ ] Deduplicated ecosystems (no duplicate entries for pip, bundler, etc.)
 - [ ] Reported "no ecosystems detected" and stopped (no file written) when none found
 - [ ] Checked for both `.github/dependabot.yml` and `.github/dependabot.yaml`
 - [ ] Warned about `.github/dependabot.yaml` (wrong extension) and asked before proceeding
-- [ ] Warned about existing `.github/dependabot.yml` and asked before overwriting
+- [ ] When `.github/dependabot.yml` exists: read file and classified each detected ecosystem as New / Identical / Conflicting before writing
+- [ ] Detected `pre-commit` ecosystem when `.pre-commit-config.yaml` is present; no cooldown block written for `pre-commit`
+- [ ] Appended only New ecosystems; left Identical entries untouched without any overwrite prompt
+- [ ] Asked user per-conflicting-ecosystem (not a whole-file overwrite prompt)
+- [ ] Completion report distinguishes added / updated / retained; omits zero-item categories
+- [ ] Reported "already up to date" when all detected ecosystems were Identical
 - [ ] Wrote one entry per detected ecosystem with `schedule.interval: weekly`
 - [ ] Included cooldown block only for ecosystems that support it (not github-actions)
 - [ ] Used `directory: /` for all ecosystems
