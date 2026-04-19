@@ -100,7 +100,9 @@ Create directory `.github/workflows/` if it does not exist.
 Write `.github/workflows/triaging-gh-issues.yml`:
 
 ```yaml
+---
 name: Triage GitHub Issues
+# yamllint disable-line rule:truthy
 on:
   schedule:
     - cron: '0 4 * * 1'
@@ -163,15 +165,21 @@ labels: enhancement
 assignees: ''
 
 ---
-**Is your feature request related to a problem? Please describe.**
+
+## Is your feature request related to a problem? Please describe.
+
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 
-**Describe the solution you'd like**
+## Describe the solution you'd like
+
 A clear and concise description of what you want to happen.
-**Describe alternatives you've considered**
+
+## Describe alternatives you've considered
+
 A clear and concise description of any alternative solutions or features you've considered.
 
-**Additional context**
+## Additional context
+
 Add any other context or screenshots about the feature request here.
 ```
 Write `.github/ISSUE_TEMPLATE/02-bug_report.md`:
@@ -183,11 +191,15 @@ about: Create a report to help us improve
 title: ''
 labels: bug
 assignees: ''
+
 ---
 
-**Describe the bug**
+## Describe the bug
+
 A clear and concise description of what the bug is.
-**To Reproduce**
+
+## To Reproduce
+
 Steps to reproduce the behavior:
 
 1. Go to '...'
@@ -195,17 +207,22 @@ Steps to reproduce the behavior:
 3. Scroll down to '....'
 4. See error
 
-**Expected behavior**
+## Expected behavior
+
 A clear and concise description of what you expected to happen.
-**Screenshots**
+
+## Screenshots
+
 If applicable, add screenshots to help explain your problem.
 
-**Additional context**
+## Additional context
+
 Add any other context about the problem here.
 ```
 Write `.github/ISSUE_TEMPLATE/config.yml`:
 
 ```yaml
+---
 blank_issues_enabled: false
 ```
 ---
@@ -249,11 +266,14 @@ user-invocable: true
 ---
 
 # Verify
+
 Run all project checks to confirm changes are working correctly.
+
 ## Commands
 
 Run each of the following commands. Report the result of each (pass/fail and any output).
 If any command fails, stop and report the failure. Do not run any remaining commands.
+
 1. `<command 1>`
 2. `<command 2>`
 (Add one line per additional command)
