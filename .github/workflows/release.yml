@@ -48,17 +48,25 @@ jobs:
             exit 1
           fi
 
-      - name: 📝 Patch plugin.json version
+      - name: 📝 Patch plugin.json version and SKILL.md URLs
         run: |
           jq --arg version "$VERSION" '.version = $version' \
             plugins/token-effort/.claude-plugin/plugin.json > plugin.json.tmp
           mv plugin.json.tmp plugins/token-effort/.claude-plugin/plugin.json
+          sed -i "s|/blob/v[0-9]*\.[0-9]*\.[0-9]*/docs/github-setup|/blob/v$VERSION/docs/github-setup|g" \
+            plugins/token-effort/skills/init-plus/SKILL.md
+          EXPECTED=5
+          ACTUAL=$(grep -c "HeadlessTarry/Token-Effort/blob/v$VERSION/docs/github-setup" plugins/token-effort/skills/init-plus/SKILL.md || true)
+          if [ "$ACTUAL" -ne "$EXPECTED" ]; then
+            echo "Expected $EXPECTED versioned URLs in SKILL.md after sed, found $ACTUAL. Check for unmatched URL formats."
+            exit 1
+          fi
 
       - name: 📝 Commit and push version bump
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add plugins/token-effort/.claude-plugin/plugin.json
+          git add plugins/token-effort/.claude-plugin/plugin.json plugins/token-effort/skills/init-plus/SKILL.md
           git diff --cached --quiet || git commit -m "chore: release v$VERSION"
           git push origin HEAD
 
