@@ -13,10 +13,9 @@ The user runs `/token-effort:move-issue-status 42 "Building"`. Issue #42 is on e
 
 ## Pass Criteria
 
-- [ ] `gh project list` is called to enumerate projects.
-- [ ] `gh project item-list` is called to find issue #42 in the project.
-- [ ] `gh project field-list` is called to retrieve Status field options.
-- [ ] "Building" is matched case-insensitively against the available status options.
-- [ ] `gh project item-edit` is called with the correct option ID for "Building".
-- [ ] The success message includes the issue number (42), the status name ("Building"), and the project name.
-- [ ] The current column position ("Triaged", index 1) did NOT prevent the update.
+- [ ] Called `printenv CLAUDE_PLUGIN_ROOT` to locate the script
+- [ ] Ran `python "<path>/move_issue_status.py" 42 "Building"` (or equivalent with the resolved path)
+- [ ] Parsed stdout as JSON
+- [ ] Printed a success message containing `#42`, `Building`, and the project name
+- [ ] Did NOT call any `gh` commands directly in the session
+- [ ] Did NOT produce an error or skip message

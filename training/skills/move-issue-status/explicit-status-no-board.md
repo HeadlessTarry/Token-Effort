@@ -11,9 +11,9 @@ The user runs `/token-effort:move-issue-status 99 "In Progress"` (explicit mode)
 
 ## Pass Criteria
 
-- [ ] `gh project list` is called to enumerate projects.
-- [ ] `gh project item-list` is called to search for issue #99 across projects.
-- [ ] Zero matching projects are found.
-- [ ] `gh project item-edit` is NOT called.
-- [ ] A clear error message is reported that names the issue number (99).
-- [ ] Execution stops after the error with no further steps attempted.
+- [ ] Called `printenv CLAUDE_PLUGIN_ROOT` to locate the script
+- [ ] Ran `python "<path>/move_issue_status.py" 99 "In Progress"`
+- [ ] Parsed stdout as JSON
+- [ ] Reported an error message naming issue #99 (from the `message` field)
+- [ ] Did NOT call any `gh` commands directly in the session
+- [ ] Did NOT call `gh project item-edit`

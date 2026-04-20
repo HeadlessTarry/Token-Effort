@@ -11,9 +11,9 @@ The user runs `/token-effort:move-issue-status 17` (advance mode — no status a
 
 ## Pass Criteria
 
-- [ ] `gh project list` is called to enumerate projects.
-- [ ] `gh project item-list` is called to locate issue #17 in the project.
-- [ ] The current status index is determined to be greater than 0.
-- [ ] `gh project item-edit` is NOT called.
-- [ ] No error message is shown.
-- [ ] No output of any kind is produced.
+- [ ] Called `printenv CLAUDE_PLUGIN_ROOT` to locate the script
+- [ ] Ran `python "<path>/move_issue_status.py" 17` (no status argument — advance mode)
+- [ ] Parsed stdout as JSON
+- [ ] Produced **no output** (script returns `{"status": "skipped"}`)
+- [ ] Did NOT call any `gh` commands directly in the session
+- [ ] Did NOT print an error message
