@@ -75,8 +75,8 @@ Assess the plan extracted in Phase 1. Choose the execution skill:
 
 | Skill | When to use |
 |-------|-------------|
-| `superpowers:executing-plans` | **Default.** Use for most plans. |
-| `superpowers:subagent-driven-development` | Use **only** when ALL THREE of the following apply: (1) the plan has many independent tasks with no sequential dependencies between them, (2) changes span 5 or more separate subsystems/modules, and (3) the plan is explicitly scoped as large or complex. |
+| `superpowers:subagent-driven-development` | **Default.** Use for most plans. |
+| `superpowers:executing-plans` | Use **only** when the implementation plan (1) has a single step and (2) touches only 1-2 files. |
 
 Invoke the chosen skill with the plan content injected as context, and the following **mandatory suppression instruction** included verbatim in the prompt:
 
@@ -148,7 +148,7 @@ This step creates the pull request. It runs exactly once, here, at the end of th
 - **Proceeding without a plan comment** — if `<!-- token-effort:planning-gh-issue -->` is not found in the issue, abort immediately with the message to run `/token-effort:planning-gh-issue #N` first. Do not proceed to execution without an approved plan.
 - **Omitting the suppression instruction from the Phase 3 prompt** — the verbatim instruction `"Do not invoke finishing-a-development-branch — this will be handled by the calling skill after all review steps complete."` must be included in the execution skill invocation. Paraphrasing it or omitting it is incorrect.
 - **Calling `finishing-a-development-branch` inside the Phase 3 execution skill** — the PR creation step belongs at Phase 9 and only there. The suppression instruction in Phase 3 enforces this; do not override it.
-- **Choosing `subagent-driven-development` for moderate-scope plans** — the default is `executing-plans`. Only switch to `subagent-driven-development` when all three conditions (independent tasks, 5+ subsystems, explicitly large/complex scope) are met simultaneously.
+- **Choosing `executing-plans` for non-trivial scope plans** — the default is `subagent-driven-development`. Only switch to `executing-plans` when all conditions (single-step plan, no more than 2 files touched) are met simultaneously.
 - **Silently skipping Phase 4** — Phase 4 is optional but must log a named warning when skipped. Do not silently continue without the warning.
 - **Continuing past Phase 8 when `recording-decisions` is unavailable** — Phase 8 is a hard block. If the skill is not installed, stop with the error message. Do not warn and continue.
 - **Passing the full raw comment body to the execution skill** — strip both the `<!-- brainstorming-gh-issue:spec -->` and `<!-- token-effort:planning-gh-issue -->` marker lines before using their content. Do not include markers in the context.
@@ -167,7 +167,7 @@ This step creates the pull request. It runs exactly once, here, at the end of th
 - [ ] Called `token-effort:move-issue-status <N> "Building"` in Phase 2
 - [ ] Phase 2 failure logged as a warning and did not block the build
 - [ ] Assessed plan complexity before choosing execution skill
-- [ ] Used `executing-plans` by default; `subagent-driven-development` only when all three conditions apply
+- [ ] Used `subagent-driven-development` by default; `executing-plans` only when all conditions apply
 - [ ] Plan content (marker stripped) passed to execution skill as context
 - [ ] Suppression instruction present verbatim in the execution skill invocation prompt
 - [ ] Attempted `/verify` and skipped with named warning if absent
