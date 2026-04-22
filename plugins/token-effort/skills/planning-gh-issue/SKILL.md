@@ -124,7 +124,7 @@ If re-entry mode and a prior plan was found, append:
 - Treat the design spec as the approved input brief. Do not revisit or re-question decisions already captured in the spec.
 - Run the full interactive planning loop through user approval.
 - Do not make any git commits — the plan content will be posted to GitHub as a comment after approval.
-- After the user approves the plan, do **not** call `superpowers:executing-plans` or any execution skill. Proceed to Phase 4 of this skill instead.
+- After the user approves the plan, do **not** call `superpowers:subagent-driven-development`, `superpowers:executing-plans` or any other build/execution skill. Proceed to Phase 4 of this skill instead.
 
 Wait for the user to approve the plan. Do not proceed to Phase 4 until approval is given.
 
@@ -194,7 +194,7 @@ After Phase 4 completes, report:
 - **Posting the plan before the user approves it** — Phase 4 must not run until the user has explicitly approved the plan within the `superpowers:writing-plans` session. Do not call `gh issue comment` or `gh issue edit` during Phase 3.
 - **Not reading the plan file before posting** — always locate and read the file that writing-plans wrote with `ls -t ~/.claude/plans/*.md | head -1`. Do not reconstruct the plan content from memory.
 - **Forgetting the HTML comment marker** — the plan comment must begin with `<!-- token-effort:planning-gh-issue -->` on its own line so future re-entry runs can locate it reliably.
-- **Invoking execution skills after plan approval** — the Phase 3 handoff instructs writing-plans to stop after the user approves the plan. Do not invoke `superpowers:executing-plans` or any build skill; proceed to Phase 4 instead.
+- **Invoking execution skills after plan approval** — the Phase 3 handoff instructs writing-plans to stop after the user approves the plan. Do not invoke `superpowers:subagent-driven-development`, `superpowers:executing-plans` or any build skill; proceed to Phase 4 instead.
 - **Creating `pending-review` without checking first** — always run `gh label list` before `gh label create` to avoid an error if the label already exists.
 - **Re-asking questions answered in the spec** — the design spec is the approved input brief. Instruct writing-plans not to revisit decisions already captured there.
 - **Using shell expansion syntax** — never use `${VARIABLE}`, `${VARIABLE:-}`, or any `${...}` form. Claude Code's sandbox blocks these. Use `printenv VARIABLE` to read environment variables.
