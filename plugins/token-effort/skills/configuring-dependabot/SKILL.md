@@ -6,6 +6,10 @@ user-invocable: true
 
 # Configuring Dependabot
 
+## Dispatcher
+
+Delegate this skill's entire workflow to a Haiku subagent. Use the `Agent` tool with `model: haiku`. Embed all instructions below (Overview through Eval) verbatim as the subagent prompt, and include this instruction in the prompt: **"Use `AskUserQuestion` for any mid-task user interaction — per-ecosystem conflict resolution prompts and the `.yaml` extension overwrite confirmation."** Report the subagent's result to the user without modification.
+
 ## Overview
 
 Scans the repository for package ecosystem indicators and writes `.github/dependabot.yml` with one entry per detected ecosystem. All entries use a weekly schedule; cooldown settings are included only for ecosystems that support them.
