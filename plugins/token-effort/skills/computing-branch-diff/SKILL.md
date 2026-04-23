@@ -5,6 +5,10 @@ description: Use when a subagent needs to know what changed on the current branc
 
 # Computing a Branch Diff
 
+## Dispatcher
+
+Delegate this skill's entire workflow to a Haiku subagent. Use the `Agent` tool with `model: haiku`. Embed the resolved script path (already substituted in this file by Claude Code) and all instructions below (Overview through Eval) verbatim as the subagent prompt. Report the subagent's result to the user without modification.
+
 ## Overview
 
 Produces the merge-base, full diff, changed file list, and commit list for the current branch relative to its base. Delegates all logic to a script — one Bash call, no approval chain. Handles base-branch detection, upstream fallback, `LARGE_DIFF_FILE` offloading, and `STATUS=empty` for branches with no unique commits.
