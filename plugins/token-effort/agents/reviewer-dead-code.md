@@ -2,7 +2,7 @@
 name: reviewer-dead-code
 description: Use when reviewing files for dead code — unreachable branches, unused symbols, orphaned files, stale flags, and commented-out blocks.
 tools: Read, Grep, Glob, Bash
-model: sonnet
+model: haiku
 ---
 
 # Reviewer Dead Code
