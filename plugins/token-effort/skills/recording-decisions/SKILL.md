@@ -85,30 +85,34 @@ spec context. When standalone, prompt for all fields.
 
 **1. Issue number and title**
 - `/token-effort:building-gh-issue` context: read issue number and title from context
-- Standalone: "What is the GitHub issue number for this decision? (e.g. 42)"
+- Standalone: call `AskUserQuestion` with the prompt `What is the GitHub issue number for this decision? (e.g. 42)`
 - Construct the full URL: `https://github.com/<owner>/<repo>/issues/<N>`
 
 **2. Slug**
 - `/token-effort:building-gh-issue` context: derive slug from the spec headline
 - Standalone with issue number: fetch title via `gh issue view <N> --json title -q .title`, then derive slug from that title
-- Standalone without issue: ask the user for a short description to derive the slug from
-- Show: `Suggested slug: \`<slug>\` — press Enter to accept or type a new one:`
-- Confirmed slug is used as the filename suffix
+- Standalone without issue: call `AskUserQuestion` with the prompt `Provide a short description to derive the slug from:`
+- Call `AskUserQuestion` with the prompt `Slug — accept or provide a replacement:` and the pre-populated value
+  (e.g. `recording-decisions-confirmation-gate`) shown in the message body. Wait for the user's response.
+- Confirmed slug is used as the filename suffix.
 
 **3. Context**
 - `/token-effort:building-gh-issue`: auto-populate from the spec's Context / problem statement section
-- Show the text and ask: `Context (from spec) — press Enter to accept or paste a replacement:`
-- Standalone: "Describe what problem prompted this decision:"
+- Call `AskUserQuestion` with the prompt `Context — accept or provide a replacement:` and the pre-populated text shown
+  in the message body. Wait for the user's response before continuing.
+- Standalone: call `AskUserQuestion` with the prompt `Describe what problem prompted this decision:`
 
 **4. Decision**
 - `/token-effort:building-gh-issue`: auto-populate from the spec's recommended approach section
-- Same confirmation pattern as Context
-- Standalone: "Describe what was decided and why:"
+- Call `AskUserQuestion` with the prompt `Decision — accept or provide a replacement:` and the pre-populated text shown
+  in the message body. Wait for the user's response before continuing.
+- Standalone: call `AskUserQuestion` with the prompt `Describe what was decided and why:`
 
 **5. Consequences**
 - `/token-effort:building-gh-issue`: auto-populate from the spec's trade-offs / limitations section
-- Same confirmation pattern as Context
-- Standalone: "Describe the trade-offs, known limitations, or anything that should inform future work:"
+- Call `AskUserQuestion` with the prompt `Consequences — accept or provide a replacement:` and the pre-populated text
+  shown in the message body. Wait for the user's response before continuing.
+- Standalone: call `AskUserQuestion` with the prompt `Describe the trade-offs, known limitations, or anything that should inform future work:`
 
 #### Phase 3 — Supersession check
 
