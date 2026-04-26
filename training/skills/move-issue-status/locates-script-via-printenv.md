@@ -4,10 +4,12 @@ The user runs `/token-effort:move-issue-status 42`. The skill must locate the Py
 
 ## Expected Behavior
 
-The skill runs `printenv CLAUDE_PLUGIN_ROOT` to discover the plugin root, then constructs the script path as `<output>/skills/move-issue-status/move_issue_status.py`. It does not hard-code any path, use `${CLAUDE_PLUGIN_ROOT}`, or assume the script location from memory.
+The skill reads the `Base directory for this skill:` header injected at the top of the skill invocation to discover the script directory, then constructs the script path as `<base-directory>/move_issue_status.py`. It does not use `printenv CLAUDE_PLUGIN_ROOT`, hard-code any path, use `${CLAUDE_PLUGIN_ROOT}`, or assume the script location from memory.
 
 ## Pass Criteria
 
-- [ ] Ran `printenv CLAUDE_PLUGIN_ROOT` as a Bash command
-- [ ] Constructed the script path using the output of `printenv`, not a hard-coded or assumed path
+- [ ] Derived the script path from the `Base directory for this skill:` header in the skill invocation metadata
+- [ ] Constructed the script path as `<base-directory>/move_issue_status.py`
+- [ ] Did NOT use `printenv CLAUDE_PLUGIN_ROOT`
 - [ ] Did NOT use `${CLAUDE_PLUGIN_ROOT}` or any `${...}` shell expansion
+- [ ] Did NOT hard-code or assume the script path from memory

@@ -18,7 +18,7 @@ def resolve_repo() -> tuple[str, str]:
 
     result = subprocess.run(
         ["git", "remote", "get-url", "origin"],
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8",
     )
     url = result.stdout.strip()
     if url.startswith("https://"):
@@ -36,7 +36,7 @@ def resolve_repo() -> tuple[str, str]:
 def find_project_item(owner: str, issue_number: int) -> list[dict]:
     result = subprocess.run(
         ["gh", "project", "list", "--owner", owner, "--format", "json", "--limit", "100"],  # practical cap; raise if >100 projects
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8",
     )
     data = json.loads(result.stdout)
 
@@ -46,7 +46,7 @@ def find_project_item(owner: str, issue_number: int) -> list[dict]:
         items_result = subprocess.run(
             ["gh", "project", "item-list", str(pnum),
              "--owner", owner, "--format", "json", "--limit", "1000"],  # boards with >1000 items may miss matches
-            capture_output=True, text=True,
+            capture_output=True, text=True, encoding="utf-8",
         )
         items_data = json.loads(items_result.stdout)
         for item in items_data.get("items", []):
@@ -65,7 +65,7 @@ def get_status_field(owner: str, project_number: int) -> dict | None:
     result = subprocess.run(
         ["gh", "project", "field-list", str(project_number),
          "--owner", owner, "--format", "json"],
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8",
     )
     data = json.loads(result.stdout)
     for field in data.get("fields", []):
@@ -122,7 +122,7 @@ def run(issue_number: int, target_status: str | None) -> dict:
          "--id", match["item_id"],
          "--field-id", field["field_id"],
          "--single-select-option-id", target_option["id"]],
-        capture_output=True, text=True,
+        capture_output=True, text=True, encoding="utf-8",
     )
     return {"status": "moved", "issue": issue_number, "to": target_option["name"], "project": match["project_name"]}
 

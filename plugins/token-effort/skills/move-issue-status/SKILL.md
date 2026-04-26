@@ -36,13 +36,9 @@ Python 3 and `gh` CLI must be available. `CLAUDE_PLUGIN_ROOT` must be set (injec
 
 ### Phase 1 — Locate the script
 
-Run:
+The `Base directory for this skill:` header injected at the top of this skill invocation gives the directory containing `move_issue_status.py`. No bash command is needed.
 
-```bash
-printenv CLAUDE_PLUGIN_ROOT
-```
-
-The Python script path is: `<output>/skills/move-issue-status/move_issue_status.py`
+The Python script path is: `<base-directory>/move_issue_status.py`
 
 ### Phase 2 — Run the script
 
@@ -72,8 +68,8 @@ Use the `status` field from the JSON to determine output:
 
 ## ⚠️ Common Mistakes
 
-- **Not reading `CLAUDE_PLUGIN_ROOT` via `printenv`** — never use `${CLAUDE_PLUGIN_ROOT}` (shell expansion is blocked). Always run `printenv CLAUDE_PLUGIN_ROOT` first.
-- **Reconstructing the script path from memory** — always derive the script path from the `printenv CLAUDE_PLUGIN_ROOT` output at runtime.
+- **Not reading the script path from skill metadata** — never use `${CLAUDE_PLUGIN_ROOT}` (shell expansion is blocked) or `printenv CLAUDE_PLUGIN_ROOT` (unreliable on Windows). Always derive the script path from the `Base directory for this skill:` header injected at the top of this skill invocation.
+- **Reconstructing the script path from memory** — always derive the script path from the `Base directory for this skill:` header at runtime, not from a remembered or hard-coded path.
 - **Printing output for skipped results** — `status == "skipped"` means stop silently. No output.
 - **Treating `status == "error"` as fatal** — report the `message` and stop, but do not raise an exception or block callers.
 - **Passing the `#` prefix to the script** — strip `#` before constructing the command.
@@ -81,8 +77,8 @@ Use the `status` field from the JSON to determine output:
 
 ## Eval
 
-- [ ] Called `printenv CLAUDE_PLUGIN_ROOT` to locate the script
-- [ ] Constructed script path as `<CLAUDE_PLUGIN_ROOT>/skills/move-issue-status/move_issue_status.py`
+- [ ] Read script path from the `Base directory for this skill:` header in the skill invocation metadata
+- [ ] Constructed script path as `<base-directory>/move_issue_status.py`
 - [ ] Stripped leading `#` from issue number before invoking the script
 - [ ] Ran `python "<script-path>" <issue-number> [<status>]` via Bash
 - [ ] Parsed stdout as JSON
