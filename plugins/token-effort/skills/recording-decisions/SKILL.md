@@ -8,7 +8,7 @@ user-invocable: true
 
 ## ⛔ Dispatcher — Act on This Before Reading Further
 
-**Do not execute any step below.** Your only action is to spawn a Haiku subagent via the `Agent` tool with `model: haiku`. Embed all instructions under "Subagent Instructions" below verbatim as the subagent prompt, and include this instruction in the prompt: **"Use `AskUserQuestion` for any mid-task user interaction — slug confirmation, Context/Decision/Consequences field entry, and supersession selection."** `AskUserQuestion` is a standard Claude Code tool available to all subagents for synchronous mid-task user prompts. Report the subagent's result to the user without modification.
+**Do not execute any step below.** Your only action is to spawn a Haiku subagent via the `Agent` tool with `model: haiku`. Embed all instructions under "Subagent Instructions" below verbatim as the subagent prompt, and include this instruction in the prompt: **"Use `AskUserQuestion` for any mid-task user interaction — slug confirmation, Context/Decision/Consequences field entry, and supersession selection."** `AskUserQuestion` is a standard Claude Code tool available to all subagents for synchronous mid-task user prompts. **You MUST call `AskUserQuestion` for each of the following fields before proceeding: Slug, Context, Decision, Consequences. Do not infer acceptance from available context — each field requires an explicit user response.** **You MUST NOT write the ADR file or call `git commit` until the user has explicitly approved the full ADR via `AskUserQuestion`.** Report the subagent's result to the user without modification.
 
 ## 📋 Subagent Instructions — Pass Verbatim, Do Not Execute Directly
 
@@ -85,30 +85,34 @@ spec context. When standalone, prompt for all fields.
 
 **1. Issue number and title**
 - `/token-effort:building-gh-issue` context: read issue number and title from context
-- Standalone: "What is the GitHub issue number for this decision? (e.g. 42)"
+- Standalone: call `AskUserQuestion` with the prompt `What is the GitHub issue number for this decision? (e.g. 42)`
 - Construct the full URL: `https://github.com/<owner>/<repo>/issues/<N>`
 
 **2. Slug**
 - `/token-effort:building-gh-issue` context: derive slug from the spec headline
 - Standalone with issue number: fetch title via `gh issue view <N> --json title -q .title`, then derive slug from that title
-- Standalone without issue: ask the user for a short description to derive the slug from
-- Show: `Suggested slug: \`<slug>\` — press Enter to accept or type a new one:`
-- Confirmed slug is used as the filename suffix
+- Standalone without issue: call `AskUserQuestion` with the prompt `Provide a short description to derive the slug from:`
+- Call `AskUserQuestion` with the prompt `Slug — accept or provide a replacement:` and the pre-populated value
+  (e.g. `recording-decisions-confirmation-gate`) shown in the message body. Wait for the user's response.
+- Confirmed slug is used as the filename suffix.
 
 **3. Context**
 - `/token-effort:building-gh-issue`: auto-populate from the spec's Context / problem statement section
-- Show the text and ask: `Context (from spec) — press Enter to accept or paste a replacement:`
-- Standalone: "Describe what problem prompted this decision:"
+- Call `AskUserQuestion` with the prompt `Context — accept or provide a replacement:` and the pre-populated text shown
+  in the message body. Wait for the user's response before continuing.
+- Standalone: call `AskUserQuestion` with the prompt `Describe what problem prompted this decision:`
 
 **4. Decision**
 - `/token-effort:building-gh-issue`: auto-populate from the spec's recommended approach section
-- Same confirmation pattern as Context
-- Standalone: "Describe what was decided and why:"
+- Call `AskUserQuestion` with the prompt `Decision — accept or provide a replacement:` and the pre-populated text shown
+  in the message body. Wait for the user's response before continuing.
+- Standalone: call `AskUserQuestion` with the prompt `Describe what was decided and why:`
 
 **5. Consequences**
 - `/token-effort:building-gh-issue`: auto-populate from the spec's trade-offs / limitations section
-- Same confirmation pattern as Context
-- Standalone: "Describe the trade-offs, known limitations, or anything that should inform future work:"
+- Call `AskUserQuestion` with the prompt `Consequences — accept or provide a replacement:` and the pre-populated text
+  shown in the message body. Wait for the user's response before continuing.
+- Standalone: call `AskUserQuestion` with the prompt `Describe the trade-offs, known limitations, or anything that should inform future work:`
 
 #### Phase 3 — Supersession check
 
@@ -155,17 +159,57 @@ If not found, warn and re-prompt — do not silently skip:
 
 6. **If none superseded:** Status = `Active`, no existing files modified.
 
-#### Phase 4 — Create `docs/decisions/` if needed
+#### Phase 4 — Final approval gate
+
+Assemble the complete ADR text in memory using all confirmed fields from Phase 2 and the
+supersession outcome from Phase 3. Do **not** write any file yet.
+
+Present the full rendered ADR to the user via `AskUserQuestion`:
+
+````
+Here is the ADR that will be committed. Please review and reply `yes` to confirm, or describe any changes:
+
+---
+# YYYY-MM-<slug>
+
+> **Status:** Active  (or Supersedes ... if applicable)
+> **Issue:** [#N — Title](https://github.com/owner/repo/issues/N)
+> **Date:** YYYY-MM-DD
+
+## Context
+
+<confirmed context text>
+
+## Decision
+
+<confirmed decision text>
+
+## Consequences
+
+<confirmed consequences text>
+---
+````
+
+Wait for the user's response.
+
+- If the user replies `yes` (case-insensitive): proceed to Phase 5.
+- Any response other than `yes` (case-insensitive) is treated as a change request. Apply the requested
+  changes, re-assemble the full ADR draft, and call `AskUserQuestion` again with the revised draft.
+  There is no iteration limit — repeat until the user replies `yes`.
+
+**You MUST NOT write the ADR file, run `mkdir`, or call `git commit` until the user replies `yes`.**
+
+#### Phase 5 — Create `docs/decisions/` if needed
 
 ```bash
 mkdir -p docs/decisions
 ```
 
-#### Phase 5 — Write the ADR file
+#### Phase 6 — Write the ADR file
 
 Assemble the ADR from confirmed fields and write to `docs/decisions/YYYY-MM-<slug>.md`.
 
-#### Phase 6 — Commit
+#### Phase 7 — Commit
 
 ```bash
 git add docs/decisions/
@@ -186,12 +230,27 @@ Report the committed file path to the user.
   same commit as the new ADR. Never commit only the new file.
 - **Wrong location for supersession note** — the `> ⚠️ Superseded by ...` line goes
   immediately after the `# YYYY-MM-<slug>` heading, before the blockquote metadata.
+- **Skipping `AskUserQuestion` when context is rich** — even when all fields are
+  auto-populated from spec context, each field MUST be confirmed via `AskUserQuestion`.
+  Available context is not a substitute for explicit user confirmation.
+- **Writing the file before final approval** — `AskUserQuestion` must be called with
+  the full rendered ADR before `mkdir` or any file write. Commit and file write happen
+  only after an explicit "yes".
+- **Treating ambiguous affirmatives as approval** — only `yes` (case-insensitive) exits
+  the Phase 4 approval loop. Responses like `looks good`, `ok`, or `fine` are change
+  requests, not approvals — apply them and re-present the draft.
 
 ### Eval
 
 - [ ] Resolved owner/repo from `git remote get-url origin`
 - [ ] Used current year and zero-padded month for filename prefix
-- [ ] Presented each field for confirmation with auto-population when in `/token-effort:building-gh-issue` context
+- [ ] Called `AskUserQuestion` for Slug confirmation and waited for user response
+- [ ] Called `AskUserQuestion` for Context confirmation and waited for user response
+- [ ] Called `AskUserQuestion` for Decision confirmation and waited for user response
+- [ ] Called `AskUserQuestion` for Consequences confirmation and waited for user response
+- [ ] Assembled full ADR draft and called `AskUserQuestion` for final approval before writing the file
+- [ ] Did not write the ADR file or call `git commit` before receiving explicit user approval
+- [ ] Looped back to show a revised draft when the user requested changes at the final gate
 - [ ] Prompted all fields interactively when called standalone
 - [ ] Scanned `docs/decisions/` for potentially related ADRs and presented shortlist
 - [ ] Verified existence of any user-supplied filenames before accepting them

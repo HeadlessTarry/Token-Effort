@@ -1,5 +1,5 @@
 ## Scenario
-The skill is invoked from `/build`. `docs/decisions/` contains two existing ADRs:
+The skill is invoked from `/token-effort:building-gh-issue`. `docs/decisions/` contains two existing ADRs:
 `2025-11-use-sqlite-for-storage.md` and `2025-08-auth-middleware-approach.md`.
 The user selects `2025-11-use-sqlite-for-storage.md` as superseded.
 

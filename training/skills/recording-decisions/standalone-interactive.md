@@ -14,3 +14,6 @@ auto-populated.
 - [ ] Presents the existing ADR as a potential supersession candidate
 - [ ] User can press Enter to skip supersession
 - [ ] ADR is written and committed after all fields confirmed
+- [ ] Called `AskUserQuestion` for each of Slug, Context, Decision, Consequences individually
+- [ ] Presented full rendered ADR via `AskUserQuestion` before writing the file
+- [ ] Did not write the ADR file or commit before user approval
