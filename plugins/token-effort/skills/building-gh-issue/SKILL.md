@@ -61,7 +61,7 @@ gh issue view <N> --json number,title,body,comments,labels
 
 > "Issue #N does not have an implementation plan comment. Run `/token-effort:planning-gh-issue <N>` to generate one, then get it approved before building."
 
-**If found:** Extract the plan body — the full comment content **after** stripping the `<!-- token-effort:planning-gh-issue -->` marker line. This is the plan used for execution in Phase 3.
+**If found:** Extract the plan body — the full comment content **after** stripping the `<!-- token-effort:planning-gh-issue -->` marker line. This is the plan used for execution in Phase 4.
 
 ### Phase 2 — Move issue to Building status
 
@@ -69,7 +69,32 @@ Invoke: `token-effort:move-issue-status <N> "Building"`
 
 If this fails for any reason (e.g. the issue is not on a project board, or the skill is unavailable), **log a warning and continue**. This phase is non-fatal — do not block the build on a status update failure.
 
-### Phase 3 — Execute plan
+### Phase 3 — Create worktree
+
+**Branch naming:** Derive the branch name from the issue data extracted in Phase 1:
+
+1. Take the issue title.
+2. Lowercase it.
+3. Replace every run of non-alphanumeric characters with a single hyphen.
+4. Strip any leading or trailing hyphens.
+5. Truncate the resulting slug to 50 characters.
+6. Prepend the issue number: `<N>-<slug>`
+
+Examples:
+- Issue #98 "building-gh-issue commits directly to main — no worktree or branch created" → `98-building-gh-issue-commits-directly-to-main-no`
+- Issue #55 "Add retry logic to the API client — handles 5xx errors" → `55-add-retry-logic-to-the-api-client-handles-5xx`
+
+**Worktree creation:** Invoke `superpowers:using-git-worktrees` with the following context supplied in the prompt:
+
+- **Worktree path:** `.claude/worktrees/<branch-name>`
+- **Branch name:** `<branch-name>` (as derived above)
+- **Instruction:** use the supplied path and branch name directly; skip the interactive directory-selection flow
+
+This phase runs **unconditionally** — regardless of the branch that is currently checked out.
+
+**This phase is fatal.** If `using-git-worktrees` fails for any reason, stop the build immediately with a clear error. Do not log-and-continue.
+
+### Phase 4 — Execute plan
 
 Assess the plan extracted in Phase 1. Choose the execution skill:
 
@@ -84,17 +109,17 @@ Invoke the chosen skill with the plan content injected as context, and the follo
 
 This instruction is required regardless of which execution skill is chosen. Do not paraphrase or omit it.
 
-### Phase 4 — Verify (optional)
+### Phase 5 — Verify (optional)
 
 Attempt to invoke the project-local `/verify` skill.
 
 If `/verify` is not available or not found, log the following named warning and continue:
 
-> "⚠️ Phase 4 skipped: `/verify` skill not available in this project"
+> "⚠️ Phase 5 skipped: `/verify` skill not available in this project"
 
 Do not block on this phase.
 
-### Phase 5 — Inline simplify pass
+### Phase 6 — Inline simplify pass
 
 Review all changed code directly using Claude's built-in reasoning. No separate skill invocation is needed.
 
@@ -106,13 +131,13 @@ Check for:
 
 Fix any issues found directly. Report a brief summary of changes made, or "No changes needed" if nothing required fixing.
 
-### Phase 6 — Code review
+### Phase 7 — Code review
 
 Invoke: `token-effort:reviewing-code-systematically`
 
-Address any `BLOCK` or `NEEDS_CHANGES` findings before continuing to Phase 7.
+Address any `BLOCK` or `NEEDS_CHANGES` findings before continuing to Phase 8.
 
-### Phase 7 — Inline security review
+### Phase 8 — Inline security review
 
 Review all changed code directly using Claude's built-in reasoning. No separate skill invocation is needed.
 
@@ -125,18 +150,18 @@ Check for:
 
 Fix any issues found directly. Report a brief summary of findings, or "No security issues found" if the review was clean.
 
-### Phase 8 — Record decisions
+### Phase 9 — Record decisions
 
 Invoke: `token-effort:recording-decisions`
 
 If the skill is not available, **stop immediately** with:
 
-> "❌ Phase 8 blocked: `token-effort:recording-decisions` skill is required but not available.
+> "❌ Phase 9 blocked: `token-effort:recording-decisions` skill is required but not available.
 >  Install the skill before continuing the build."
 
 Do not proceed to Phase 9 until this phase completes successfully.
 
-### Phase 9 — Finish development branch
+### Phase 10 — Finish development branch
 
 Invoke: `superpowers:finishing-a-development-branch`
 
@@ -173,7 +198,7 @@ This step creates the pull request. It runs exactly once, here, at the end of th
 - [ ] Attempted `/verify` and skipped with named warning if absent
 - [ ] Performed inline simplify pass after verify; reported a summary
 - [ ] Invoked `token-effort:reviewing-code-systematically`
-- [ ] Addressed BLOCK or NEEDS_CHANGES findings before continuing past Phase 6
+- [ ] Addressed BLOCK or NEEDS_CHANGES findings before continuing past Phase 7
 - [ ] Performed inline security review after code review; reported a summary
 - [ ] Invoked `token-effort:recording-decisions` and blocked with error message if not available
 - [ ] Did not proceed to Phase 9 when `recording-decisions` was unavailable
