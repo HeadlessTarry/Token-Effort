@@ -50,6 +50,10 @@ Skills become `/token-effort:triaging-gh-issues`, `/token-effort:computing-branc
 
 Hooks configure automation triggers in [plugins/token-effort/hooks/hooks.json](plugins/token-effort/hooks/hooks.json).
 
+### 📊 Status Line
+
+A custom Python statusline showing replay token load, rate limit usage, and tool errors. See [docs/status-line.md](docs/status-line.md) for installation instructions.
+
 ### Standalone Skills
 
 The following skills are embedded within the workflows (see below) and not typically invoked directly:
