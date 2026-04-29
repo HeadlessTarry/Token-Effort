@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import io
 import json
+import os
 import sys
+import tempfile
 import time
 from datetime import datetime
 
@@ -119,7 +121,7 @@ def _measure_content(content):
 def get_tool_error(data):
     session_id = data.get("session_id", "unknown")
     transcript_path = data.get("transcript_path", "")
-    cache_path = f"/tmp/claude-statusline-{session_id}"
+    cache_path = os.path.join(tempfile.gettempdir(), f"claude-statusline-{session_id}")
 
     try:
         with open(cache_path) as f:
