@@ -10,45 +10,47 @@ A collection of Claude Code agents and skills that do just enough to avoid being
 
 ```bash
 claude plugin marketplace add HeadlessTarry/Token-Effort
-claude plugin install token-effort@token-effort
+claude plugin install token-effort-workflow@workflow
+claude plugin install token-effort-initialise@initialise
+claude plugin install token-effort-labs@labs
 ```
 
-After install, Claude Code will list `token-effort` in your active plugins. You'll also need a GitHub Project board - see [github-setup.md](docs/github-setup.md) for more detail.
+After install, Claude Code will list the active plugins. You'll also need a GitHub Project board - see [github-setup.md](docs/github-setup.md) for more detail.
 
-Skills become `/token-effort:triaging-gh-issues`, `/token-effort:computing-branch-diff`, etc.
+Skills become `/token-effort-workflow:triaging-gh-issues`, `/token-effort-initialise:init-plus`, etc.
 
 ## 📚 Documentation Index
 
 ### 🎯 Skills
 
-| Skill | Purpose |
-|-------|---------|
-| [brainstorming-gh-issue](plugins/token-effort/skills/brainstorming-gh-issue/SKILL.md) | Brainstorm GitHub issues, create design specs, refine ideas |
-| [building-gh-issue](plugins/token-effort/skills/building-gh-issue/SKILL.md) | Implement issues end-to-end from spec to merged PR |
-| [computing-branch-diff](plugins/token-effort/skills/computing-branch-diff/SKILL.md) | Compute changes between branches for reviews and analysis |
-| [configuring-dependabot](plugins/token-effort/skills/configuring-dependabot/SKILL.md) | Configure Dependabot for automated dependency updates |
-| [init-plus](plugins/token-effort/skills/init-plus/SKILL.md) | Interactive repository setup with CLAUDE.md and workflows |
-| [move-issue-status](plugins/token-effort/skills/move-issue-status/SKILL.md) | Move issues between project board statuses |
-| [planning-gh-issue](plugins/token-effort/skills/planning-gh-issue/SKILL.md) | Write implementation plans for approved GitHub issues |
-| [propose-feature](plugins/token-effort/skills/propose-feature/SKILL.md) | File new feature requests through guided interview |
-| [recording-decisions](plugins/token-effort/skills/recording-decisions/SKILL.md) | Record Architecture Decision Records (ADRs) in docs/decisions |
-| [report-bug](plugins/token-effort/skills/report-bug/SKILL.md) | File new bug reports through guided interview |
-| [reviewing-code-systematically](plugins/token-effort/skills/reviewing-code-systematically/SKILL.md) | Perform comprehensive code reviews on branches or main |
-| [triaging-gh-issues](plugins/token-effort/skills/triaging-gh-issues/SKILL.md) | Triage open issues: classify, label, and optionally advance project board status |
+| Skill | Plugin | Purpose |
+|-------|--------|---------|
+| [brainstorming-gh-issue](plugins/workflow/skills/brainstorming-gh-issue/SKILL.md) | workflow | Brainstorm GitHub issues, create design specs, refine ideas |
+| [building-gh-issue](plugins/workflow/skills/building-gh-issue/SKILL.md) | workflow | Implement issues end-to-end from spec to merged PR |
+| [computing-branch-diff](plugins/workflow/skills/computing-branch-diff/SKILL.md) | workflow | Compute changes between branches for reviews and analysis |
+| [configuring-dependabot](plugins/initialise/skills/configuring-dependabot/SKILL.md) | initialise | Configure Dependabot for automated dependency updates |
+| [init-plus](plugins/initialise/skills/init-plus/SKILL.md) | initialise | Interactive repository setup with CLAUDE.md and workflows |
+| [move-issue-status](plugins/workflow/skills/move-issue-status/SKILL.md) | workflow | Move issues between project board statuses |
+| [planning-gh-issue](plugins/workflow/skills/planning-gh-issue/SKILL.md) | workflow | Write implementation plans for approved GitHub issues |
+| [propose-feature](plugins/workflow/skills/propose-feature/SKILL.md) | workflow | File new feature requests through guided interview |
+| [recording-decisions](plugins/workflow/skills/recording-decisions/SKILL.md) | workflow | Record Architecture Decision Records (ADRs) in docs/decisions |
+| [report-bug](plugins/workflow/skills/report-bug/SKILL.md) | workflow | File new bug reports through guided interview |
+| [reviewing-code-systematically](plugins/workflow/skills/reviewing-code-systematically/SKILL.md) | workflow | Perform comprehensive code reviews on branches or main |
+| [triaging-gh-issues](plugins/workflow/skills/triaging-gh-issues/SKILL.md) | workflow | Triage open issues: classify, label, and optionally advance project board status |
 
 ### 🤖 Agents
 
-| Agent | Purpose |
-|-------|---------|
-| [agent-creator-engineer](plugins/token-effort/agents/agent-creator-engineer.md) | Create new or improve existing Claude Code agent definitions |
-| [reviewer-dead-code](plugins/token-effort/agents/reviewer-dead-code.md) | Review files for dead code, unused symbols, and stale flags |
-| [reviewer-docs](plugins/token-effort/agents/reviewer-docs.md) | Review documentation for quality and accuracy |
-| [reviewer-newcomer](plugins/token-effort/agents/reviewer-newcomer.md) | Review source for clarity, comments, assumptions, and error message quality |
-| [skill-creator-engineer](plugins/token-effort/agents/skill-creator-engineer.md) | Create new or improve existing skill definitions |
+| Agent | Plugin | Purpose |
+|-------|--------|---------|
+| [agent-creator-engineer](plugins/labs/agents/agent-creator-engineer.md) | labs | Create new or improve existing Claude Code agent definitions |
+| [reviewer-dead-code](plugins/workflow/agents/reviewer-dead-code.md) | workflow | Review files for dead code, unused symbols, and stale flags |
+| [reviewer-docs](plugins/workflow/agents/reviewer-docs.md) | workflow | Review documentation for quality and accuracy |
+| [reviewer-newcomer](plugins/workflow/agents/reviewer-newcomer.md) | workflow | Review source for clarity, comments, assumptions, and error message quality |
+| [skill-creator-engineer](plugins/labs/agents/skill-creator-engineer.md) | labs | Create new or improve existing skill definitions |
 
 ### 🪝 Hooks
 
-Hooks configure automation triggers in [plugins/token-effort/hooks/hooks.json](plugins/token-effort/hooks/hooks.json).
+Hooks configure automation triggers in [plugins/labs/hooks/hooks.json](plugins/labs/hooks/hooks.json).
 
 ### 📊 Status Line
 
@@ -118,21 +120,26 @@ graph LR
 ## 🏗️ Structure
 
 ```
-plugins/token-effort/
-├── agents/      →  agent definitions
-├── skills/      →  skill definitions
-└── hooks/       →  hooks + hook declarations
+plugins/
+├── initialise/
+│   └── skills/      →  init-plus, configuring-dependabot
+├── workflow/
+│   ├── agents/      →  reviewer agents
+│   └── skills/      →  workflow skill definitions
+└── labs/
+    ├── agents/      →  creator/engineer agents
+    └── hooks/       →  hooks + hook declarations
 
 .claude/skills/run-training/   →  local skill for training evals (not distributed)
 
 training/
-└── <type>/<name>/   →  eval cases for the /run-training skill
+└── <plugin>/<type>/<name>/   →  eval cases for the /run-training skill
 
 docs/
 └── *.md             →  guides and reference docs
 ```
 
-**Local vs. Plugin Skills:** Skills in `.claude/skills/` are local to this repository only and are not distributed with the plugin. Plugin skills live in `plugins/token-effort/skills/` and are packaged for distribution.
+**Local vs. Plugin Skills:** Skills in `.claude/skills/` are local to this repository only and are not distributed with the plugin. Plugin skills live under `plugins/<plugin>/skills/` and are packaged for distribution.
 
 ## 🧪 Training
 
@@ -146,4 +153,4 @@ New versions are published via the [release workflow](.github/workflows/release.
 
 ## ➕ Adding Things
 
-Agents go in `plugins/token-effort/agents/<name>.md`. Skills go in `plugins/token-effort/skills/<name>/SKILL.md`. See existing entries for reference.
+Agents go in `plugins/labs/agents/<name>.md` (creator/engineer agents) or `plugins/workflow/agents/<name>.md` (reviewer agents). Skills go in `plugins/workflow/skills/<name>/SKILL.md` or `plugins/initialise/skills/<name>/SKILL.md` depending on their category. See existing entries for reference.

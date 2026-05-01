@@ -1,5 +1,5 @@
 ## Scenario
-The user asks the agent to review `plugins/token-effort/agents/reviewer-docs.md`. The `initialPrompt`
+The user asks the agent to review `plugins/workflow/agents/reviewer-docs.md`. The `initialPrompt`
 WebFetch step did not run (the agent was invoked as a sub-agent, not via `--agent`).
 
 ## Expected Behavior

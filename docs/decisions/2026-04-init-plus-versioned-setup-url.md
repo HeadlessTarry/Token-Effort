@@ -10,7 +10,7 @@ The `/init-plus` skill references `docs/github-setup.md` as a bare local path in
 
 ## ✅ Decision
 
-Replace all bare `docs/github-setup.md` path references in `plugins/token-effort/skills/init-plus/SKILL.md` with Markdown links pointing to a versioned GitHub URL (e.g. `blob/v0.6.0/docs/github-setup.md`). The release workflow patches these URLs at publish time via a `sed` command, so they always reflect the installed plugin version rather than a floating `main` reference.
+Replace all bare `docs/github-setup.md` path references in `plugins/initialise/skills/init-plus/SKILL.md` with Markdown links pointing to a versioned GitHub URL (e.g. `blob/v0.6.0/docs/github-setup.md`). The release workflow patches these URLs at publish time via a `sed` command, so they always reflect the installed plugin version rather than a floating `main` reference.
 
 ## ⚖️ Consequences
 

@@ -1,10 +1,10 @@
 ## Scenario
-User runs `/run-training agent:reviewer-docs`. The file `plugins/token-effort/agents/reviewer-docs.md` exists.
+User runs `/run-training plugins/workflow/agents/reviewer-docs.md`. The file `plugins/workflow/agents/reviewer-docs.md` exists.
 
 ## Expected Behavior
-The skill recognizes the `agent:` prefix and resolves the definition file to `plugins/token-effort/agents/reviewer-docs.md` and the evals directory to `training/agents/reviewer-docs/`. It does not look under `claude/skills/`.
+The skill parses the plugin (`workflow`), type (`agents`), and name (`reviewer-docs`) from the supplied path. It resolves the definition file to `plugins/workflow/agents/reviewer-docs.md` and the evals directory to `training/workflow/agents/reviewer-docs/`. It does not look under `claude/skills/`.
 
 ## Pass Criteria
-- [ ] Resolves definition file to `plugins/token-effort/agents/reviewer-docs.md`
-- [ ] Resolves evals directory to `training/agents/reviewer-docs/`
+- [ ] Resolves definition file to `plugins/workflow/agents/reviewer-docs.md`
+- [ ] Resolves evals directory to `training/workflow/agents/reviewer-docs/`
 - [ ] Does not look under `claude/skills/` for the definition file

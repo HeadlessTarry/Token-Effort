@@ -16,7 +16,7 @@ Without explicit guidance, AI agents guess which commands to run — and often m
 
 ## Decision
 
-Add Step 6 "Bootstrap `/verify` skill" to the `init-plus` skill (`plugins/token-effort/skills/init-plus/SKILL.md`).
+Add Step 6 "Bootstrap `/verify` skill" to the `init-plus` skill (`plugins/initialise/skills/init-plus/SKILL.md`).
 
 This step:
 1. Checks if a project already has `.claude/skills/verify/SKILL.md` and skips if so (respecting user modifications)
