@@ -132,7 +132,7 @@ jobs:
           github_token: ${{ steps.project-manager-token.outputs.token }}
           # Always references the Token-Effort plugin source — correct even when deploying to other repos
           plugin_marketplaces: https://github.com/HeadlessTarry/Token-Effort.git
-          plugins: token-effort
+          plugins: token-effort-workflow
           prompt: |
             Use the `token-effort-workflow:triaging-gh-issues` skill with `--advance-status`.
             Triage all open issues in this repository.

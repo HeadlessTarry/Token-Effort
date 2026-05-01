@@ -12,6 +12,8 @@ Applies the [Karpathy "autoresearch" pattern](https://github.com/karpathy/autore
 
 **Usage:** `/run-training plugins/<plugin>/skills/<name>/SKILL.md` or `/run-training plugins/<plugin>/agents/<name>.md`
 
+> **Note:** The old shorthand forms (`/run-training <name>` and `/run-training agent:<name>`) are no longer supported. Always supply the full plugin-relative path.
+
 ## Phase 1 — Target
 
 Resolve paths from the user's argument by parsing the plugin, type, and name from the supplied path:
@@ -19,7 +21,7 @@ Resolve paths from the user's argument by parsing the plugin, type, and name fro
 | Input | Plugin | Type | Name | Definition file | Evals directory |
 |-------|--------|------|------|----------------|-----------------|
 | `plugins/workflow/skills/brainstorming-gh-issue/SKILL.md` | `workflow` | `skills` | `brainstorming-gh-issue` | `plugins/workflow/skills/brainstorming-gh-issue/SKILL.md` | `training/workflow/skills/brainstorming-gh-issue/` |
-| `plugins/labs/agents/reviewer-docs.md` | `labs` | `agents` | `reviewer-docs` | `plugins/labs/agents/reviewer-docs.md` | `training/labs/agents/reviewer-docs/` |
+| `plugins/labs/agents/skill-creator-engineer.md` | `labs` | `agents` | `skill-creator-engineer` | `plugins/labs/agents/skill-creator-engineer.md` | `training/labs/agents/skill-creator-engineer/` |
 
 Parse rules:
 - **Definition file**: the argument as supplied verbatim

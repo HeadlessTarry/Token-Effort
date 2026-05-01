@@ -44,7 +44,7 @@ Follow the `writing-skills` RED-GREEN-REFACTOR cycle from this point:
 
 ### Phase 3 — Write
 
-Create `plugins/workflow/skills/<name>/SKILL.md`. Follow `writing-skills` structure. Apply repo conventions above.
+Create the skill file at the path determined from the Repo Conventions (workflow, initialise, or labs). Follow `writing-skills` structure. Apply repo conventions above.
 
 ### Phase 4 — Validate
 
@@ -100,7 +100,11 @@ Use `Edit` for targeted fixes. Full rewrite only if the structure is too broken 
 
 ## Repo Conventions
 
-- **File location:** `plugins/workflow/skills/<name>/SKILL.md`
+- **File location:** Depends on the skill's category:
+  - `plugins/workflow/skills/<name>/SKILL.md` — GitHub issue lifecycle skills (triage, brainstorm, plan, build, review)
+  - `plugins/initialise/skills/<name>/SKILL.md` — repository setup skills (init, dependabot, CI scaffolding)
+  - `plugins/labs/skills/<name>/SKILL.md` — experimental or higher-risk skills (opt-in only)
+  Ask the user which plugin the skill belongs to if it is not clear from context.
 - **`user-invocable` key:** Add `user-invocable: true` to frontmatter when the skill is directly invocable by the user (the install script surfaces these as a distinct category). Omit for background-only skills. This is the only frontmatter key beyond `name` and `description`.
 - **Name style:** Gerund form preferred (`creating-skills`) over noun form (`skill-creation`).
 
@@ -129,7 +133,7 @@ After Phase 5 (Confirm), report: number of FAILs resolved, number still open (sh
 ## Error Handling
 
 ### Skill not found
-**Cause**: The user names a skill file that does not exist at `plugins/workflow/skills/<name>/SKILL.md`.
+**Cause**: The user names a skill file that does not exist at the expected plugin path.
 **Solution**: Report the missing path. Ask the user to confirm the skill name or provide the correct path before proceeding.
 
 ### `writing-skills` unavailable
@@ -148,6 +152,6 @@ After Phase 5 (Confirm), report: number of FAILs resolved, number still open (sh
 
 Run these in addition to the `writing-skills` checklist:
 
-1. File is at `plugins/workflow/skills/<name>/SKILL.md`
+1. File is at the correct plugin path (`plugins/workflow/`, `plugins/initialise/`, or `plugins/labs/`) per the Repo Conventions above
 2. `user-invocable: true` is present if the skill is user-invocable, omitted otherwise
 3. No agent-only keys (`model`, `tools`, `disallowedTools`) in the frontmatter
