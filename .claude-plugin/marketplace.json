@@ -4,9 +4,19 @@
   "metadata": { "description": "Low-stakes intelligence for high-latency humans" },
   "plugins": [
     {
-      "name": "token-effort",
-      "source": "./plugins/token-effort",
-      "description": "Agents, skills, and hooks for Claude Code"
+      "name": "token-effort-initialise",
+      "source": "./plugins/initialise",
+      "description": "Skills for initialising a GitHub repository with Claude Code conventions"
+    },
+    {
+      "name": "token-effort-workflow",
+      "source": "./plugins/workflow",
+      "description": "Skills and agents for the full GitHub issue lifecycle — triage, brainstorm, plan, build"
+    },
+    {
+      "name": "token-effort-labs",
+      "source": "./plugins/labs",
+      "description": "Experimental and higher-risk features — opt-in only"
     }
   ]
 }
