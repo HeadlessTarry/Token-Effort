@@ -6,7 +6,7 @@ import unittest
 from contextlib import redirect_stdout
 from unittest.mock import patch, MagicMock
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../plugins/token-effort/skills/move-issue-status'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../plugins/workflow/skills/move-issue-status'))
 
 import move_issue_status as m
 

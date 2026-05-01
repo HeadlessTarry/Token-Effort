@@ -1,7 +1,7 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "plugins", "token-effort", "hooks"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "plugins", "labs", "hooks"))
 
 from compound_bash_allow import parse_command
 
