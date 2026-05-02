@@ -114,7 +114,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
-      id-token: write
     steps:
       - name: 🔑 Authenticate as Project Manager
         id: project-manager-token
@@ -140,7 +139,7 @@ jobs:
             Upon completion, write a brief markdown summary of your activity to the GitHub Actions step summary using: SUMMARY_FILE=$(printenv GITHUB_STEP_SUMMARY) && echo "**[Claude]** {Activity summary}" >> "$SUMMARY_FILE"
           claude_args: >-
             --model sonnet
-            --allowedTools Skill,Bash(printenv *),Bash(git remote get-url *),Bash(gh issue list *),Bash(gh issue view *),Bash(gh search issues *),Bash(gh issue edit *),Bash(gh issue comment *),Bash(gh project list *),Bash(gh project item-list *),Bash(gh project field-list *),Bash(gh project item-edit *)
+            --allowedTools Skill,Bash(printenv *),Bash(git remote get-url *),Bash(gh issue list *),Bash(gh issue view *),Bash(gh search issues *),Bash(gh issue edit *),Bash(gh issue comment *)
 ```
 
 ---
