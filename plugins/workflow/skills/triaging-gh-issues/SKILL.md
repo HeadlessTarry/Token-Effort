@@ -10,7 +10,9 @@ user-invocable: true
 
 Fetches all open GitHub issues, classifies each one by reading its content and searching for duplicates, then determines whether to apply a new label or correct an existing one. Issues that already have the correct label are skipped silently. Presents a summary of proposed changes and waits for user confirmation before applying any writes (unless running in GitHub Actions, where it applies changes immediately). For each issue, a confidence score is produced reflecting how certain the classification is.
 
-**Usage:** `/triaging-gh-issues [--advance-status]`
+> **Note:** Status advancement is not part of triage. Each downstream skill (e.g. `brainstorming-gh-issue`, `planning-gh-issue`, `building-gh-issue`) is responsible for pulling the issue into its own project board column when it begins.
+
+**Usage:** `/triaging-gh-issues`
 
 ## When to Use
 
@@ -227,9 +229,7 @@ For each issue in the approved triage list (action `apply` or `reclassify`):
 
 If any individual call fails, report the failure for that issue and continue processing the remaining issues — do not abort the batch.
 
-After all label writes complete, proceed to Phase 6b.
-
-After Phase 6b completes, report:
+After all label writes complete, report:
 
 ```
 Triage complete:
@@ -238,23 +238,6 @@ Triage complete:
 - N issue(s) unchanged
 - N failure(s)
 ```
-
-### Phase 6b — Update GitHub project status
-
-**This phase only runs when `--advance-status` was passed at invocation.** If it was not passed, skip this phase entirely.
-
-For **every** classified issue where **confidence > 80%** — regardless of action (`apply`, `reclassify`, or `no-change`) — advance its GitHub project status one column to the right. Process each issue **one at a time** in the following sequence:
-
-1. Invoke the `token-effort-workflow:move-issue-status` skill using the Skill tool:
-   ```
-   token-effort-workflow:move-issue-status <issue-number>
-   ```
-2. The skill will return detailed instructions. **Execute every phase those instructions describe** — including all `gh project` Bash commands (`gh project list`, `gh project item-list`, `gh project field-list`, `gh project item-edit`) — before moving on to the next issue.
-3. Do not call the Skill tool for the next issue until the current issue's execution is fully complete (all phases run, result reported).
-
-No explicit status argument is passed; this uses advance mode. The skill handles all preconditions (single-project membership, first-column check, null status check, last-column check) internally and skips silently if any condition is not met.
-
-> **Confidence threshold:** Only issues with confidence **strictly greater than 80%** trigger the project status update. Issues with confidence ≤ 80% skip Phase 6b entirely, even if they belong to exactly one project. This applies equally to `apply`, `reclassify`, and `no-change` issues.
 
 ## Common Mistakes
 
@@ -274,11 +257,6 @@ No explicit status argument is passed; this uses advance mode. The skill handles
 - **Prompting for confirmation when there is nothing to confirm** — if all issues resolved to `no-change`, skip Phase 5 entirely. Do not display an empty summary table or ask the user to confirm a list with zero changes.
 - **Using MCP tools for issue operations** — all issue interactions (listing, searching, writing labels, posting comments) must use `gh` CLI commands. Never call `mcp__plugin_github_github__list_issues`, `mcp__plugin_github_github__issue_read`, `mcp__plugin_github_github__search_issues`, `mcp__plugin_github_github__issue_write`, `mcp__plugin_github_github__add_issue_comment`, or any other `mcp__` tool for issue operations.
 - **Omitting the Confidence column from the summary table** — the triage summary table must always include a `Confidence` column showing the % value for each `apply` or `reclassify` issue.
-- **Updating project status for low-confidence issues** — `token-effort-workflow:move-issue-status` must NOT be called for issues with confidence ≤ 80%. Only invoke it when confidence is strictly greater than 80%.
-- **Skipping the project status update for `no-change` issues** — Phase 6b applies to ALL classified issues with confidence > 80%, not just `apply` and `reclassify`. A `no-change` issue with high confidence should still have its project status advanced.
-- **Updating project status when `--advance-status` was not specified** — Phase 6b must be skipped entirely unless `--advance-status` was passed at invocation. Do not invoke `token-effort-workflow:move-issue-status` if the flag is absent.
-- **Batch-calling `token-effort-workflow:move-issue-status` for multiple issues without executing each sub-skill's phases** — for each issue, call the Skill tool, then execute every phase the returned skill describes (including all `gh project` Bash commands), before invoking the skill for the next issue. Do not make multiple Skill tool calls in succession without executing the returned instructions first.
-
 ## Eval
 
 - [ ] In GitHub Actions context (`GITHUB_ACTIONS` set): owner and repo were derived from `GITHUB_REPOSITORY`, not from `git remote get-url origin`
@@ -308,7 +286,3 @@ No explicit status argument is passed; this uses advance mode. The skill handles
 - [ ] Each `gh issue edit` or `gh issue comment` failure was reported individually without aborting the remaining batch
 - [ ] Final summary reported counts for: labels applied (new), labels updated (reclassified), issues unchanged, and failures
 - [ ] No `mcp__` tool was called at any point
-- [ ] If `--advance-status` was not specified, Phase 6b was skipped entirely — `token-effort-workflow:move-issue-status` was NOT called
-- [ ] `token-effort-workflow:move-issue-status <N>` (no explicit status) was called for each classified issue with confidence > 80%, regardless of action (`apply`, `reclassify`, or `no-change`)
-- [ ] Each invocation of `token-effort-workflow:move-issue-status` completed in full (all phases executed, including all `gh project` Bash commands) before the skill was invoked for the next issue
-- [ ] `token-effort-workflow:move-issue-status` was NOT called for issues with confidence ≤ 80%

@@ -7,7 +7,7 @@ for Step 3, says yes to superpowers, and provides verification commands for Step
 ## Expected Behavior
 The skill scans the repo, shows the menu with all items as [not present] except Step 2
 which shows [not verified]. It runs all six steps in order 1→6. Each step creates its
-respective file(s). Step 5 delegates to token-effort:configuring-dependabot.
+respective file(s). Step 5 delegates to token-effort-initialise:configuring-dependabot.
 
 ## Pass Criteria
 - [ ] Presented menu with all six steps before executing anything
@@ -16,7 +16,7 @@ respective file(s). Step 5 delegates to token-effort:configuring-dependabot.
 - [ ] Step 3 asked about prerequisites before writing the workflow
 - [ ] Step 3 wrote .github/workflows/triaging-gh-issues.yml
 - [ ] Step 4 wrote all three issue template files
-- [ ] Step 5 invoked token-effort:configuring-dependabot via Skill tool
+- [ ] Step 5 invoked token-effort-initialise:configuring-dependabot via Skill tool
 - [ ] Step 6 asked for verification commands and wrote .claude/skills/verify/SKILL.md
 - [ ] Printed a completion summary listing all six steps
 - [ ] Steps executed in order 1 → 2 → 3 → 4 → 5 → 6

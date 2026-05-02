@@ -17,6 +17,6 @@ The user runs `/token-effort-workflow:planning-gh-issue 42`. The issue exists an
 - [ ] No spec comment is found and execution halts.
 - [ ] The error message includes the issue number (42).
 - [ ] The error message instructs the user to run `/token-effort-workflow:brainstorming-gh-issue 42` (or equivalent) first.
-- [ ] `token-effort:move-issue-status` is NOT called.
+- [ ] `token-effort-workflow:move-issue-status` is NOT called.
 - [ ] `superpowers:writing-plans` is NOT called.
 - [ ] `gh issue comment` is NOT called.

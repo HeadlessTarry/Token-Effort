@@ -10,7 +10,5 @@ with the standard templates.
 - [ ] Detected existing template files
 - [ ] Warned that template files already exist
 - [ ] Overwrote all three files after "yes"
-- [ ] 01-feature_request.md contains standard feature request content with labels: enhancement
-- [ ] 02-bug_report.md contains standard bug report content with labels: bug
 - [ ] config.yml contains blank_issues_enabled: false
 - [ ] Completion summary reports templates as created/overwritten (not skipped)

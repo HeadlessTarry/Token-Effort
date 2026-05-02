@@ -124,7 +124,7 @@ The triage workflow uses one repository variable and two secrets. Add them under
 
 ## ⚙️ 6. Triage Workflow
 
-The triage workflow runs automatically every Monday at 4am UTC and can also be triggered manually. It authenticates as the Project Manager GitHub App, then invokes the `token-effort:triaging-gh-issues` skill, which labels issues by type, detects duplicates, and advances issue statuses on the project board.
+The triage workflow runs automatically every Monday at 4am UTC and can also be triggered manually. It authenticates as the Project Manager GitHub App, then invokes the `token-effort-workflow:triaging-gh-issues` skill, which labels issues by type, detects duplicates, and advances issue statuses on the project board.
 
 > **On a personal account?** See [Personal Account Alternative](#personal-account-alternative) for the workflow changes needed.
 

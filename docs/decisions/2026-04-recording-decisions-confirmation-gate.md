@@ -6,9 +6,9 @@
 
 ## Context
 
-The `token-effort:recording-decisions` skill is designed to present each ADR field
+The `token-effort-workflow:recording-decisions` skill is designed to present each ADR field
 (Slug, Context, Decision, Consequences) to the user for review before committing.
-When invoked from `token-effort:building-gh-issue` Phase 8, rich spec context
+When invoked from `token-effort-workflow:building-gh-issue` Phase 8, rich spec context
 pre-populates all fields — and the model was observed skipping the confirmation
 loop, committing the ADR directly without user review.
 

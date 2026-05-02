@@ -29,7 +29,7 @@ Strip any leading `#` from the issue number before use (e.g. `#42` → `42`).
 
 - `gh` CLI must be authenticated and available in the session. All GitHub operations use `gh` commands via `Bash`. No MCP tools are used or required.
 - The issue must have a design spec comment whose body begins with `<!-- brainstorming-gh-issue:spec -->`, produced by `token-effort-workflow:brainstorming-gh-issue`.
-- The issue must have an implementation plan comment whose body begins with `<!-- token-effort:planning-gh-issue -->`, produced by `token-effort-workflow:planning-gh-issue`.
+- The issue must have an implementation plan comment whose body begins with `<!-- token-effort-workflow:planning-gh-issue -->`, produced by `token-effort-workflow:planning-gh-issue`.
 - The following `superpowers` skills must be installed:
   - `superpowers:executing-plans`
   - `superpowers:subagent-driven-development`
@@ -56,13 +56,13 @@ gh issue view <N> --json number,title,body,comments,labels
 
 **If found:** Extract the spec body — the full comment content **after** stripping the `<!-- brainstorming-gh-issue:spec -->` marker line.
 
-**Extract plan:** Search the `comments` array for a comment whose body starts with `<!-- token-effort:planning-gh-issue -->`.
+**Extract plan:** Search the `comments` array for a comment whose body starts with `<!-- token-effort-workflow:planning-gh-issue -->`.
 
 **If no plan comment is found:** Stop immediately with the error:
 
 > "Issue #N does not have an implementation plan comment. Run `/token-effort-workflow:planning-gh-issue <N>` to generate one, then get it approved before building."
 
-**If found:** Extract the plan body — the full comment content **after** stripping the `<!-- token-effort:planning-gh-issue -->` marker line. This is the plan used for execution in Phase 4.
+**If found:** Extract the plan body — the full comment content **after** stripping the `<!-- token-effort-workflow:planning-gh-issue -->` marker line. This is the plan used for execution in Phase 4.
 
 ### Phase 2 — Move issue to Building status
 
@@ -176,13 +176,13 @@ This step creates the pull request. It runs exactly once, here, at the end of th
 ## Common Mistakes
 
 - **Blocking on Phase 2 failure** — `move-issue-status` errors are non-fatal. Log the warning and continue. Never stop the build because of a status update failure.
-- **Proceeding without a plan comment** — if `<!-- token-effort:planning-gh-issue -->` is not found in the issue, abort immediately with the message to run `/token-effort-workflow:planning-gh-issue #N` first. Do not proceed to execution without an approved plan.
+- **Proceeding without a plan comment** — if `<!-- token-effort-workflow:planning-gh-issue -->` is not found in the issue, abort immediately with the message to run `/token-effort-workflow:planning-gh-issue #N` first. Do not proceed to execution without an approved plan.
 - **Omitting the suppression instruction from the Phase 4 prompt** — the verbatim instruction `"Do not invoke finishing-a-development-branch — this will be handled by the calling skill after all review steps complete."` must be included in the execution skill invocation. Paraphrasing it or omitting it is incorrect.
 - **Calling `finishing-a-development-branch` inside the Phase 4 execution skill** — the PR creation step belongs at Phase 10 and only there. The suppression instruction in Phase 4 enforces this; do not override it.
 - **Choosing `executing-plans` for non-trivial scope plans** — the default is `subagent-driven-development`. Only switch to `executing-plans` when all conditions (single-step plan, no more than 2 files touched) are met simultaneously.
 - **Silently skipping Phase 5** — Phase 5 is optional but must log a named warning when skipped. Do not silently continue without the warning.
 - **Continuing past Phase 9 when `recording-decisions` is unavailable** — Phase 9 is a hard block. If the skill is not installed, stop with the error message. Do not warn and continue.
-- **Passing the full raw comment body to the execution skill** — strip both the `<!-- brainstorming-gh-issue:spec -->` and `<!-- token-effort:planning-gh-issue -->` marker lines before using their content. Do not include markers in the context.
+- **Passing the full raw comment body to the execution skill** — strip both the `<!-- brainstorming-gh-issue:spec -->` and `<!-- token-effort-workflow:planning-gh-issue -->` marker lines before using their content. Do not include markers in the context.
 - **Not stripping the leading `#` from the issue number** — `gh issue view` requires a bare integer. Strip any `#` prefix before constructing the command.
 - **Using MCP tools for issue operations** — all GitHub interactions must use `gh` CLI commands. Never call `mcp__plugin_github_github__*` tools for any operation.
 - **Calling `finishing-a-development-branch` more than once** — it must be called exactly once, at Phase 10, regardless of how many execution iterations Phase 4 required.
@@ -196,7 +196,7 @@ This step creates the pull request. It runs exactly once, here, at the end of th
 - [ ] Fetched issue with `gh issue view --json number,title,body,comments,labels`
 - [ ] Searched comments for `<!-- brainstorming-gh-issue:spec -->` marker
 - [ ] Blocked with clear error when spec comment not found
-- [ ] Searched comments for `<!-- token-effort:planning-gh-issue -->` marker
+- [ ] Searched comments for `<!-- token-effort-workflow:planning-gh-issue -->` marker
 - [ ] Blocked with clear error when plan comment not found
 - [ ] Called `token-effort-workflow:move-issue-status <N> "Building"` in Phase 2
 - [ ] Phase 2 failure logged as a warning and did not block the build

@@ -78,10 +78,10 @@ This returns a JSON object with `number`, `title`, `body`, `comments` (array of 
 
 **Extract spec content:** Strip the `<!-- brainstorming-gh-issue:spec -->` marker line from the comment body. The remaining content is the spec context used in Phase 3.
 
-**Detect re-entry:** Search all entries in the `comments` array for one whose `body` starts with `<!-- token-effort:planning-gh-issue -->`:
+**Detect re-entry:** Search all entries in the `comments` array for one whose `body` starts with `<!-- token-effort-workflow:planning-gh-issue -->`:
 
 - **No plan comment → fresh planning run.** Proceed to Phase 3 with issue context and spec content. There is no prior plan.
-- **Plan comment found → re-entry mode.** Strip the `<!-- token-effort:planning-gh-issue -->` marker line and extract the prior plan body. Load both the issue context, the spec content, and the prior plan into Phase 3 as a continuation.
+- **Plan comment found → re-entry mode.** Strip the `<!-- token-effort-workflow:planning-gh-issue -->` marker line and extract the prior plan body. Load both the issue context, the spec content, and the prior plan into Phase 3 as a continuation.
 
 ### Phase 3 — Move to Planning and invoke `superpowers:writing-plans`
 
@@ -145,7 +145,7 @@ Read the file content. Use this as the plan body in step 4a. Do **not** reconstr
 Post the plan to the issue using this exact format:
 
 ```
-<!-- token-effort:planning-gh-issue -->
+<!-- token-effort-workflow:planning-gh-issue -->
 ## 🤖📋 Implementation Plan
 
 <approved plan content>
@@ -193,13 +193,13 @@ After Phase 4 completes, report:
 - **Blocking on the Planning status move failure** — `token-effort-workflow:move-issue-status` errors are non-fatal. Log the warning and continue. Never stop planning because of a status update failure.
 - **Posting the plan before the user approves it** — Phase 4 must not run until the user has explicitly approved the plan within the `superpowers:writing-plans` session. Do not call `gh issue comment` or `gh issue edit` during Phase 3.
 - **Not reading the plan file before posting** — always locate and read the file that writing-plans wrote with `ls -t ~/.claude/plans/*.md | head -1`. Do not reconstruct the plan content from memory.
-- **Forgetting the HTML comment marker** — the plan comment must begin with `<!-- token-effort:planning-gh-issue -->` on its own line so future re-entry runs can locate it reliably.
+- **Forgetting the HTML comment marker** — the plan comment must begin with `<!-- token-effort-workflow:planning-gh-issue -->` on its own line so future re-entry runs can locate it reliably.
 - **Invoking execution skills after plan approval** — the Phase 3 handoff instructs writing-plans to stop after the user approves the plan. Do not invoke `superpowers:subagent-driven-development`, `superpowers:executing-plans` or any build skill; proceed to Phase 4 instead.
 - **Creating `pending-review` without checking first** — always run `gh label list` before `gh label create` to avoid an error if the label already exists.
 - **Re-asking questions answered in the spec** — the design spec is the approved input brief. Instruct writing-plans not to revisit decisions already captured there.
 - **Using shell expansion syntax** — never use `${VARIABLE}`, `${VARIABLE:-}`, or any `${...}` form. Claude Code's sandbox blocks these. Use `printenv VARIABLE` to read environment variables.
 - **Asking the user to choose when no choice is needed** — branch name auto-detection always uses the first integer. Only ask the user to choose when multiple numbers were explicitly provided as arguments.
-- **Stripping the wrong marker line** — the spec comment starts with `<!-- brainstorming-gh-issue:spec -->` and the plan comment starts with `<!-- token-effort:planning-gh-issue -->`. Ensure you strip the correct marker for each.
+- **Stripping the wrong marker line** — the spec comment starts with `<!-- brainstorming-gh-issue:spec -->` and the plan comment starts with `<!-- token-effort-workflow:planning-gh-issue -->`. Ensure you strip the correct marker for each.
 
 ## Eval
 
@@ -211,7 +211,7 @@ After Phase 4 completes, report:
 - [ ] Searched comments for `<!-- brainstorming-gh-issue:spec -->` marker
 - [ ] Blocked with clear error when spec comment not found
 - [ ] Extracted spec content with the marker line stripped
-- [ ] Identified the absence of `<!-- token-effort:planning-gh-issue -->` comment and proceeded as a fresh planning run
+- [ ] Identified the absence of `<!-- token-effort-workflow:planning-gh-issue -->` comment and proceeded as a fresh planning run
 - [ ] In re-entry mode: loaded prior plan content (marker stripped) into Phase 3 alongside issue context and spec
 - [ ] Invoked `token-effort-workflow:move-issue-status <N> "Planning"` before invoking writing-plans
 - [ ] Phase 3 status-move failure logged as a warning and did not block the planning session
@@ -223,7 +223,7 @@ After Phase 4 completes, report:
 - [ ] `gh issue edit --add-label pending-review` was NOT called until after user approval
 - [ ] Phase 4 located the plan file with `ls -t ~/.claude/plans/*.md | head -1`
 - [ ] Phase 4 read the plan file content before constructing the GitHub comment
-- [ ] The plan comment body starts with `<!-- token-effort:planning-gh-issue -->`
+- [ ] The plan comment body starts with `<!-- token-effort-workflow:planning-gh-issue -->`
 - [ ] The plan comment contains the heading `## 🤖📋 Implementation Plan`
 - [ ] The plan comment footer contains "Please review carefully before approving"
 - [ ] The plan comment footer contains instructions to remove `pending-review` and advance the project status

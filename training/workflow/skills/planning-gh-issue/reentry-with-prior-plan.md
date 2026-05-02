@@ -1,6 +1,6 @@
 ## Scenario
 
-The user runs `/token-effort-workflow:planning-gh-issue 44`. The issue has both a spec comment (`<!-- brainstorming-gh-issue:spec -->`) and a prior plan comment (`<!-- token-effort:planning-gh-issue -->`). The `pending-review` label is currently applied.
+The user runs `/token-effort-workflow:planning-gh-issue 44`. The issue has both a spec comment (`<!-- brainstorming-gh-issue:spec -->`) and a prior plan comment (`<!-- token-effort-workflow:planning-gh-issue -->`). The `pending-review` label is currently applied.
 
 ## Expected Behaviour
 
@@ -11,9 +11,9 @@ The user runs `/token-effort-workflow:planning-gh-issue 44`. The issue has both 
 
 ## Pass Criteria
 
-- [ ] The prior plan comment starting with `<!-- token-effort:planning-gh-issue -->` is found.
+- [ ] The prior plan comment starting with `<!-- token-effort-workflow:planning-gh-issue -->` is found.
 - [ ] The prior plan content (marker stripped) is extracted.
 - [ ] A "Prior Implementation Plan" section is included in the context passed to `superpowers:writing-plans`.
 - [ ] `superpowers:writing-plans` is invoked (not re-implemented inline).
 - [ ] Phase 4 posts a NEW comment — `gh issue comment` is called (not a comment edit).
-- [ ] The new comment starts with `<!-- token-effort:planning-gh-issue -->`.
+- [ ] The new comment starts with `<!-- token-effort-workflow:planning-gh-issue -->`.

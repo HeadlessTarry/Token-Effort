@@ -16,5 +16,5 @@ The user runs `/token-effort-workflow:building-gh-issue 15`. The issue exists an
 - [ ] No spec comment is found and execution halts.
 - [ ] The error message includes the issue number (15).
 - [ ] The error message instructs the user to run `/token-effort-workflow:brainstorming-gh-issue 15` (or equivalent brainstorming step) first.
-- [ ] `token-effort:move-issue-status` is NOT called.
+- [ ] `token-effort-workflow:move-issue-status` is NOT called.
 - [ ] No execution skill is invoked.

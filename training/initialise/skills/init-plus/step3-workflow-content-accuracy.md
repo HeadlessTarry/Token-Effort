@@ -14,7 +14,7 @@ the correct action versions, schedule (0 4 * * 1), allowedTools list, and prompt
 - [ ] References vars.PROJECT_MANAGER_CLIENT_ID and secrets.PROJECT_MANAGER_PRIVATE_KEY
 - [ ] References secrets.CLAUDE_CODE_OAUTH_TOKEN
 - [ ] plugin_marketplaces includes HeadlessTarry/Token-Effort.git
-- [ ] Prompt instructs to use token-effort:triaging-gh-issues with --advance-status
+- [ ] Prompt instructs to use token-effort-workflow:triaging-gh-issues
 - [ ] allowedTools includes Skill and the set of Bash(gh ...) permissions
 - [ ] claude_args includes --model sonnet
 - [ ] Prompt block includes the GITHUB_STEP_SUMMARY write pattern: SUMMARY_FILE=$(printenv GITHUB_STEP_SUMMARY) && echo ...

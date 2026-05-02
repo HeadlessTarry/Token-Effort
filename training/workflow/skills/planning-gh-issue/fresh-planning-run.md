@@ -1,6 +1,6 @@
 ## Scenario
 
-The user runs `/token-effort-workflow:planning-gh-issue 30`. The issue has a spec comment starting with `<!-- brainstorming-gh-issue:spec -->` but no prior plan comment starting with `<!-- token-effort:planning-gh-issue -->`.
+The user runs `/token-effort-workflow:planning-gh-issue 30`. The issue has a spec comment starting with `<!-- brainstorming-gh-issue:spec -->` but no prior plan comment starting with `<!-- token-effort-workflow:planning-gh-issue -->`.
 
 ## Expected Behaviour
 
@@ -11,7 +11,7 @@ The user runs `/token-effort-workflow:planning-gh-issue 30`. The issue has a spe
 ## Pass Criteria
 
 - [ ] The spec comment is found and its content (marker line stripped) is used as context.
-- [ ] All comments are searched for `<!-- token-effort:planning-gh-issue -->` — none found.
+- [ ] All comments are searched for `<!-- token-effort-workflow:planning-gh-issue -->` — none found.
 - [ ] `superpowers:writing-plans` is invoked with fresh context (no prior plan section).
 - [ ] The context passed to writing-plans includes the issue title, body, and spec content.
 - [ ] No "Prior Implementation Plan" section is included in the context.

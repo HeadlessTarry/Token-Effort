@@ -13,5 +13,5 @@ the workflow file.
 - [ ] Wrote .github/workflows/triaging-gh-issues.yml
 - [ ] Written workflow contains "anthropics/claude-code-action@v1"
 - [ ] Written workflow contains "actions/create-github-app-token@v3"
-- [ ] Written workflow contains "token-effort:triaging-gh-issues" in the prompt
+- [ ] Written workflow contains "token-effort-workflow:triaging-gh-issues" in the prompt
 - [ ] Completion summary reports the workflow was created

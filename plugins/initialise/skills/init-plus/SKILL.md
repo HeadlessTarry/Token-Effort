@@ -114,7 +114,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       issues: write
-      id-token: write
     steps:
       - name: 🔑 Authenticate as Project Manager
         id: project-manager-token
@@ -134,13 +133,13 @@ jobs:
           plugin_marketplaces: https://github.com/HeadlessTarry/Token-Effort.git
           plugins: token-effort-workflow
           prompt: |
-            Use the `token-effort-workflow:triaging-gh-issues` skill with `--advance-status`.
+            Use the `token-effort-workflow:triaging-gh-issues` skill.
             Triage all open issues in this repository.
 
             Upon completion, write a brief markdown summary of your activity to the GitHub Actions step summary using: SUMMARY_FILE=$(printenv GITHUB_STEP_SUMMARY) && echo "**[Claude]** {Activity summary}" >> "$SUMMARY_FILE"
           claude_args: >-
             --model sonnet
-            --allowedTools Skill,Bash(printenv *),Bash(git remote get-url *),Bash(gh issue list *),Bash(gh issue view *),Bash(gh search issues *),Bash(gh issue edit *),Bash(gh issue comment *),Bash(gh project list *),Bash(gh project item-list *),Bash(gh project field-list *),Bash(gh project item-edit *)
+            --allowedTools Skill,Bash(printenv *),Bash(git remote get-url *),Bash(gh issue list *),Bash(gh issue view *),Bash(gh search issues *),Bash(gh issue edit *),Bash(gh issue comment *)
 ```
 
 ---
@@ -161,7 +160,6 @@ Write `.github/ISSUE_TEMPLATE/01-feature_request.md`:
 name: Feature request
 about: Suggest an idea for this project
 title: ''
-labels: enhancement
 assignees: ''
 
 ---
@@ -189,7 +187,6 @@ Write `.github/ISSUE_TEMPLATE/02-bug_report.md`:
 name: Bug report
 about: Create a report to help us improve
 title: ''
-labels: bug
 assignees: ''
 
 ---

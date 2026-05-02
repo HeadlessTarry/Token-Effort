@@ -10,6 +10,6 @@ no messages, no actions are taken for them. The completion summary covers only S
 - [ ] Executed Step 3 (workflow, assuming prerequisites confirmed)
 - [ ] Did NOT print the superpowers recommendation (Step 2 not selected)
 - [ ] Did NOT write any issue template files (Step 4 not selected)
-- [ ] Did NOT invoke token-effort:configuring-dependabot (Step 5 not selected)
+- [ ] Did NOT invoke token-effort-initialise:configuring-dependabot (Step 5 not selected)
 - [ ] Did NOT execute Step 6 (not selected — no /verify commands asked, no SKILL.md written)
 - [ ] Completion summary mentions only Steps 1 and 3
