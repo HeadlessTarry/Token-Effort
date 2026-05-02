@@ -79,6 +79,8 @@ This returns a JSON object with `number`, `title`, `body`, `comments` (array of 
   - **Spec comment found:** extract the full body as the prior spec. This is a continuation — load both the issue context and the prior spec into Phase 3.
   - **No spec comment found** (label added manually): note "The `pending-review` label was present but no prior spec comment was found. Starting fresh." and proceed as a fresh brainstorm.
 
+After detecting state, invoke `token-effort-workflow:move-issue-status <N> "Brainstorming"` via the Skill tool to pull the issue into the correct project board column. Non-fatal — if it fails, log a warning and continue.
+
 ### Phase 3 — Handoff to `superpowers:brainstorming`
 
 Format the issue context as follows:
@@ -184,6 +186,7 @@ After Phase 4 completes, report:
 
 ## Common Mistakes
 
+- **Skipping the status pull in re-entry mode** — `move-issue-status "Brainstorming"` must be called on every invocation, including when the issue already has a `pending-review` label and is being re-entered.
 - **Using MCP tools for issue operations** — all issue interactions must use `gh` CLI commands. Never call any `mcp__plugin_github_github__*` tool, even if it is available.
 - **Invoking `writing-plans` after the user approves the spec** — the Phase 3 handoff instructs brainstorming to stop after step 8. Do not invoke `writing-plans` (step 9); proceed to Phase 4 instead.
 - **Not reading the spec file before posting** — always locate and read the file brainstorming wrote with `ls -t docs/superpowers/specs/*.md | head -1`. Do not reconstruct the spec content from memory.
@@ -205,6 +208,7 @@ After Phase 4 completes, report:
 - [ ] When no args given and branch has no digits: stopped with a message containing the suggested invocation `/brainstorming-gh-issue <N>`
 - [ ] When multiple issue numbers given as args: asked the user to choose one before fetching any issue
 - [ ] Fetched the issue with `gh issue view --json number,title,body,comments,labels`
+- [ ] Invoked `token-effort-workflow:move-issue-status <N> "Brainstorming"` in Phase 2 after detecting state (non-fatal on failure)
 - [ ] Identified the absence of `pending-review` label and proceeded as a fresh brainstorm
 - [ ] Identified the presence of `pending-review` label and searched comments for `<!-- brainstorming-gh-issue:spec -->`
 - [ ] In re-entry mode with spec found: loaded both issue context and prior spec into Phase 3
