@@ -4,6 +4,7 @@
     "anthropic.claude-code",
     "yonasvalentinmougaardkristensen.git-branch-manager-pro",
     "github.vscode-pull-request-github",
-    "sonarsource.sonarlint-vscode"
+    "sonarsource.sonarlint-vscode",
+    "github.vscode-github-actions"
   ]
 }
