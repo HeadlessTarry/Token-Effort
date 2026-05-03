@@ -46,7 +46,7 @@ plugins/
 │       ├── recording-decisions/SKILL.md
 │       ├── report-bug/SKILL.md
 │       ├── reviewing-code-systematically/SKILL.md
-│       └── triaging-gh-issues/SKILL.md
+│       └── triaging-gh-issue/SKILL.md
 └── labs/
     ├── .claude-plugin/plugin.json
     ├── agents/
@@ -88,7 +88,7 @@ Issues flow through the GitHub Project board:
 New → Brainstorming → Planning → Building → Done
 ```
 
-Each stage is handled by a dedicated skill (`/triaging-gh-issues`, `/brainstorming-gh-issue`, `/planning-gh-issue`, `/building-gh-issue`). Skills call `/move-issue-status` at completion to advance the board.
+Each stage is handled by a dedicated skill (`/triaging-gh-issue`, `/brainstorming-gh-issue`, `/planning-gh-issue`, `/building-gh-issue`). Skills call `/move-issue-status` at completion to advance the board.
 
 ### Skills
 

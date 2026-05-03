@@ -1,5 +1,5 @@
 ## Scenario
-A clean repository with no CLAUDE.md, no .github/workflows/triaging-gh-issues.yml, no
+A clean repository with no CLAUDE.md, no .github/workflows/triaging-gh-issue.yml, no
 .github/ISSUE_TEMPLATE/ directory, no .github/dependabot.yml, and no
 .claude/skills/verify/SKILL.md. The user selects "all". The user confirms prerequisites
 for Step 3, says yes to superpowers, and provides verification commands for Step 6.
@@ -14,7 +14,7 @@ respective file(s). Step 5 delegates to token-effort-initialise:configuring-depe
 - [ ] Step 1 created CLAUDE.md
 - [ ] Step 2 printed the superpowers recommendation and asked if installed
 - [ ] Step 3 asked about prerequisites before writing the workflow
-- [ ] Step 3 wrote .github/workflows/triaging-gh-issues.yml
+- [ ] Step 3 wrote .github/workflows/triaging-gh-issue.yml
 - [ ] Step 4 wrote all three issue template files
 - [ ] Step 5 invoked token-effort-initialise:configuring-dependabot via Skill tool
 - [ ] Step 6 asked for verification commands and wrote .claude/skills/verify/SKILL.md

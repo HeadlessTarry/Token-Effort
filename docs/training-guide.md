@@ -24,7 +24,7 @@ If you edit a skill or agent file while Claude Code is active, the `suggest-trai
 
 Examples:
 ```bash
-/run-training triaging-gh-issues
+/run-training triaging-gh-issue
 /run-training agent:reviewer-docs
 ```
 

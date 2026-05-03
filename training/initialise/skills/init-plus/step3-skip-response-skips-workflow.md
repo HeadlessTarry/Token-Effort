@@ -8,6 +8,6 @@ written, it is noted in the summary, and the skill continues cleanly.
 
 ## Pass Criteria
 - [ ] Treated "skip" as equivalent to "no" for the prerequisites question
-- [ ] Did NOT write .github/workflows/triaging-gh-issues.yml
+- [ ] Did NOT write .github/workflows/triaging-gh-issue.yml
 - [ ] Noted the skip in the completion summary
 - [ ] Skill continued and completed cleanly (did not halt or error)

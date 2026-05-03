@@ -124,7 +124,7 @@ The triage workflow uses one repository variable and two secrets. Add them under
 
 ## ⚙️ 6. Triage Workflow
 
-The triage workflow runs automatically every Monday at 4am UTC and can also be triggered manually. It authenticates as the Project Manager GitHub App, then invokes the `token-effort-workflow:triaging-gh-issues` skill, which labels issues by type, detects duplicates, and advances issue statuses on the project board.
+The triage workflow runs automatically every Monday at 4am UTC and can also be triggered manually. It authenticates as the Project Manager GitHub App, then invokes the `token-effort-workflow:triaging-gh-issue` skill, which labels issues by type, detects duplicates, and advances issue statuses on the project board.
 
 > **On a personal account?** See [Personal Account Alternative](#personal-account-alternative) for the workflow changes needed.
 
@@ -133,10 +133,10 @@ The triage workflow runs automatically every Monday at 4am UTC and can also be t
 1. Download the workflow file into your repository:
 
    ```bash
-   mkdir -p .github/workflows && curl -sSL https://raw.githubusercontent.com/HeadlessTarry/Token-Effort/main/.github/workflows/triaging-gh-issues.yml -o .github/workflows/triaging-gh-issues.yml
+   mkdir -p .github/workflows && curl -sSL https://raw.githubusercontent.com/HeadlessTarry/Token-Effort/main/.github/workflows/triaging-gh-issue.yml -o .github/workflows/triaging-gh-issue.yml
    ```
 
-   Alternatively, view the [latest version on main](https://github.com/HeadlessTarry/Token-Effort/blob/main/.github/workflows/triaging-gh-issues.yml) and copy its contents manually into `.github/workflows/triaging-gh-issues.yml` in your repository.
+   Alternatively, view the [latest version on main](https://github.com/HeadlessTarry/Token-Effort/blob/main/.github/workflows/triaging-gh-issue.yml) and copy its contents manually into `.github/workflows/triaging-gh-issue.yml` in your repository.
 
 2. Leave the `plugin_marketplaces` and `plugins` inputs as-is — they point to the Token-Effort plugin and should not be changed.
 
@@ -195,10 +195,10 @@ gh project list --owner <your-org>
 
 # Trigger the triage workflow manually (run from inside a cloned copy of your repo,
 # or pass --repo explicitly)
-gh workflow run triaging-gh-issues.yml --repo <your-org>/<your-repo>
+gh workflow run triaging-gh-issue.yml --repo <your-org>/<your-repo>
 ```
 
-After triggering the workflow, open the **Actions** tab in your repository and select the **Triage GitHub Issues** run. Claude will post a markdown summary to the step summary once it completes — a successful run will show a brief activity report under the `✨ Run skill` step.
+After triggering the workflow, open the **Actions** tab in your repository and select the **Triage GitHub Issue** run. Claude will post a markdown summary to the step summary once it completes — a successful run will show a brief activity report under the `✨ Run skill` step.
 
 ---
 

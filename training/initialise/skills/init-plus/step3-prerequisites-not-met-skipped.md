@@ -10,6 +10,6 @@ write the workflow file. The skill does not halt.
 ## Pass Criteria
 - [ ] Referenced docs/github-setup.md in the prerequisite message
 - [ ] Asked the user if prerequisites are configured before attempting to write the file
-- [ ] Did NOT write .github/workflows/triaging-gh-issues.yml
+- [ ] Did NOT write .github/workflows/triaging-gh-issue.yml
 - [ ] Noted "skipped (prerequisites not met)" or equivalent in the completion summary
 - [ ] Did NOT halt or error — continued cleanly to the summary

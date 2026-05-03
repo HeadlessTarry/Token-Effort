@@ -1,5 +1,5 @@
 ## Scenario
-A repository where CLAUDE.md exists and .github/workflows/triaging-gh-issues.yml exists,
+A repository where CLAUDE.md exists and .github/workflows/triaging-gh-issue.yml exists,
 but .github/ISSUE_TEMPLATE/ does not exist, .github/dependabot.yml does not exist, and
 .claude/skills/verify/SKILL.md does not exist.
 
@@ -15,7 +15,7 @@ The menu is presented with accurate status annotations reflecting what was found
 ## Pass Criteria
 - [ ] Step 1 shows [exists — will overwrite] (CLAUDE.md found)
 - [ ] Step 2 shows [not verified] (superpowers cannot be verified locally)
-- [ ] Step 3 shows [exists — will overwrite] (triaging-gh-issues.yml found)
+- [ ] Step 3 shows [exists — will overwrite] (triaging-gh-issue.yml found)
 - [ ] Step 4 shows [not present] (no ISSUE_TEMPLATE dir)
 - [ ] Step 5 shows [not present] (no dependabot.yml)
 - [ ] Step 6 shows [not present] (no .claude/skills/verify/SKILL.md)

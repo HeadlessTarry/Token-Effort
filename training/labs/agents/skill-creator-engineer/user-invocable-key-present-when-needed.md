@@ -1,6 +1,6 @@
 ## Scenario
-The agent is in Review mode auditing `plugins/workflow/skills/triaging-gh-issues/SKILL.md`. The
-skill is directly invocable by users via `/triaging-gh-issues` but has no
+The agent is in Review mode auditing `plugins/workflow/skills/triaging-gh-issue/SKILL.md`. The
+skill is directly invocable by users via `/triaging-gh-issue` but has no
 `user-invocable: true` key in its frontmatter.
 
 ## Expected Behavior

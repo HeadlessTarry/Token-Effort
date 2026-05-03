@@ -35,7 +35,7 @@ Scan the repository using Glob to detect which artefacts already exist:
 |---|---|
 | 1. CLAUDE.md | `CLAUDE.md` (repo root) |
 | 2. Superpowers plugin | Cannot be verified locally — always show `[not verified]` |
-| 3. Triage workflow | `.github/workflows/triaging-gh-issues.yml` |
+| 3. Triage workflow | `.github/workflows/triaging-gh-issue.yml` |
 | 4. Issue templates | `.github/ISSUE_TEMPLATE/` (any file in this directory) |
 | 5. Dependabot | `.github/dependabot.yml` |
 | 6. Bootstrap `/verify` skill | `.claude/skills/verify/SKILL.md` |
@@ -92,21 +92,26 @@ Ask:
 > "Is everything in [docs/github-setup.md](https://github.com/HeadlessTarry/Token-Effort/blob/v0.9.0/docs/github-setup.md) configured? [yes/no/skip]"
 
 If the user says no or skips, print: "> Complete the setup in [docs/github-setup.md](https://github.com/HeadlessTarry/Token-Effort/blob/v0.9.0/docs/github-setup.md), then re-run `/token-effort-initialise:init-plus` and select Step 3 to continue." Note "Triage workflow: skipped (prerequisites not met)" in the summary and continue to Step 4.
-If `.github/workflows/triaging-gh-issues.yml` exists:
-> "`.github/workflows/triaging-gh-issues.yml` already exists. Overwrite? [yes/no]"
+If `.github/workflows/triaging-gh-issue.yml` exists:
+> "`.github/workflows/triaging-gh-issue.yml` already exists. Overwrite? [yes/no]"
 
 Wait for confirmation. If the user says no, note "Triage workflow: skipped (overwrite declined)" in the summary and continue.
 Create directory `.github/workflows/` if it does not exist.
-Write `.github/workflows/triaging-gh-issues.yml`:
+Write `.github/workflows/triaging-gh-issue.yml`:
 
 ```yaml
 ---
-name: Triage GitHub Issues
+name: Triage GitHub Issue
 # yamllint disable-line rule:truthy
 on:
-  schedule:
-    - cron: '0 4 * * 1'
+  issues:
+    types: [opened]
   workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to triage'
+        required: true
+        type: number
 
 jobs:
   triage:
@@ -125,7 +130,7 @@ jobs:
           owner: ${{ github.repository_owner }}
 
       - name: ✨ Run skill
-        uses: anthropics/claude-code-action@v1
+        uses: anthropics/claude-code-action@fefa07e9c665b7320f08c3b525980457f22f58aa #v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ steps.project-manager-token.outputs.token }}
@@ -133,13 +138,13 @@ jobs:
           plugin_marketplaces: https://github.com/HeadlessTarry/Token-Effort.git
           plugins: token-effort-workflow
           prompt: |
-            Use the `token-effort-workflow:triaging-gh-issues` skill.
-            Triage all open issues in this repository.
+            Use the `token-effort-workflow:triaging-gh-issue` skill.
+            Triage issue #${{ github.event.issue.number || inputs.issue_number }}.
 
             Upon completion, write a brief markdown summary of your activity to the GitHub Actions step summary using: SUMMARY_FILE=$(printenv GITHUB_STEP_SUMMARY) && echo "**[Claude]** {Activity summary}" >> "$SUMMARY_FILE"
           claude_args: >-
             --model sonnet
-            --allowedTools Skill,Bash(printenv *),Bash(git remote get-url *),Bash(gh issue list *),Bash(gh issue view *),Bash(gh search issues *),Bash(gh issue edit *),Bash(gh issue comment *)
+            --allowedTools Skill,Bash(printenv *),Bash(git remote get-url *),Bash(git branch --show-current),Bash(gh issue view *),Bash(gh search issues *),Bash(gh issue edit *),Bash(gh issue comment *)
 ```
 
 ---

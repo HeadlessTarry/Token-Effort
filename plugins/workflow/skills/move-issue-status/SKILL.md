@@ -23,7 +23,7 @@ Moves a GitHub issue to a named project board status column (explicit mode), or 
 
 **Do not use when:**
 - You need to move multiple issues at once (run once per issue)
-- You want to label or otherwise edit an issue (use `triaging-gh-issues` instead)
+- You want to label or otherwise edit an issue (use `triaging-gh-issue` instead)
 
 ## Prerequisites
 

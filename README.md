@@ -17,7 +17,7 @@ claude plugin install token-effort-labs@labs
 
 After install, Claude Code will list the active plugins. You'll also need a GitHub Project board - see [github-setup.md](docs/github-setup.md) for more detail.
 
-Skills become `/token-effort-workflow:triaging-gh-issues`, `/token-effort-initialise:init-plus`, etc.
+Skills become `/token-effort-workflow:triaging-gh-issue`, `/token-effort-initialise:init-plus`, etc.
 
 ## 📚 Documentation Index
 
@@ -36,7 +36,7 @@ Skills become `/token-effort-workflow:triaging-gh-issues`, `/token-effort-initia
 | [recording-decisions](plugins/workflow/skills/recording-decisions/SKILL.md) | workflow | Record Architecture Decision Records (ADRs) in docs/decisions |
 | [report-bug](plugins/workflow/skills/report-bug/SKILL.md) | workflow | File new bug reports through guided interview |
 | [reviewing-code-systematically](plugins/workflow/skills/reviewing-code-systematically/SKILL.md) | workflow | Perform comprehensive code reviews on branches or main |
-| [triaging-gh-issues](plugins/workflow/skills/triaging-gh-issues/SKILL.md) | workflow | Triage open issues: classify, label, and optionally advance project board status |
+| [triaging-gh-issue](plugins/workflow/skills/triaging-gh-issue/SKILL.md) | workflow | Triage open issues: classify, label, and optionally advance project board status |
 
 ### 🤖 Agents
 
@@ -85,7 +85,7 @@ graph LR
 
     subgraph COL1["📋 New"]
         direction TB
-        TRIAGE["/triaging-gh-issues"]
+        TRIAGE["/triaging-gh-issue"]
     end
 
     subgraph COL2["🧠 Brainstorming"]
