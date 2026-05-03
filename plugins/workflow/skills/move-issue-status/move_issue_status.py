@@ -74,7 +74,18 @@ def get_status_field(owner: str, project_number: int) -> dict | None:
     return None
 
 
+def has_pending_review_label(issue_number: int) -> bool:
+    result = subprocess.run(
+        ["gh", "issue", "view", str(issue_number), "--json", "labels"],
+        capture_output=True, text=True, encoding="utf-8",
+    )
+    data = json.loads(result.stdout)
+    return any(label.get("name") == "pending-review" for label in data.get("labels", []))
+
+
 def run(issue_number: int, target_status: str | None) -> dict:
+    if has_pending_review_label(issue_number):
+        return {"status": "blocked", "issue": issue_number}
     owner, _repo = resolve_repo()  # gh project commands use owner only
     matches = find_project_item(owner, issue_number)
 
