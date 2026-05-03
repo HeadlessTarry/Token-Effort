@@ -1,6 +1,7 @@
 """Move a GitHub issue to a named project board status column.
 
 Outputs a single JSON line to stdout. Exit code is always 0.
+Returns {"status": "blocked"} without touching the board when the issue carries a pending-review label.
 """
 import json
 import os
@@ -74,7 +75,20 @@ def get_status_field(owner: str, project_number: int) -> dict | None:
     return None
 
 
+def has_pending_review_label(issue_number: int) -> bool:
+    result = subprocess.run(
+        ["gh", "issue", "view", str(issue_number), "--json", "labels"],  # relies on gh's ambient repo detection from the local git remote
+        capture_output=True, text=True, encoding="utf-8",
+    )
+    if result.returncode != 0 or not result.stdout.strip():
+        return False
+    data = json.loads(result.stdout)
+    return any(label.get("name") == "pending-review" for label in data.get("labels", []))
+
+
 def run(issue_number: int, target_status: str | None) -> dict:
+    if has_pending_review_label(issue_number):
+        return {"status": "blocked", "issue": issue_number, "reason": "pending-review"}
     owner, _repo = resolve_repo()  # gh project commands use owner only
     matches = find_project_item(owner, issue_number)
 

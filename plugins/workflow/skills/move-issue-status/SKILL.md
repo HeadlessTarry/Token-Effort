@@ -64,6 +64,7 @@ Use the `status` field from the JSON to determine output:
 |----------|--------|
 | `"moved"` | Print: `Moved issue #<issue> to '<to>' in project '<project>'` |
 | `"skipped"` | No output. Stop. |
+| `"blocked"` | Print: `Issue #<issue> has the \`pending-review\` label — a human must remove it before this issue can be advanced.` Stop. |
 | `"error"` | Report the `message` field. Stop. |
 
 ## ⚠️ Common Mistakes
@@ -74,6 +75,7 @@ Use the `status` field from the JSON to determine output:
 - **Treating `status == "error"` as fatal** — report the `message` and stop, but do not raise an exception or block callers.
 - **Passing the `#` prefix to the script** — strip `#` before constructing the command.
 - **Using MCP tools** — all GitHub operations happen inside the Python script via `gh` CLI.
+- **Treating `"blocked"` like `"skipped"` (silent)** — `"blocked"` must always produce a visible message. It is not a no-op; it signals an active human checkpoint.
 
 ## Eval
 
@@ -85,5 +87,7 @@ Use the `status` field from the JSON to determine output:
 - [ ] For `status == "moved"`: printed message with issue number, target status, and project name
 - [ ] For `status == "skipped"`: produced no output
 - [ ] For `status == "error"`: reported the `message` field
+- [ ] For `status == "blocked"`: printed visible message referencing issue number and `pending-review`
+- [ ] For `status == "blocked"`: did NOT treat it as `"skipped"` (silent)
 - [ ] No MCP tools used
 - [ ] No `${...}` shell expansion used
