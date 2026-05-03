@@ -17,4 +17,4 @@ The issue belongs to exactly one GitHub project (project 1, "Roadmap"). Its curr
 - [ ] `gh project item-list` is NOT called.
 - [ ] `gh project field-list` is NOT called.
 - [ ] `gh project item-edit` is NOT called.
-- [ ] Final report shows 1 applied, 0 reclassified, 0 unchanged, 0 failures.
+- [ ] Triage output references issue #42 with label `bug` applied.

@@ -15,5 +15,5 @@ One open issue is currently labelled `enhancement`. Its title is "App crashes on
 - [ ] The skill does not display a confirmation table or prompt the user for input.
 - [ ] `gh issue edit` is called to set the label to `bug` for the issue.
 - [ ] `gh issue comment` is called exactly once for this issue.
-- [ ] The comment references the old label `enhancement` and the new label `bug`.
-- [ ] Final report shows 0 applied, 1 reclassified, 0 unchanged, 0 failures.
+- [ ] The comment references both the old label (`enhancement`) and the new label (`bug`).
+- [ ] The triage output references issue #<N> with label `bug`.

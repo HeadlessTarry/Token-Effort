@@ -188,6 +188,12 @@ If confidence < 70%, the Label applied line reads:
 **Label applied:** none (low confidence — <N>%)
 ```
 
+When reclassifying (removing an existing supported label and adding a new one), the `**Label applied:**` line must name the old label:
+
+```
+**Label applied:** `<new-label>` (was `<old-label>`)
+```
+
 After Phase 5 completes, report:
 
 ```
@@ -215,6 +221,7 @@ Triage complete:
 - **Using shell expansion syntax** — never use `${VARIABLE}` or any `${...}` form. Use `printenv VARIABLE` instead.
 - **Using MCP tools** — all issue operations must use `gh` CLI commands.
 - **Falling back to `git remote` in GitHub Actions** — if `GITHUB_REPOSITORY` is missing in GHA, stop with an error. Do not call `git remote get-url origin`.
+- **Omitting the old label on reclassify** — when replacing an existing supported label, the `**Label applied:**` line must include `(was \`<old-label>\`)`.
 
 ## Eval
 
@@ -238,3 +245,4 @@ Triage complete:
 - [ ] Triage summary comment always posted (including for first-time label applications)
 - [ ] No `mcp__` tool called
 - [ ] No `${...}` shell expansion used
+- [ ] When reclassifying, `**Label applied:**` line includes `(was \`<old-label>\`)`
