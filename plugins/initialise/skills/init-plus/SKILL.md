@@ -24,7 +24,7 @@ Step 5 (Dependabot) is delegated entirely to `token-effort-initialise:configurin
 
 ## Prerequisites
 <!-- The version tag in the github-setup.md URLs below is updated automatically by release.yml at publish time. Do not change it manually. -->
-- For Step 3: a GitHub App and project board must be configured — see [docs/github-setup.md](https://github.com/HeadlessTarry/Token-Effort/blob/v0.9.0/docs/github-setup.md)
+- For Step 3: a GitHub App and project board must be configured — see [docs/github-setup.md](https://github.com/HeadlessTarry/Token-Effort/blob/v0.10.0/docs/github-setup.md)
 - For Step 5: the `token-effort-initialise:configuring-dependabot` skill must be installed
 
 ## Process
@@ -87,11 +87,11 @@ If the user says no or skips, note "Superpowers plugin: not installed (recommend
 **Step 3 — Auto-triage GitHub Actions workflow**
 Print:
 
-> "Step 3 requires a GitHub App and project board. See [docs/github-setup.md](https://github.com/HeadlessTarry/Token-Effort/blob/v0.9.0/docs/github-setup.md) for setup instructions."
+> "Step 3 requires a GitHub App and project board. See [docs/github-setup.md](https://github.com/HeadlessTarry/Token-Effort/blob/v0.10.0/docs/github-setup.md) for setup instructions."
 Ask:
-> "Is everything in [docs/github-setup.md](https://github.com/HeadlessTarry/Token-Effort/blob/v0.9.0/docs/github-setup.md) configured? [yes/no/skip]"
+> "Is everything in [docs/github-setup.md](https://github.com/HeadlessTarry/Token-Effort/blob/v0.10.0/docs/github-setup.md) configured? [yes/no/skip]"
 
-If the user says no or skips, print: "> Complete the setup in [docs/github-setup.md](https://github.com/HeadlessTarry/Token-Effort/blob/v0.9.0/docs/github-setup.md), then re-run `/token-effort-initialise:init-plus` and select Step 3 to continue." Note "Triage workflow: skipped (prerequisites not met)" in the summary and continue to Step 4.
+If the user says no or skips, print: "> Complete the setup in [docs/github-setup.md](https://github.com/HeadlessTarry/Token-Effort/blob/v0.10.0/docs/github-setup.md), then re-run `/token-effort-initialise:init-plus` and select Step 3 to continue." Note "Triage workflow: skipped (prerequisites not met)" in the summary and continue to Step 4.
 If `.github/workflows/triaging-gh-issue.yml` exists:
 > "`.github/workflows/triaging-gh-issue.yml` already exists. Overwrite? [yes/no]"
 
@@ -323,7 +323,7 @@ No git commit is made. The user decides what to commit.
 - [ ] Step 1: Did not write `CLAUDE.md` directly or use a hardcoded template
 - [ ] Step 2: Printed superpowers install recommendation with GitHub URL
 - [ ] Step 2: Asked if installed; did not block on "no" or "skip"
-- [ ] Step 3: Referenced [docs/github-setup.md](https://github.com/HeadlessTarry/Token-Effort/blob/v0.9.0/docs/github-setup.md) for prerequisites
+- [ ] Step 3: Referenced [docs/github-setup.md](https://github.com/HeadlessTarry/Token-Effort/blob/v0.10.0/docs/github-setup.md) for prerequisites
 - [ ] Step 3: Asked if prerequisites set up; skipped workflow on "no"/"skip"
 - [ ] Step 3: Warned and confirmed before overwriting existing workflow file
 - [ ] Step 3: Wrote workflow with exact content matching the template above

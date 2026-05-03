@@ -1,6 +1,6 @@
 {
   "name": "token-effort-initialise",
   "description": "Skills for initialising a GitHub repository with Claude Code conventions",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "repository": "https://github.com/HeadlessTarry/Token-Effort"
 }
