@@ -12,5 +12,5 @@ summary reports the workflow as created/overwritten (not skipped).
 - [ ] Warned that the file already exists before writing
 - [ ] Asked for overwrite confirmation
 - [ ] Wrote .github/workflows/triaging-gh-issue.yml after "yes"
-- [ ] Written workflow contains "anthropics/claude-code-action@v1"
+- [ ] Written workflow contains "anthropics/claude-code-action@fefa07e9c665b7320f08c3b525980457f22f58aa #v1"
 - [ ] Completion summary reports workflow as created or overwritten (not skipped)

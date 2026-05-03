@@ -11,7 +11,7 @@ input), allowedTools list, and prompt text.
 - [ ] Workflow name is "Triage GitHub Issue"
 - [ ] Trigger is `on: issues: types: [opened]` (not a cron schedule)
 - [ ] `workflow_dispatch` has an `issue_number` input with `required: true` and `type: number`
-- [ ] Uses anthropics/claude-code-action@v1
+- [ ] Uses "anthropics/claude-code-action@fefa07e9c665b7320f08c3b525980457f22f58aa #v1"
 - [ ] Uses actions/create-github-app-token@v3
 - [ ] References vars.PROJECT_MANAGER_CLIENT_ID and secrets.PROJECT_MANAGER_PRIVATE_KEY
 - [ ] References secrets.CLAUDE_CODE_OAUTH_TOKEN
