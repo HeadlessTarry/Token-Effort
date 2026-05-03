@@ -82,3 +82,11 @@ jobs:
           gh release create "v$VERSION" \
             --generate-notes \
             --title "v$VERSION"
+
+      - name: 🎉 Summarise release
+        run: |
+          echo "## 🎉 Release Published" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Version:** v$VERSION" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Link:** [View release on GitHub](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> "$GITHUB_STEP_SUMMARY"
