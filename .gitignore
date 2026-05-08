@@ -1,6 +1,11 @@
+# Git Worktrees
 .worktrees/
+
+# Brainstorming/Planning
 docs/superpowers/
+
+# Training
+.training-results/
 
 __pycache__/
 *.pyc
-.worktrees/
