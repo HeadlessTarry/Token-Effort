@@ -6,7 +6,7 @@ docs/superpowers/
 .opencode/plans/
 
 # Training
-.training-results/
+**/.training-results/
 
 __pycache__/
 *.pyc
