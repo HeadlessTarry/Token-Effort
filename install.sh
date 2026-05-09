@@ -56,7 +56,11 @@ done
 
 mkdir -p "$DEST/skills" "$DEST/agents"
 
-if [[ -n "$INSTALL_SKILL" ]]; then
+if [[ -n "$INSTALL_SKILL" ]] && [[ -n "$INSTALL_AGENT" ]]; then
+    echo "Error: --skill and --agent are mutually exclusive" >&2
+    usage >&2
+    exit 1
+elif [[ -n "$INSTALL_SKILL" ]]; then
     if [[ -d "skills/$INSTALL_SKILL" ]]; then
         cp -r "skills/$INSTALL_SKILL" "$DEST/skills/"
         echo "  Synced skills/$INSTALL_SKILL → $DEST/skills/$INSTALL_SKILL"
