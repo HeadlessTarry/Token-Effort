@@ -138,3 +138,14 @@ Report key:
 - **retained** = conflicting ecosystems the user chose to keep as-is
 - Identical entries are silently skipped and do not appear in the report
 - Omit any category with zero items
+
+## Common Mistakes
+
+- **Applying cooldown to `github-actions`** — `github-actions` does not support the cooldown option. Never include a `cooldown` block on a `github-actions` entry.
+- **Writing duplicate ecosystem entries** — if both `requirements.txt` and `pyproject.toml` exist, write only one `pip` entry. If both `Gemfile` and `*.gemspec` exist, write only one `bundler` entry.
+- **Ignoring `.github/dependabot.yaml`** — always check for the `.yaml` variant (wrong extension) in addition to `.yml`. Warn the user if it exists.
+- **Writing the file when no ecosystems are detected** — if the scan finds no indicators, output the "no ecosystems" message and stop without writing.
+- **Prompting for whole-file overwrite when `.github/dependabot.yml` exists** — use the append-only merge path instead. Only per-ecosystem conflict prompts are used.
+- **Skipping the conflict prompt when an ecosystem is present with different settings** — always ask the user per-conflicting-ecosystem. Never silently overwrite or silently skip a conflicting entry.
+- **Failing to detect `.pre-commit-config.yaml`** — this file maps to the `pre-commit` ecosystem. It must be checked in Phase 1 alongside all other indicator files.
+- **Using a non-root directory** — always use `directory: /` unless the user specifies otherwise.
