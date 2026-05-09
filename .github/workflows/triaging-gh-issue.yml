@@ -36,4 +36,3 @@ jobs:
           model: opencode-go/qwen3.6-plus
           prompt: |
             Use the triaging-gh-issue skill to triage issue ${{ github.event.issue.number || inputs.issue_number }}.
-          use_github_token: true
