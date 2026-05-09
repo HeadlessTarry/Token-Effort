@@ -18,19 +18,19 @@ jobs:
       contents: read
       issues: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: ⤵️ Checkout repository
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
 
-      - name: Install skill
-        run: bash install.sh --local --skill triaging-gh-issue
+      # No need to run install.sh as skills are local to this repo
 
-      - name: Run OpenCode
+      - name: ✨ Run OpenCode
         uses: anomalyco/opencode/github@8ba2a9171597262df9d19516c82a5e14f18f5c63
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
-          model: anthropic/claude-sonnet-4-20250514
+          model: opencode-go/qwen3.6-plus
           prompt: |
             Use the triaging-gh-issue skill to triage issue ${{ github.event.issue.number || inputs.issue_number }}.
+          
