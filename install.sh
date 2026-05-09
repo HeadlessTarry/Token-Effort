@@ -13,6 +13,7 @@ usage() {
 }
 
 # Defaults
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DEST="$HOME/.config/opencode"
 INSTALL_SKILL=""
 INSTALL_AGENT=""
@@ -61,16 +62,24 @@ if [[ -n "$INSTALL_SKILL" ]] && [[ -n "$INSTALL_AGENT" ]]; then
     usage >&2
     exit 1
 elif [[ -n "$INSTALL_SKILL" ]]; then
-    if [[ -d "skills/$INSTALL_SKILL" ]]; then
-        cp -r "skills/$INSTALL_SKILL" "$DEST/skills/"
+    if [[ "$INSTALL_SKILL" == *..* ]] || [[ "$INSTALL_SKILL" == /* ]]; then
+        echo "Error: Invalid skill name: $INSTALL_SKILL" >&2
+        exit 1
+    fi
+    if [[ -d "$SCRIPT_DIR/skills/$INSTALL_SKILL" ]]; then
+        cp -r "$SCRIPT_DIR/skills/$INSTALL_SKILL" "$DEST/skills/"
         echo "  Synced skills/$INSTALL_SKILL → $DEST/skills/$INSTALL_SKILL"
     else
         echo "Error: Skill not found: $INSTALL_SKILL" >&2
         exit 1
     fi
 elif [[ -n "$INSTALL_AGENT" ]]; then
-    if [[ -f "agents/$INSTALL_AGENT.md" ]]; then
-        cp "agents/$INSTALL_AGENT.md" "$DEST/agents/"
+    if [[ "$INSTALL_AGENT" == *..* ]] || [[ "$INSTALL_AGENT" == /* ]]; then
+        echo "Error: Invalid agent name: $INSTALL_AGENT" >&2
+        exit 1
+    fi
+    if [[ -f "$SCRIPT_DIR/agents/$INSTALL_AGENT.md" ]]; then
+        cp "$SCRIPT_DIR/agents/$INSTALL_AGENT.md" "$DEST/agents/"
         echo "  Synced agents/$INSTALL_AGENT.md → $DEST/agents/$INSTALL_AGENT.md"
     else
         echo "Error: Agent not found: $INSTALL_AGENT" >&2
@@ -79,8 +88,8 @@ elif [[ -n "$INSTALL_AGENT" ]]; then
 else
     # Install everything
     for dir in skills agents; do
-        if [[ -d "$dir" ]] && [[ "$(ls -A "$dir" 2>/dev/null)" ]]; then
-            cp -r "$dir"/. "$DEST/$dir/"
+        if [[ -d "$SCRIPT_DIR/$dir" ]] && [[ "$(ls -A "$SCRIPT_DIR/$dir" 2>/dev/null)" ]]; then
+            cp -r "$SCRIPT_DIR/$dir"/. "$DEST/$dir/"
             echo "  Synced $dir/ → $DEST/$dir/"
         fi
     done
