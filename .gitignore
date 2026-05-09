@@ -1,0 +1,7 @@
+# Planning
+.opencode/plans/
+
+# Plugin Development
+node_modules/
+package.json
+package-lock.json
