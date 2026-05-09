@@ -62,7 +62,7 @@ Check for **both** `.github/dependabot.yml` and `.github/dependabot.yaml`.
 
 - If `.github/dependabot.yml` exists, apply an **append-only merge**:
 
-  1. **Read** the file and extract all `package-ecosystem:` values from the `updates:` list using text matching.
+  1. Use the `read` tool to read the file and extract all `package-ecosystem:` values from the `updates:` list using text matching.
   2. **Classify** each detected ecosystem into one of three buckets:
      - **New** — not present in the existing file → will be appended in Phase 3
      - **Identical** — present and matches the standard config (weekly schedule + correct cooldown presence/absence for this ecosystem) → skip silently
