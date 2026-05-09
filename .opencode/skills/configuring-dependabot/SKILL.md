@@ -149,3 +149,21 @@ Report key:
 - **Skipping the conflict prompt when an ecosystem is present with different settings** — always ask the user per-conflicting-ecosystem. Never silently overwrite or silently skip a conflicting entry.
 - **Failing to detect `.pre-commit-config.yaml`** — this file maps to the `pre-commit` ecosystem. It must be checked in Phase 1 alongside all other indicator files.
 - **Using a non-root directory** — always use `directory: /` unless the user specifies otherwise.
+
+## Eval
+
+- [ ] Scanned all seven ecosystem indicator patterns using glob
+- [ ] Deduplicated ecosystems (no duplicate entries for pip, bundler, etc.)
+- [ ] Reported "no ecosystems detected" and stopped (no file written) when none found
+- [ ] Checked for both `.github/dependabot.yml` and `.github/dependabot.yaml`
+- [ ] Warned about `.github/dependabot.yaml` (wrong extension) and asked before proceeding
+- [ ] When `.github/dependabot.yml` exists: read file and classified each detected ecosystem as New / Identical / Conflicting before writing
+- [ ] Detected `pre-commit` ecosystem when `.pre-commit-config.yaml` is present; no cooldown block written for `pre-commit`
+- [ ] Appended only New ecosystems; left Identical entries untouched without any overwrite prompt
+- [ ] Asked user per-conflicting-ecosystem (not a whole-file overwrite prompt)
+- [ ] Completion report distinguishes added / updated / retained; omits zero-item categories
+- [ ] Reported "already up to date" when all detected ecosystems were Identical
+- [ ] Wrote one entry per detected ecosystem with `schedule.interval: weekly`
+- [ ] Included cooldown block only for ecosystems that support it (not github-actions)
+- [ ] Used `directory: /` for all ecosystems
+- [ ] Reported which ecosystems were configured after writing
