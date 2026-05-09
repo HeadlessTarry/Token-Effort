@@ -25,6 +25,8 @@ jobs:
           persist-credentials: false
 
       - name: ⚙️ Install skill
+        # Do not install locally, as opencode will see a dirty local branch and raise a PR for the changes
+        # See https://github.com/anomalyco/opencode/issues/21636
         run: bash ./install.sh --skill triaging-gh-issue
 
       - name: ✨ Run OpenCode
