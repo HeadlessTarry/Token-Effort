@@ -1,0 +1,42 @@
+name: Triage GitHub Issue
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number to triage'
+        required: true
+        type: number
+
+jobs:
+  triage:
+    name: 🔍 Triage
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Checkout Token-Effort
+        uses: actions/checkout@v6
+        with:
+          repository: HeadlessTarry/Token-Effort
+          path: token-effort
+
+      - name: Install skill
+        run: bash token-effort/install.sh --local --skill triaging-gh-issue
+
+      - name: Checkout target repo
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Run OpenCode
+        uses: anomalyco/opencode/github@8ba2a9171597262df9d19516c82a5e14f18f5c63
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        with:
+          model: anthropic/claude-sonnet-4-20250514
+          prompt: |
+            Use the triaging-gh-issue skill to triage issue #${{ github.event.issue.number || inputs.issue_number }}.
