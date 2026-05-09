@@ -25,3 +25,27 @@ Reference: https://docs.github.com/en/code-security/reference/supply-chain-secur
 ## Prerequisites
 
 None. All operations are local file reads and writes.
+
+## Process
+
+### Phase 1 — Scan for ecosystem indicators
+
+Use the `glob` tool to check for each of the following patterns from the repo root. Each ecosystem must appear **at most once** in the output list — if multiple file patterns map to the same ecosystem, deduplicate (e.g. both `requirements.txt` and `pyproject.toml` both map to `pip`; only one `pip` entry is written).
+
+| File pattern | Ecosystem |
+|---|---|
+| `package.json` | `npm` |
+| `requirements.txt` or `pyproject.toml` | `pip` |
+| `*.gemspec` or `Gemfile` | `bundler` |
+| `go.mod` | `gomod` |
+| `Cargo.toml` | `cargo` |
+| `.github/workflows/*.yml` | `github-actions` (include whenever any workflow file exists) |
+| `.pre-commit-config.yaml` | `pre-commit` |
+
+Collect all **unique** matching ecosystems into an ordered list (preserve detection order above).
+
+If no ecosystems are detected, output:
+
+> "No package ecosystems detected in this repository. Dependabot configuration not written."
+
+Then stop without writing any file.
