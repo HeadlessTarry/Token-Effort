@@ -1,0 +1,92 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "SemVer version to release (e.g. 1.2.3)"
+        type: string
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: 📦 Create Release
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      VERSION: ${{ inputs.version }}
+    steps:
+      - name: 🔍 Validate SemVer format
+        run: |
+          if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Error: '$VERSION' is not a valid SemVer string (expected X.Y.Z)"
+            exit 1
+          fi
+
+      - name: 🔑 Authenticate as Release Manager
+        id: release-manager-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.RELEASE_MANAGER_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_MANAGER_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+
+      - name: ⤵️ Checkout repository
+        uses: actions/checkout@v6
+        with:
+          token: ${{ steps.release-manager-token.outputs.token }}
+          fetch-depth: 1
+
+      - name: 🔍 Check tag does not exist
+        run: |
+          if git ls-remote --tags origin "refs/tags/v$VERSION" | grep -q .; then
+            echo "Tag v$VERSION already exists. Aborting."
+            exit 1
+          fi
+
+      - name: 📝 Patch plugin.json version and SKILL.md URLs
+        run: |
+          for plugin in plugins/initialise plugins/workflow plugins/labs; do
+            jq --arg version "$VERSION" '.version = $version' \
+              "$plugin/.claude-plugin/plugin.json" > plugin.json.tmp
+            mv plugin.json.tmp "$plugin/.claude-plugin/plugin.json"
+          done
+          sed -i "s|/blob/v[0-9]*\.[0-9]*\.[0-9]*/docs/github-setup|/blob/v$VERSION/docs/github-setup|g" \
+            plugins/initialise/skills/init-plus/SKILL.md
+          EXPECTED=5
+          ACTUAL=$(grep -c "HeadlessTarry/Token-Effort/blob/v$VERSION/docs/github-setup" plugins/initialise/skills/init-plus/SKILL.md || true)
+          if [ "$ACTUAL" -ne "$EXPECTED" ]; then
+            echo "Expected $EXPECTED versioned URLs in SKILL.md after sed, found $ACTUAL. Check for unmatched URL formats."
+            exit 1
+          fi
+
+      - name: 📝 Commit and push version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add plugins/initialise/.claude-plugin/plugin.json plugins/workflow/.claude-plugin/plugin.json plugins/labs/.claude-plugin/plugin.json plugins/initialise/skills/init-plus/SKILL.md
+          git diff --cached --quiet || git commit -m "chore: release v$VERSION"
+          git push origin HEAD
+
+      - name: 🏷️ Create git tag
+        run: |
+          git tag "v$VERSION"
+          git push origin "v$VERSION"
+
+      - name: 📦 Create GitHub release
+        run: |
+          gh release create "v$VERSION" \
+            --generate-notes \
+            --title "v$VERSION"
+
+      - name: 🎉 Summarise release
+        run: |
+          echo "## 🎉 Release Published" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Version:** v$VERSION" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Link:** [View release on GitHub](https://github.com/${{ github.repository }}/releases/tag/v$VERSION)" >> "$GITHUB_STEP_SUMMARY"
