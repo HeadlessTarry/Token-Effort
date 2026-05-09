@@ -25,7 +25,7 @@ jobs:
           persist-credentials: false
 
       - name: ⚙️ Install skill
-        run: ./install.sh --local --skill triaging-gh-issue
+        run: bash ./install.sh --local --skill triaging-gh-issue
 
       - name: ✨ Run OpenCode
         uses: anomalyco/opencode/github@8ba2a9171597262df9d19516c82a5e14f18f5c63
