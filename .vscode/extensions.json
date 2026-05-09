@@ -3,6 +3,7 @@
     "yonasvalentinmougaardkristensen.git-branch-manager-pro",
     "github.vscode-pull-request-github",
     "sonarsource.sonarlint-vscode",
-    "github.vscode-github-actions"
+    "github.vscode-github-actions",
+    "sst-dev.opencode"
   ]
 }
