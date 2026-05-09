@@ -33,4 +33,4 @@ jobs:
         with:
           model: anthropic/claude-sonnet-4-20250514
           prompt: |
-            Use the triaging-gh-issue skill to triage issue #${{ github.event.issue.number || inputs.issue_number }}.
+            Use the triaging-gh-issue skill to triage issue ${{ github.event.issue.number || inputs.issue_number }}.

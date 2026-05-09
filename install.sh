@@ -22,7 +22,7 @@ INSTALL_AGENT=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --local)
-            DEST=".opencode"
+            DEST="$(pwd)/.opencode"
             shift
             ;;
         --skill)
