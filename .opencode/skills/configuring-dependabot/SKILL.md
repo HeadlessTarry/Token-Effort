@@ -78,3 +78,63 @@ Check for **both** `.github/dependabot.yml` and `.github/dependabot.yaml`.
   > "`.github/dependabot.yml` is already up to date. No changes made."
 
   Then stop without writing.
+
+### Phase 3 — Write `.github/dependabot.yml`
+
+**When no existing file is present:** write the full file from scratch with one entry per detected ecosystem. Always use `directory: /`.
+
+**When an existing file is present (from the Phase 2 merge):**
+- **New** ecosystems: append their YAML block to the end of the `updates:` list
+- **Overwrite** decisions: replace the conflicting entry's block in-place (from its `  - package-ecosystem:` line to the line before the next `  - package-ecosystem:` entry, or the end of the `updates:` list)
+- **Identical** and **Retain** entries: leave the file untouched
+
+**Cooldown support:** Only include the `cooldown` block for ecosystems that support it. The following ecosystems do **NOT** support cooldown and must not have a `cooldown` block:
+
+- `github-actions`
+- `docker`
+- `terraform`
+- `git-submodule`
+- `helm`
+- `conda`
+- `pre-commit`
+- `devcontainers`
+
+All other ecosystems detected by this skill (`npm`, `pip`, `bundler`, `gomod`, `cargo`) **do** support cooldown and must include the full `cooldown` block.
+
+The cooldown values below are project-defined defaults, not GitHub defaults. Update both this file and the corresponding training eval if you change them.
+
+Example output for a repo with `npm` (supports cooldown) and `github-actions` (does not):
+
+```yaml
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 20
+      semver-patch-days: 10
+      semver-minor-days: 20
+      semver-major-days: 30
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+```
+
+After writing, report:
+
+**Fresh file (no prior file existed):**
+> "Written `.github/dependabot.yml` with entries for: [comma-separated list of ecosystems]."
+
+**Existing file updated:**
+> "Updated `.github/dependabot.yml`: added [ecosystems], updated [ecosystems], retained [ecosystems]."
+
+Report key:
+- **added** = new ecosystems appended
+- **updated** = conflicting ecosystems the user chose to overwrite
+- **retained** = conflicting ecosystems the user chose to keep as-is
+- Identical entries are silently skipped and do not appear in the report
+- Omit any category with zero items
