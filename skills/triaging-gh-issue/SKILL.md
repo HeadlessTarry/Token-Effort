@@ -64,7 +64,7 @@ Extract the **first** sequence of digits from the branch name. Examples:
 
 If none of the above yield a number, stop with:
 
-> "No issue number found in args, event payload, or branch name. Run as `/triaging-gh-issue <N>`."
+> "No issue number found in args, event payload, or branch name. Provide an issue number as an argument."
 
 **Resolve the repository:**
 
@@ -80,7 +80,7 @@ This is always set by GitHub Actions in the format `owner/repo`. Split on `/` to
 
 Do NOT call `git remote get-url origin` as a fallback.
 
-**Otherwise** (interactive / local session):
+**Otherwise** (interactive session):
 
 ```bash
 git remote get-url origin
