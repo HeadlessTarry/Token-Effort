@@ -49,7 +49,13 @@ Assign exactly one label per issue. When an issue could fit multiple labels, cho
 printenv GITHUB_EVENT_PATH
 ```
 
-Then read the JSON at that path and extract `issue.number`. If `GITHUB_EVENT_PATH` is not set or the JSON lacks `issue.number`, proceed to step 3.
+Then read the JSON at that path and extract `issue.number`:
+
+```bash
+python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['issue']['number'])" "$(printenv GITHUB_EVENT_PATH)"
+```
+
+If `GITHUB_EVENT_PATH` is not set or the JSON lacks `issue.number`, proceed to step 3.
 
 3. If neither args nor event payload yielded a number, run:
 
@@ -167,8 +173,11 @@ Note the current labels from Phase 2:
 
 **Post comment** (always, for every issue — regardless of label action):
 
+Use a heredoc to pass the body to avoid quoting issues:
+
 ```bash
-gh issue comment <N> --body "<!-- triaging-gh-issue:summary -->
+gh issue comment <N> --body "$(cat <<'EOF'
+<!-- triaging-gh-issue:summary -->
 ## 🤖 Triage Summary
 
 **Label applied:** \`<label>\`
@@ -176,7 +185,9 @@ gh issue comment <N> --body "<!-- triaging-gh-issue:summary -->
 
 **Reasoning:** <one-sentence rationale>
 
-**Duplicate check:** <No substantially similar issues found. | Potential duplicate of #<M>: <title>.>"
+**Duplicate check:** <No substantially similar issues found. | Potential duplicate of #<M>: <title>.>
+EOF
+)"
 ```
 
 If confidence < 70%, the Label applied line reads:
