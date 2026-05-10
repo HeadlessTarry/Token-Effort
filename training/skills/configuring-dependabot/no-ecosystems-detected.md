@@ -7,6 +7,6 @@ The skill scans using Glob, finds no ecosystem indicators, outputs the "no ecosy
 detected" message, and stops without writing any file.
 
 ## Pass Criteria
-- [ ] Scanned for all six ecosystem indicator patterns
+- [ ] Scanned for all seven ecosystem indicator patterns
 - [ ] Did NOT write .github/dependabot.yml
 - [ ] Reported "No package ecosystems detected in this repository. Dependabot configuration not written."
