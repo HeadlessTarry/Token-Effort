@@ -1,3 +1,6 @@
+# Training
+training/**/.training-results/
+
 # Planning
 .opencode/plans/
 docs/superpowers/
