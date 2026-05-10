@@ -55,6 +55,14 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+
+# Check prerequisites
+if ! command -v jq &> /dev/null; then
+    echo "Error: jq is not installed." >&2
+    echo "Install jq: https://jqlang.github.io/jq/download/" >&2
+    exit 1
+fi
+
 mkdir -p "$DEST/skills" "$DEST/agents"
 
 if [[ -n "$INSTALL_SKILL" ]] && [[ -n "$INSTALL_AGENT" ]]; then
