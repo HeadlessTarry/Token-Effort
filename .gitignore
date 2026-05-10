@@ -1,6 +1,9 @@
 # Planning
 .opencode/plans/
 
+# Worktrees
+.worktrees/
+
 # Plugin Development
 node_modules/
 package.json
