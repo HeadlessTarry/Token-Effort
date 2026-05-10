@@ -11,4 +11,4 @@ The user runs `/brainstorming-gh-issue 28`. Phase 2 fetches the issue from GitHu
 
 - [ ] `gh issue view` is called with `--json` and includes at minimum: `number`, `title`, `body`, `comments`, `labels`.
 - [ ] The skill does not make separate follow-up calls to get individual fields.
-- [ ] The JSON response is used for both label checking (Phase 2) and context injection (Phase 3).
+- [ ] The JSON response is used for both label checking (Phase 2) and context injection (Phase 4).

@@ -4,11 +4,11 @@ The user runs `/brainstorming-gh-issue 28`. Brainstorming is underway. The user 
 
 ## Expected Behaviour
 
-- Phase 4 (posting the spec comment and applying the label) only runs after the user explicitly approves the final design within the brainstorming session.
+- Phase 5 (posting the spec comment and applying the label) only runs after the user explicitly approves the final design within the brainstorming session.
 - No `gh issue comment` or `gh issue edit` call is made during or before brainstorming.
 
 ## Pass Criteria
 
-- [ ] `gh issue comment` is not called during Phase 3 (brainstorming).
-- [ ] `gh issue edit --add-label` is not called during Phase 3.
+- [ ] `gh issue comment` is not called during Phase 4 (brainstorming).
+- [ ] `gh issue edit --add-label` is not called during Phase 4.
 - [ ] The skill clearly separates the brainstorming phase from the GitHub action phase in its process description.

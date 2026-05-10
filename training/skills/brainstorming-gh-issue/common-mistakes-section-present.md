@@ -12,5 +12,5 @@ The `brainstorming-gh-issue` SKILL.md is read by an engineer preparing to implem
 - [ ] A "Common Mistakes" section exists in the SKILL.md.
 - [ ] The section lists at least 5 distinct anti-patterns.
 - [ ] The anti-pattern of using MCP tools is explicitly called out.
-- [ ] The anti-pattern of invoking `writing-plans` instead of proceeding to Phase 4 is explicitly called out.
+- [ ] The anti-pattern of invoking `writing-plans` instead of proceeding to Phase 5 is explicitly called out.
 - [ ] The anti-pattern of posting the spec before user approval is explicitly called out.

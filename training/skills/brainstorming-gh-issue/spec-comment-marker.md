@@ -1,6 +1,6 @@
 ## Scenario
 
-The user runs `/brainstorming-gh-issue 28`. Brainstorming completes and the user approves the design. Phase 4 posts the spec as a GitHub comment.
+The user runs `/brainstorming-gh-issue 28`. Brainstorming completes and the user approves the design. Phase 5 posts the spec as a GitHub comment.
 
 ## Expected Behaviour
 

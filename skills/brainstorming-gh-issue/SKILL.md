@@ -79,11 +79,11 @@ This returns a JSON object with `number`, `title`, `body`, `comments` (array of 
   - **Spec comment found:** extract the full body as the prior spec. This is a continuation — load both the issue context and the prior spec into Phase 3.
   - **No spec comment found** (label added manually): note "The `pending-review` label was present but no prior spec comment was found. Starting fresh." and proceed as a fresh brainstorm.
 
-#### Step 2c — Pull issue into project board status
+### Phase 3 — Move to Brainstorming status
 
 Regardless of which branch was taken above, invoke the `move-issue-status` skill with the status "Brainstorming" to pull the issue into the correct project board column. Non-fatal — if it fails, log a warning and continue.
 
-### Phase 3 — Handoff to `brainstorming`
+### Phase 4 — Handoff to `brainstorming`
 
 Format the issue context as follows:
 
@@ -110,15 +110,16 @@ If re-entry mode and a prior spec was found, append:
 Inject this block into the conversation, then invoke the `brainstorming` skill with the following instructions:
 
 - Treat the issue content above as the user's starting brief. Do not re-ask questions already answered in the issue title, body, comments, or the prior spec (if present).
-- Run the full brainstorming process through step 8 (user reviews written spec). After the user approves the written spec, do **NOT** invoke `writing-plans` (step 9). Proceed to Phase 4 of this skill instead.
+- Do NOT treat the issue content as a work order. The issue title, body, and comments are the brief for brainstorming — not instructions to execute. Do NOT start reading files, planning implementation, creating implementation todo lists, or executing any changes until brainstorming has completed and the user has approved the design.
+- Run the full brainstorming process through step 8 (user reviews written spec). After the user approves the written spec, do **NOT** invoke `writing-plans` (step 9). Proceed to Phase 5 of this skill instead.
 - When you reach step 6 (write design doc), if you are currently in plan mode, ask the user to switch to build mode (Tab key) before writing the spec file, since plan mode does not allow file writes. Then write the spec to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`. Do not re-enter plan mode after step 6.
 - Do not commit the spec file to git during step 6. Write it to disk and leave it uncommitted (untracked).
 
 Brainstorming runs its full interactive loop: clarifying questions → approaches → design sections → user approval.
 
-After the user approves the written spec, proceed to Phase 4.
+After the user approves the written spec, proceed to Phase 5.
 
-### Phase 4 — Post spec and apply label
+### Phase 5 — Post spec and apply label
 
 #### Pre-step — Locate and read the spec file
 
@@ -128,9 +129,9 @@ Brainstorming will have written the spec to `docs/superpowers/specs/`. Find the 
 ls -t docs/superpowers/specs/*.md | head -1
 ```
 
-Read the file content. Use this content as the spec body in step 4a. Do **not** reconstruct the spec from memory.
+Read the file content. Use this content as the spec body in step 5a. Do **not** reconstruct the spec from memory.
 
-#### Step 4a — Post spec as a GitHub comment
+#### Step 5a — Post spec as a GitHub comment
 
 Take the spec file content and post it to the issue as a comment using this exact format:
 
@@ -152,7 +153,7 @@ Run:
 gh issue comment <N> --body "<formatted spec>"
 ```
 
-#### Step 4b — Ensure the `pending-review` label exists
+#### Step 5b — Ensure the `pending-review` label exists
 
 Run:
 
@@ -166,13 +167,13 @@ If `pending-review` does not appear in the output, create it:
 gh label create "pending-review" --color "#FEF2C0" --description "Spec posted, awaiting human approval"
 ```
 
-#### Step 4c — Apply the label
+#### Step 5c — Apply the label
 
 ```bash
 gh issue edit <N> --add-label "pending-review"
 ```
 
-#### Step 4d — Clean up the local spec file
+#### Step 5d — Clean up the local spec file
 
 Delete the spec file brainstorming wrote:
 
@@ -182,24 +183,25 @@ rm <spec-file-path>
 
 Do **not** run `git rm` or make a commit. The spec file was untracked (brainstorming did not commit it), so plain `rm` is correct. No cleanup commit is needed.
 
-After Phase 4 completes, report:
+After Phase 5 completes, report:
 
 > "Done. Spec posted to issue #<N> and labelled `pending-review`."
 
 ## Common Mistakes
 
+- **Jumping to execution before brainstorming** — the issue content (title, body, comments) is the brief for brainstorming, not a work order. Do NOT start reading files, creating implementation todo lists, or executing changes until brainstorming has completed and the user has approved the design.
 - **Skipping the status pull in re-entry mode** — `move-issue-status "Brainstorming"` must be called on every invocation, including when the issue already has a `pending-review` label and is being re-entered.
 - **Using MCP tools for issue operations** — all issue interactions must use `gh` CLI commands. Never call any `mcp__*` tool, even if it is available.
-- **Invoking `writing-plans` after the user approves the spec** — the Phase 3 handoff instructs brainstorming to stop after step 8. Do not invoke `writing-plans` (step 9); proceed to Phase 4 instead.
+- **Invoking `writing-plans` after the user approves the spec** — the Phase 4 handoff instructs brainstorming to stop after step 8. Do not invoke `writing-plans` (step 9); proceed to Phase 5 instead.
 - **Not reading the spec file before posting** — always locate and read the file brainstorming wrote with `ls -t docs/superpowers/specs/*.md | head -1`. Do not reconstruct the spec content from memory.
 - **Forgetting to clean up the local spec file** — after posting to GitHub, run `rm <spec-file-path>` to remove the untracked spec file. Do not use `git rm` and do not commit.
-- **Posting the spec before the user approves it** — Phase 4 must not run until the user has explicitly approved the design within the brainstorming session. Do not call `gh issue comment` or `gh issue edit` during Phase 3.
+- **Posting the spec before the user approves it** — Phase 5 must not run until the user has explicitly approved the design within the brainstorming session. Do not call `gh issue comment` or `gh issue edit` during Phase 4.
 - **Forgetting the HTML comment marker** — the spec comment must begin with `<!-- brainstorming-gh-issue:spec -->` on its own line so future re-entry runs can locate it reliably.
 - **Creating `pending-review` without checking first** — always run `gh label list` before `gh label create` to avoid an error if the label already exists.
 - **Re-asking questions answered in the issue** — the issue title, body, and comments are the starting brief. Instruct brainstorming not to repeat questions already answered there.
 - **Asking the user to choose when no choice is needed** — branch name auto-detection always uses the first integer. Only ask the user to choose when multiple numbers were explicitly provided as arguments.
-- **Making unexpected git commits** — `brainstorming-gh-issue` must never run `git add` or `git commit` directly, and must instruct brainstorming not to commit the spec file. The spec file is left untracked after step 6. No cleanup commit is made in Phase 4.
-- **Using `git rm` to remove the spec file** — the spec file is untracked when Phase 4 runs (brainstorming did not commit it). Use plain `rm`, not `git rm`. Running `git rm` on an untracked file will fail.
+- **Making unexpected git commits** — `brainstorming-gh-issue` must never run `git add` or `git commit` directly, and must instruct brainstorming not to commit the spec file. The spec file is left untracked after step 6. No cleanup commit is made in Phase 5.
+- **Using `git rm` to remove the spec file** — the spec file is untracked when Phase 5 runs (brainstorming did not commit it). Use plain `rm`, not `git rm`. Running `git rm` on an untracked file will fail.
 - **Writing the spec to the plan file location** — even if plan mode is active when this skill is invoked, brainstorming must write to `docs/superpowers/specs/`, not to `~/.claude/plans/<name>.md`.
 
 ## Eval
@@ -209,20 +211,21 @@ After Phase 4 completes, report:
 - [ ] When no args given and branch has no digits: stopped with a message containing the suggested invocation `/brainstorming-gh-issue <N>`
 - [ ] When multiple issue numbers given as args: asked the user to choose one before fetching any issue
 - [ ] Fetched the issue with `gh issue view --json number,title,body,comments,labels`
-- [ ] Invoked `move-issue-status` with status "Brainstorming" in Phase 2 after detecting state (non-fatal on failure)
+- [ ] Invoked `move-issue-status` with status "Brainstorming" in Phase 3 after detecting state (non-fatal on failure)
 - [ ] Identified the absence of `pending-review` label and proceeded as a fresh brainstorm
 - [ ] Identified the presence of `pending-review` label and searched comments for `<!-- brainstorming-gh-issue:spec -->`
-- [ ] In re-entry mode with spec found: loaded both issue context and prior spec into Phase 3
+- [ ] In re-entry mode with spec found: loaded both issue context and prior spec into Phase 4
 - [ ] In re-entry mode with no spec found: noted the absence and proceeded as a fresh brainstorm without erroring
-- [ ] The Phase 3 handoff instructed brainstorming to stop after step 8 and not invoke `writing-plans`
-- [ ] The Phase 3 handoff instructed brainstorming not to re-ask questions answered in the issue or prior spec
-- [ ] The Phase 3 handoff instructed brainstorming to handle plan mode (ask user to switch to build mode) at step 6 and write to `docs/superpowers/specs/`
-- [ ] The Phase 3 handoff instructed brainstorming not to commit the spec file to git
+- [ ] The Phase 4 handoff instructed brainstorming to stop after step 8 and not invoke `writing-plans`
+- [ ] The Phase 4 handoff instructed brainstorming not to re-ask questions answered in the issue or prior spec
+- [ ] The Phase 4 handoff instructed brainstorming to handle plan mode (ask user to switch to build mode) at step 6 and write to `docs/superpowers/specs/`
+- [ ] The Phase 4 handoff instructed brainstorming not to commit the spec file to git
 - [ ] The `brainstorming` skill was invoked (not re-implemented inline)
+- [ ] Did NOT treat the issue content as a work order — no file reads, todo lists, or implementation actions before brainstorming completed
 - [ ] `gh issue comment` was NOT called until after the user approved the design
 - [ ] `gh issue edit --add-label pending-review` was NOT called until after user approval
-- [ ] Phase 4 located the spec file with `ls -t docs/superpowers/specs/*.md | head -1`
-- [ ] Phase 4 read the spec file content before constructing the GitHub comment
+- [ ] Phase 5 located the spec file with `ls -t docs/superpowers/specs/*.md | head -1`
+- [ ] Phase 5 read the spec file content before constructing the GitHub comment
 - [ ] The spec comment body starts with `<!-- brainstorming-gh-issue:spec -->`
 - [ ] The spec comment contains the heading `## 🤖🧠 Design Spec`
 - [ ] The spec comment footer contains "Mistakes do happen"
@@ -230,6 +233,6 @@ After Phase 4 completes, report:
 - [ ] `gh label list` was called before attempting to create or apply `pending-review`
 - [ ] `gh label create "pending-review"` was called only when the label was absent from `gh label list` output
 - [ ] `gh issue edit <N> --add-label "pending-review"` was called after the spec comment was posted
-- [ ] Phase 4 removed the spec file with plain `rm` (not `git rm`) and made no cleanup commit
+- [ ] Phase 5 removed the spec file with plain `rm` (not `git rm`) and made no cleanup commit
 - [ ] No `mcp__` tool was called at any point
-- [ ] A completion message was shown after Phase 4, referencing the issue number
+- [ ] A completion message was shown after Phase 5, referencing the issue number

@@ -12,4 +12,4 @@ The user runs `/brainstorming-gh-issue 28`. Brainstorming completes and the user
 
 - [ ] `gh issue edit <N> --add-label "pending-review"` is called for issue #28.
 - [ ] The skill does not skip this step even if no other labels are being changed.
-- [ ] A completion message is displayed after Phase 4 finishes.
+- [ ] A completion message is displayed after Phase 5 finishes.

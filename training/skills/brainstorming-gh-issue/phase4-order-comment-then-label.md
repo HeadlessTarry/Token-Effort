@@ -1,10 +1,10 @@
 ## Scenario
 
-The user runs `/brainstorming-gh-issue 28`. Brainstorming completes and the user approves the design. Phase 4 runs.
+The user runs `/brainstorming-gh-issue 28`. Brainstorming completes and the user approves the design. Phase 5 runs.
 
 ## Expected Behaviour
 
-- Phase 4 executes its steps in the correct order:
+- Phase 5 executes its steps in the correct order:
   1. Post the spec as a comment (`gh issue comment`).
   2. Ensure the `pending-review` label exists (`gh label list`, then `gh label create` if needed).
   3. Apply the `pending-review` label (`gh issue edit --add-label`).

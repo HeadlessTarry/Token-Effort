@@ -1,6 +1,6 @@
 ## Scenario
 
-The user runs `/brainstorming-gh-issue 28`. Brainstorming completes and the spec is posted as a GitHub comment. A human reviewer will see this comment and needs to know how to approve it.
+The user runs `/brainstorming-gh-issue 28`. Brainstorming completes and the spec is posted as a GitHub comment in Phase 5. A human reviewer will see this comment and needs to know how to approve it.
 
 ## Expected Behaviour
 
