@@ -16,17 +16,34 @@ A collection of OpenCode skills and agents that do just enough to avoid being re
 ```bash
 git clone https://github.com/HeadlessTarry/Token-Effort.git
 cd Token-Effort
+```
+
+**PowerShell (Windows):**
+```powershell
+.\install.ps1
+```
+
+**Bash (Linux/macOS/WSL):**
+```bash
 ./install.sh
 ```
 
-This syncs `skills/`, `agents/`, and `plugins/` into `~/.config/opencode/`. Restart OpenCode to pick up changes.
+Both scripts sync `skills/` and `agents/` into your OpenCode config directory. Restart OpenCode to pick up changes.
+
+**Options:**
+
+| Flag (PS) | Flag (Bash) | Description |
+|-----------|-------------|-------------|
+| `-Skill <name>` | `--skill <name>` | Install only the specified skill |
+| `-Agent <name>` | `--agent <name>` | Install only the specified agent |
+| `-Local` | `--local` | Install to `.opencode/` in the project directory instead |
 
 ## Directory Structure
 
 ```
 skills/          → OpenCode skill definitions
 agents/          → OpenCode agent definitions
-pending-migration/ → Legacy Claude Code plugin content (DO NOT MODIFY — will be removed)
+pending-migration/ → Legacy content (DO NOT MODIFY — will be removed)
 ```
 
 ## Workflows
