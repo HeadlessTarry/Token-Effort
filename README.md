@@ -6,6 +6,11 @@ A collection of OpenCode skills and agents that do just enough to avoid being re
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=HeadlessTarry_Token-Effort&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=HeadlessTarry_Token-Effort)
 
+## Prerequisites
+
+- [gh CLI](https://cli.github.com/) — authenticated with `gh auth login`
+- [jq](https://jqlang.github.io/jq/download/) — JSON parsing
+
 ## Installation
 
 ```bash
