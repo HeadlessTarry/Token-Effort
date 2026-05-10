@@ -52,7 +52,7 @@ printenv GITHUB_EVENT_PATH
 Then read the JSON at that path and extract `issue.number`:
 
 ```bash
-python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['issue']['number'])" "$(printenv GITHUB_EVENT_PATH)"
+jq -r '.issue.number' "$(printenv GITHUB_EVENT_PATH)"
 ```
 
 If `GITHUB_EVENT_PATH` is not set or the JSON lacks `issue.number`, proceed to step 3.
