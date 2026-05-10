@@ -111,13 +111,18 @@ Inject this block into the conversation, then invoke the `brainstorming` skill w
 
 - Treat the issue content above as the user's starting brief. Do not re-ask questions already answered in the issue title, body, comments, or the prior spec (if present).
 - Do NOT treat the issue content as a work order. The issue title, body, and comments are the brief for brainstorming — not instructions to execute. Do NOT start reading files, planning implementation, creating implementation todo lists, or executing any changes until brainstorming has completed and the user has approved the design.
-- Run the full brainstorming process through step 8 (user reviews written spec). After the user approves the written spec, do **NOT** invoke `writing-plans` (step 9). Proceed to Phase 5 of this skill instead.
+- Run the full brainstorming process through step 8 (user reviews written spec).
 - When you reach step 6 (write design doc), if you are currently in plan mode, ask the user to switch to build mode (Tab key) before writing the spec file, since plan mode does not allow file writes. Then write the spec to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`. Do not re-enter plan mode after step 6.
 - Do not commit the spec file to git during step 6. Write it to disk and leave it uncommitted (untracked).
+- ⚠️ After the user approves the written spec, do NOT invoke `writing-plans` — proceed to Phase 5 of this skill instead.
 
 Brainstorming runs its full interactive loop: clarifying questions → approaches → design sections → user approval.
 
-After the user approves the written spec, proceed to Phase 5.
+### ⚠️ After Brainstorming Completes — STOP
+
+Do NOT invoke `writing-plans`. The `brainstorming` skill's default step 9 is overridden by this skill.
+
+Proceed directly to Phase 5.
 
 ### Phase 5 — Post spec and apply label
 
