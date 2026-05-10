@@ -1,0 +1,1 @@
+{"iteration": 3, "score": 0.98, "best_score": 1.0, "operator": "remove-bloat", "kept": false, "failed_criteria": ["SKILL.md contains warning against `${VARIABLE}` or `${...}`", "Restriction in prominent location (Prerequisites)"]}
