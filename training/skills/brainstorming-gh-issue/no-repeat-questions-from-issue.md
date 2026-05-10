@@ -5,7 +5,7 @@ The user runs `/brainstorming-gh-issue 28`. Issue #28 has a detailed description
 ## Expected Behaviour
 
 - The skill injects the issue content as the starting brief.
-- The handoff instructions tell `superpowers:brainstorming` not to re-ask questions whose answers are already present in the issue title, body, or comments.
+- The handoff instructions tell `brainstorming` not to re-ask questions whose answers are already present in the issue title, body, or comments.
 - Brainstorming picks up from the issue context without redundantly asking "what does this feature need to do?" or "who is the intended user?".
 
 ## Pass Criteria

@@ -6,7 +6,7 @@ The user runs `/brainstorming-gh-issue 42`. Issue #42 exists with title "Add dar
 
 - The skill fetches issue #42 with `--json number,title,body,comments,labels`.
 - It checks labels and finds no `pending-review` label.
-- It proceeds as a **fresh brainstorm**: injects the issue title, body, and comments as context for `superpowers:brainstorming`.
+- It proceeds as a **fresh brainstorm**: injects the issue title, body, and comments as context for `brainstorming`.
 - No "prior spec" is mentioned or loaded.
 
 ## Pass Criteria

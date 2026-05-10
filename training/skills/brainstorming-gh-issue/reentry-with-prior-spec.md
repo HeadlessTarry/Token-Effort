@@ -8,7 +8,7 @@ The user runs `/brainstorming-gh-issue 15`. Issue #15 has the `pending-review` l
 - It searches the comments array for an entry starting with `<!-- brainstorming-gh-issue:spec -->`.
 - It extracts the full body of that comment as the prior spec.
 - It loads both the issue context and the prior spec into the conversation.
-- It invokes `superpowers:brainstorming` as a **continuation**, informing Claude not to start from scratch.
+- It invokes the `brainstorming` skill as a **continuation**, informing the agent not to start from scratch.
 
 ## Pass Criteria
 
