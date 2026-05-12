@@ -43,7 +43,6 @@ plugins/
 │       ├── move-issue-status/
 │       ├── planning-gh-issue/SKILL.md
 │       ├── propose-feature/SKILL.md
-│       ├── recording-decisions/SKILL.md
 │       ├── report-bug/SKILL.md
 │       ├── reviewing-code-systematically/SKILL.md
 │       └── triaging-gh-issue/SKILL.md
