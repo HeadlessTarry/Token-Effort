@@ -158,11 +158,11 @@ Fix any issues found directly. Report a brief summary of findings, or "No securi
 
 ### Phase 9 — Record decisions
 
-Invoke: `token-effort-workflow:recording-decisions`
+Invoke: `recording-decisions`
 
 If the skill is not available, **stop immediately** with:
 
-> "❌ Phase 9 blocked: `token-effort-workflow:recording-decisions` skill is required but not available.
+> "❌ Phase 9 blocked: `recording-decisions` skill is required but not available.
 >  Install the skill before continuing the build."
 
 Do not proceed to Phase 10 until this phase completes successfully.
@@ -214,7 +214,7 @@ This step creates the pull request. It runs exactly once, here, at the end of th
 - [ ] Invoked `token-effort-workflow:reviewing-code-systematically`
 - [ ] Addressed BLOCK or NEEDS_CHANGES findings before continuing past Phase 7
 - [ ] Performed inline security review after code review; reported a summary
-- [ ] Invoked `token-effort-workflow:recording-decisions` and blocked with error message if not available
+- [ ] Invoked `recording-decisions` and blocked with error message if not available
 - [ ] Did not proceed to Phase 9 when `recording-decisions` was unavailable
 - [ ] Invoked `superpowers:finishing-a-development-branch` exactly once, at Phase 10
 - [ ] `finishing-a-development-branch` was NOT called by the execution skills in Phase 4
