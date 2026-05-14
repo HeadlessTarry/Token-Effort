@@ -10,12 +10,12 @@ CURRENT=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "HEAD")
 BASE=""
 
 # Step 1: upstream tracking branch — but only if it diverges from HEAD
-if [ "$CURRENT" != "HEAD" ]; then
+if [[ "$CURRENT" != "HEAD" ]]; then
   UPSTREAM=$(git rev-parse --abbrev-ref --symbolic-full-name @{upstream} 2>/dev/null || true)
-  if [ -n "$UPSTREAM" ]; then
+  if [[ -n "$UPSTREAM" ]]; then
     UPSTREAM_MERGE_BASE=$(git merge-base HEAD "$UPSTREAM" 2>/dev/null || true)
     HEAD_HASH=$(git rev-parse HEAD)
-    if [ -n "$UPSTREAM_MERGE_BASE" ] && [ "$UPSTREAM_MERGE_BASE" != "$HEAD_HASH" ]; then
+    if [[ -n "$UPSTREAM_MERGE_BASE" ]] && [[ "$UPSTREAM_MERGE_BASE" != "$HEAD_HASH" ]]; then
       BASE="$UPSTREAM"
     fi
     # If upstream tracks the same branch (merge-base == HEAD), skip it
@@ -23,16 +23,16 @@ if [ "$CURRENT" != "HEAD" ]; then
 fi
 
 # Step 2: remote default branch via cached metadata (no network)
-if [ -z "$BASE" ]; then
+if [[ -z "$BASE" ]]; then
   DEFAULT_BRANCH=$(git remote show origin --no-fetch 2>/dev/null \
     | grep 'HEAD branch' | awk '{print $NF}' || true)
-  if [ -n "$DEFAULT_BRANCH" ]; then
+  if [[ -n "$DEFAULT_BRANCH" ]]; then
     BASE="origin/$DEFAULT_BRANCH"
   fi
 fi
 
 # Step 3: probe known default names
-if [ -z "$BASE" ]; then
+if [[ -z "$BASE" ]]; then
   if git rev-parse --verify origin/main &>/dev/null 2>&1; then
     BASE="origin/main"
   elif git rev-parse --verify origin/master &>/dev/null 2>&1; then
@@ -41,7 +41,7 @@ if [ -z "$BASE" ]; then
 fi
 
 # Step 4: give up — caller must ask the user
-if [ -z "$BASE" ]; then
+if [[ -z "$BASE" ]]; then
   echo "ERROR: Could not detect base branch automatically. Please specify the branch to diff against (e.g. origin/main)." >&2
   exit 1
 fi
@@ -54,7 +54,7 @@ HEAD_HASH=$(git rev-parse HEAD)
 echo "BASE=$BASE"
 echo "MERGE_BASE=$MERGE_BASE"
 
-if [ "$MERGE_BASE" = "$HEAD_HASH" ]; then
+if [[ "$MERGE_BASE" = "$HEAD_HASH" ]]; then
   echo "STATUS=empty"
   echo "MESSAGE=No commits on this branch relative to $BASE. Diff is empty."
   exit 0
@@ -76,7 +76,7 @@ DIFF_OUTPUT=$(git diff "$MERGE_BASE" HEAD)
 LINE_COUNT=$(printf '%s\n' "$DIFF_OUTPUT" | wc -l)
 
 # Diffs over 1000 lines are offloaded to a temp file to avoid exceeding the agent's context window
-if [ "$LINE_COUNT" -gt 1000 ]; then
+if [[ "$LINE_COUNT" -gt 1000 ]]; then
   TMPFILE=$(mktemp /tmp/branch-diff-XXXXXX.patch)
   printf '%s\n' "$DIFF_OUTPUT" > "$TMPFILE"
   echo "LARGE_DIFF_FILE=$TMPFILE"
