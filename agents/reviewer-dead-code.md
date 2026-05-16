@@ -43,7 +43,6 @@ You have deep expertise in:
 5. **Work through Review Checklist** (below, in order).
 6. **Orphaned-export verification**: For unused-export candidates, run full-codebase Grep to verify reference counts.
 7. **Compile findings** into structured output.
-8. **Include Positive Elements**. Include Summary Table unless VERDICT is PASS or SKIP.
 
 ### Review Checklist
 
@@ -95,12 +94,6 @@ VERDICT: PASS | NEEDS_CHANGES | BLOCK | SKIP
 | Stale flags | N | ... |
 | Obsolete TODOs | N | ... |
 
-## Positive Elements
-
-- `path/to/file.ext[:line-range]`: <One sentence naming the specific clean pattern>
-
-If no file has a notable positive, write "No notable positive elements identified."
-
 ### VERDICT rules
 
 | Verdict | When to use |
@@ -139,10 +132,6 @@ VERDICT: NEEDS_CHANGES
 | Type | Count | Files |
 |------|-------|-------|
 | Unreachable code | 1 | login.ts |
-
-## Positive Elements
-
-- `src/utils/parser.ts:1-40`: Clean import section — every imported symbol is used.
 ```
 
 ## Error Handling
