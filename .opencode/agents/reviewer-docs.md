@@ -44,7 +44,7 @@ For each documentation file:
 ```
 VERDICT: PASS | NEEDS_CHANGES | BLOCK | SKIP
 
-## Findings
+## Documentation Findings
 
 ### [Severity: HIGH | MEDIUM | LOW] <Short title>
 **Location**: `path/to/doc.md` — <Section heading or line reference>
@@ -53,6 +53,28 @@ VERDICT: PASS | NEEDS_CHANGES | BLOCK | SKIP
 **Suggestion**: <Concrete improvement>
 
 (repeat for each finding)
+
+### Example output (BLOCK)
+
+```
+VERDICT: BLOCK
+
+## Documentation Findings
+
+### [Severity: HIGH] Installation command does not exist
+**Location**: `README.md` — Installation section
+**Issue**: The install step instructs users to run `make install`, but no `install` target exists in the Makefile.
+**Impact**: A new reader following the README will get `make: *** No rule to make target 'install'. Stop.` and have no path forward.
+**Suggestion**: Update the README to use `npm install` (which exists in package.json), or add the missing `make install` target to the Makefile.
+
+## Cross-Reference Results
+
+- `README.md` command `make install`: ✗ No `install` target found in Makefile
+
+## Positive Elements
+
+- `README.md` — Project overview: Clear one-paragraph description of what the project does and who it is for.
+```
 
 ## Positive Elements
 
