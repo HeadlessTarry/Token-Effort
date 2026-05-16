@@ -53,6 +53,7 @@ VERDICT: PASS | NEEDS_CHANGES | BLOCK | SKIP
 **Suggestion**: <Concrete improvement>
 
 (repeat for each finding)
+```
 
 ### Example output (BLOCK)
 
