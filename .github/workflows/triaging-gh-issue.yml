@@ -30,7 +30,7 @@ jobs:
         run: bash ./install.sh --skill triaging-gh-issue
 
       - name: ✨ Run OpenCode
-        uses: anomalyco/opencode/github@2662a4f955e563fd22cd5c4873ca350d21745275
+        uses: anomalyco/opencode/github@8ba2a9171597262df9d19516c82a5e14f18f5c63
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
