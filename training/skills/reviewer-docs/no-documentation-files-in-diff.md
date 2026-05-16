@@ -11,5 +11,5 @@ documentation updates.
 - [ ] Agent does not review `src/auth/login.ts` or `src/utils/hash.ts`
 - [ ] Output includes "No documentation files found in diff."
 - [ ] Output suggests considering whether code changes require documentation updates
-- [ ] A VERDICT line is produced
+- [ ] VERDICT is SKIP
 - [ ] No findings or cross-reference results are produced
