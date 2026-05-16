@@ -70,8 +70,6 @@ When cross-references are verified, include:
 - `README.md` command `make test`: ✗ No `test` target found in Makefile
 ```
 
-When `VERDICT: PASS` or `VERDICT: SKIP`, omit the Summary Table.
-
 ## VERDICT Rules
 
 VERDICT determination is mechanical — agent judgment lives entirely in severity assignment, not verdict determination:
