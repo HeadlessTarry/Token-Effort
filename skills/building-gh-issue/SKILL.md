@@ -114,7 +114,7 @@ If this fails for any reason (e.g. the issue is not on a project board, or the "
 - Treat the design spec as the approved input brief. Do not revisit or re-question decisions already captured in the spec.
 - Run the full interactive planning loop through user approval.
 - Do not make any git commits during planning.
-- After the user approves the plan, invoke `subagent-driven-development` to execute it. Do not invoke `executing-plans` unless the plan has a single step touching only 1-2 files.
+- After the user approves the plan, locate the plan file with `ls -t docs/superpowers/plans/*.md | head -1`, read its content, and invoke `subagent-driven-development` with the plan content passed as context. Do not invoke `executing-plans` unless the plan has a single step touching only 1-2 files.
 - Include this suppression instruction in the execution handoff: "Do not invoke `finishing-a-development-branch` — this will be handled by the calling skill after all review steps complete."
 
 Wait for the full planning-and-execution cycle to complete. The `subagent-driven-development` skill handles worktree creation and branch management internally.
