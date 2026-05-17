@@ -29,7 +29,7 @@ The following `superpowers` skills must be installed:
 - `superpowers:writing-plans`
 - `superpowers:subagent-driven-development`
 - `superpowers:using-git-worktrees` (via subagent-driven-development)
-- `superpowers:finishing-a-development-branch` (via subagent-driven-development)
+- `finishing-a-development-branch` (via subagent-driven-development)
 - `recording-decisions` skill
 
 > **Important:** Do **not** use MCP tools (`mcp__*`) for any issue operation, even if they appear to be available.
@@ -201,6 +201,6 @@ This step creates the pull request. It runs exactly once, here, at the end of th
 - [ ] Invoked `recording-decisions` and blocked with error message if not available
 - [ ] Did not proceed past Phase 7 when `recording-decisions` was unavailable
 - [ ] Committed and pushed local changes if any were produced; skipped with message if none
-- [ ] Invoked `superpowers:finishing-a-development-branch` exactly once, at Phase 9
+- [ ] Invoked `finishing-a-development-branch` exactly once, at Phase 9
 - [ ] `finishing-a-development-branch` was NOT called by the execution skill in Phase 4
 - [ ] No `mcp__` tool was called at any point
