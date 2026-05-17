@@ -30,6 +30,7 @@ The following `superpowers` skills must be installed:
 - `superpowers:subagent-driven-development`
 - `superpowers:using-git-worktrees` (via subagent-driven-development)
 - `superpowers:finishing-a-development-branch` (via subagent-driven-development)
+- `recording-decisions` skill
 
 > **Important:** Do **not** use MCP tools (`mcp__*`) for any issue operation, even if they appear to be available.
 
@@ -160,7 +161,7 @@ If there are no uncommitted changes, skip this phase with:
 
 ### Phase 9 — Finish development branch
 
-Invoke: `superpowers:finishing-a-development-branch`
+Invoke: `finishing-a-development-branch`
 
 This step creates the pull request. It runs exactly once, here, at the end of the build process. The execution skill in Phase 4 must not call it — that is what the suppression instruction in Phase 4 enforces.
 
