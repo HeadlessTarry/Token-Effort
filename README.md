@@ -82,7 +82,7 @@ graph LR
     BUILD --> DONE
 ```
 
-Issue states (📋 New, 🧠 Brainstorming, 📐 Planning, 🏗️ Building, ✅ Done) correspond to GitHub Project board columns. Each skill automatically advances the issue from an earlier status.
+Issue states (📋 New, 🧠 Brainstorming, 🏗️ Building, ✅ Done) correspond to GitHub Project board columns. Each skill automatically advances the issue from an earlier status.
 
 ## Migration Status
 
