@@ -41,7 +41,6 @@ plugins/
 │       ├── building-gh-issue/SKILL.md
 │       ├── computing-branch-diff/
 │       ├── move-issue-status/
-│       ├── planning-gh-issue/SKILL.md
 │       ├── propose-feature/SKILL.md
 │       ├── report-bug/SKILL.md
 │       ├── reviewing-code-systematically/SKILL.md
@@ -84,10 +83,10 @@ training/
 Issues flow through the GitHub Project board:
 
 ```
-New → Brainstorming → Planning → Building → Done
+New → Brainstorming → Building → Done
 ```
 
-Each stage is handled by a dedicated skill (`/triaging-gh-issue`, `/brainstorming-gh-issue`, `/planning-gh-issue`, `/building-gh-issue`). Skills call `/move-issue-status` at completion to advance the board.
+Each stage is handled by a dedicated skill (`/triaging-gh-issue`, `/brainstorming-gh-issue`, `/building-gh-issue`). Skills call `/move-issue-status` at completion to advance the board.
 
 ### Skills
 
