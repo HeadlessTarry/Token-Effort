@@ -1,7 +1,6 @@
 ---
 name: agent-skill-crafter
 description: Creates high-quality OpenCode skills and agents through guided workflows, pattern analysis, and automatic handoff to run-training for iterative improvement.
-user-invocable: true
 ---
 
 # Agent-Skill-Crafter: Create Skills and Agents
@@ -79,7 +78,6 @@ Produce a SKILL.md or agent.md following:
 - [ ] Description is 1-1024 characters and specific enough for the agent to choose correctly
 - [ ] Correct path conventions per doc standards
 - [ ] Agent has appropriate `mode`, `permission` fields
-- [ ] Skill has `user-invocable` field if applicable
 - [ ] Content follows clear, actionable instruction style
 
 ### Phase 5: Review Loop
