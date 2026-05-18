@@ -1,7 +1,6 @@
 ---
 name: run-training
 description: Use when the user wants to iteratively improve a skill or agent definition through automated evaluation cycles against committed test cases.
-user-invocable: true
 ---
 
 # Training: Iterative Skill/Agent Improvement
