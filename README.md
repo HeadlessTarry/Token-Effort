@@ -67,13 +67,7 @@ graph LR
         SPEC(["📄 Design Spec"])
     end
 
-    subgraph COL3["📐 Planning"]
-        direction TB
-        PLAN["/planning-gh-issue"]
-        PLANOUT(["📄 Implementation Plan"])
-    end
-
-    subgraph COL4["🏗️ Building"]
+    subgraph COL3["🏗️ Building"]
         direction TB
         BUILD["/building-gh-issue + agents"]
         PR(["📄 Pull Request + Decision Record(s)"])
@@ -83,14 +77,12 @@ graph LR
     A2 --> TRIAGE
     TRIAGE --> BRAIN
     BRAIN -.-> SPEC
-    BRAIN --> PLAN
-    PLAN -.-> PLANOUT
-    PLAN --> BUILD
+    BRAIN --> BUILD
     BUILD -.-> PR
     BUILD --> DONE
 ```
 
-Issue states (📋 New, 🧠 Brainstorming, 📐 Planning, 🏗️ Building, ✅ Done) correspond to GitHub Project board columns. Each skill automatically advances the issue from an earlier status.
+Issue states (📋 New, 🧠 Brainstorming, 🏗️ Building, ✅ Done) correspond to GitHub Project board columns. Each skill automatically advances the issue from an earlier status.
 
 ## Migration Status
 
