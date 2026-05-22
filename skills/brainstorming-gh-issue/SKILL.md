@@ -241,6 +241,7 @@ After Phase 5 completes, report:
 - [ ] The `brainstorming` skill was invoked (not re-implemented inline)
 - [ ] Did NOT treat the issue content as a work order — no file reads, todo lists, or implementation actions before brainstorming completed
 - [ ] `gh issue comment` was NOT called until after the user approved the design
+- [ ] `gh issue comment` called with `--body-file <temp-path>` (not `--body`)
 - [ ] `gh issue edit --add-label pending-review` was NOT called until after user approval
 - [ ] Phase 5 located the spec file with `ls -t docs/superpowers/specs/*.md | head -1`
 - [ ] Phase 5 read the spec file content before constructing the GitHub comment
