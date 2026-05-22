@@ -29,6 +29,8 @@ The `gh` CLI must be authenticated and available in the session. All GitHub oper
 
 > **Shell expansion:** Never use `${VARIABLE}` or any `${...}` form in bash commands. Use `printenv VARIABLE` to read environment variables.
 
+> **Posting GitHub content:** Always write the comment/issue body to a temp file first, then use `--body-file` with `gh` commands. Never pass body content directly via `--body "..."` as this is vulnerable to shell escaping issues.
+
 ## Process
 
 ### Phase 1 — Resolve the issue
@@ -154,9 +156,19 @@ Take the spec file content and post it to the issue as a comment using this exac
 
 Run:
 
-```bash
-gh issue comment <N> --body "<formatted spec>"
-```
+1. Write the formatted spec to a temp file:
+   - **Linux/macOS:** `<TMPDIR>/gh-comment-body.md` (use `printenv TMPDIR` to check; fall back to `/tmp/gh-comment-body.md` if unset)
+   - **Windows:** `<TEMP>/gh-comment-body.md` (use `printenv TEMP` to get the path)
+
+2. Post the comment:
+   ```bash
+   gh issue comment <N> --body-file <temp-path>
+   ```
+
+3. Clean up the temp file:
+   ```bash
+   rm <temp-path>
+   ```
 
 #### Step 5b — Ensure the `pending-review` label exists
 
@@ -194,6 +206,7 @@ After Phase 5 completes, report:
 
 ## Common Mistakes
 
+- **Using `--body` instead of `--body-file`** — always write the comment body to a temp file first, then use `gh issue comment <N> --body-file <temp-path>`. Never pass body content directly via `--body "..."` as this is vulnerable to shell escaping issues.
 - **Jumping to execution before brainstorming** — the issue content (title, body, comments) is the brief for brainstorming, not a work order. Do NOT start reading files, creating implementation todo lists, or executing changes until brainstorming has completed and the user has approved the design.
 - **Skipping the status pull in re-entry mode** — `move-issue-status "Brainstorming"` must be called on every invocation, including when the issue already has a `pending-review` label and is being re-entered.
 - **Using MCP tools for issue operations** — all issue interactions must use `gh` CLI commands. Never call any `mcp__*` tool, even if it is available.
@@ -228,6 +241,7 @@ After Phase 5 completes, report:
 - [ ] The `brainstorming` skill was invoked (not re-implemented inline)
 - [ ] Did NOT treat the issue content as a work order — no file reads, todo lists, or implementation actions before brainstorming completed
 - [ ] `gh issue comment` was NOT called until after the user approved the design
+- [ ] `gh issue comment` called with `--body-file <temp-path>` (not `--body`)
 - [ ] `gh issue edit --add-label pending-review` was NOT called until after user approval
 - [ ] Phase 5 located the spec file with `ls -t docs/superpowers/specs/*.md | head -1`
 - [ ] Phase 5 read the spec file content before constructing the GitHub comment

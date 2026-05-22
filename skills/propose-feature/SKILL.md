@@ -30,6 +30,8 @@ The `gh` CLI must be authenticated and available in the session. All GitHub oper
 
 > **Shell expansion:** Never use `${VARIABLE}` or any `${...}` form in bash commands. Use printenv VARIABLE to read environment variables.
 
+> **Posting GitHub content:** Always write the comment/issue body to a temp file first, then use `--body-file` with `gh` commands. Never pass body content directly via `--body "..."` as this is vulnerable to shell escaping issues.
+
 ## Process
 
 ### Phase 1 — Template Discovery
@@ -100,8 +102,18 @@ Allow the user to request edits. After each round of edits, re-display the **ful
 
 Once the user approves, run:
 
+1. Write the issue body to a temp file using the `write` tool. Use the OS temp directory:
+   - **Linux/macOS:** `<TMPDIR>/gh-comment-body.md` (use `printenv TMPDIR` to check; fall back to `/tmp/gh-comment-body.md` if unset)
+   - **Windows:** `<TEMP>/gh-comment-body.md` (use `printenv TEMP` to get the path)
+
+2. Run:
 ```bash
-gh issue create --title "<title>" --body "<body>"
+gh issue create --title "<title>" --body-file <temp-path>
+```
+
+3. Run:
+```bash
+rm <temp-path>
 ```
 
 Use no additional flags — no `--label`, `--assignee`, or `--milestone`.
@@ -112,6 +124,7 @@ Use no additional flags — no `--label`, `--assignee`, or `--milestone`.
 
 ## Common Mistakes
 
+- **Using `--body` instead of `--body-file`** — always write the issue body to a temp file first, then use `gh issue create --title "<title>" --body-file <temp-path>`. Never pass body content directly via `--body "..."` as this is vulnerable to shell escaping issues.
 - **Using MCP tools** — all issue interactions must use `gh` CLI commands only.
 - **Filing before user approval** — `gh issue create` must NOT be called until the user explicitly approves the draft in Phase 3.
 - **Dumping all interview questions at once** — the interview must be conversational; let answers drive follow-up questions.
@@ -133,6 +146,6 @@ Use no additional flags — no `--label`, `--assignee`, or `--milestone`.
 - [ ] Showed a formatted draft preview (title + body) before filing
 - [ ] Allowed the user to request edits and iterated until explicit approval
 - [ ] Did NOT call `gh issue create` until user explicitly approved
-- [ ] Called `gh issue create --title "..." --body "..."` with no extra flags
+- [ ] Called `gh issue create --title "..." --body-file <temp-path>` with no extra flags
 - [ ] Reported the filed issue URL to the user
 - [ ] No `mcp__` tool was called at any point
