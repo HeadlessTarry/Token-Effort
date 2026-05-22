@@ -102,7 +102,7 @@ Allow the user to request edits. After each round of edits, re-display the **ful
 
 Once the user approves:
 
-1. Write the issue body to a temp file using the `write` tool:
+1. Write the issue body to a temp file using the `write` tool. Use the OS temp directory:
    - **Linux/macOS:** `<TMPDIR>/gh-comment-body.md` (use `printenv TMPDIR` to check; fall back to `/tmp/gh-comment-body.md` if unset)
    - **Windows:** `<TEMP>/gh-comment-body.md` (use `printenv TEMP` to get the path)
 

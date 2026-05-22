@@ -24,6 +24,8 @@ Fetches a single GitHub issue, classifies it by reading its content and searchin
 
 The `gh` CLI must be authenticated and available in the session. All GitHub issue operations use `gh` commands via `Bash`.
 
+> **Posting GitHub content:** Always write the comment/issue body to a temp file first, then use `--body-file` with `gh` commands. Never pass body content directly via `--body "..."` as this is vulnerable to shell escaping issues.
+
 ## Labels
 
 | Label | When to assign |
@@ -173,21 +175,31 @@ Note the current labels from Phase 2:
 
 **Post comment** (always, for every issue — regardless of label action):
 
-Use a heredoc to pass the body to avoid quoting issues:
+1. Write the triage summary to a temp file:
+   - **Linux/macOS:** `<TMPDIR>/gh-comment-body.md` (use `printenv TMPDIR`; fall back to `/tmp/gh-comment-body.md` if unset)
+   - **Windows:** `<TEMP>/gh-comment-body.md` (use `printenv TEMP`)
 
-```bash
-gh issue comment <N> --body "$(cat <<'EOF'
+   The file content (including the `<!-- triaging-gh-issue:summary -->` marker):
+```
 <!-- triaging-gh-issue:summary -->
 ## 🤖 Triage Summary
 
-**Label applied:** \`<label>\`
+**Label applied:** `<label>`
 **Confidence:** <N>%
 
 **Reasoning:** <one-sentence rationale>
 
 **Duplicate check:** <No substantially similar issues found. | Potential duplicate of #<M>: <title>.>
-EOF
-)"
+```
+
+2. Post the comment:
+```bash
+gh issue comment <N> --body-file <temp-path>
+```
+
+3. Clean up:
+```bash
+rm <temp-path>
 ```
 
 If confidence < 70%, the Label applied line reads:
@@ -218,6 +230,7 @@ Triage complete:
 
 ## Common Mistakes
 
+- **Using `--body` instead of `--body-file`** — always write the comment body to a temp file first, then use `gh issue comment <N> --body-file <temp-path>`. Never pass body content directly via `--body "..."` as this is vulnerable to shell escaping issues.
 - **Calling `gh issue list` instead of `gh issue view`** — always use `gh issue view <N>` for single-issue triage.
 - **Calling `git branch --show-current` when args were provided** — only fall back to branch name when no args given.
 - **Not posting the comment** — Phase 5 always posts a triage comment, even for first-time label applications.
