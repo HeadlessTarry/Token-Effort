@@ -124,6 +124,21 @@ If `.github/workflows/triaging-gh-issue.yml` exists:
 
 Wait for confirmation. If the user says no, note "Triage workflow: skipped (overwrite declined)" in the summary and continue.
 
+**Resolve OpenCode action version**: Before writing the workflow file, resolve the latest release commit SHA:
+
+1. Run `gh api repos/anomalyco/opencode/releases/latest --jq .tag_name` to get the latest release tag (e.g. `v1.15.13`).
+2. Run `gh api repos/anomalyco/opencode/commits/tags/<tag> --jq .sha` to resolve that tag to a full commit SHA.
+
+On success, construct the pinned reference as `<sha> # <tag>` (e.g. `385cb694419f98103af0e8fc6187ddcbcbb6eecb # v1.15.13`).
+
+On failure of either command, use the fallback value:
+
+```
+385cb694419f98103af0e8fc6187ddcbcbb6eecb # v1.15.13
+```
+
+Substitute the resolved (or fallback) reference into the `uses:` line of the workflow template below.
+
 Create directory `.github/workflows/` if it does not exist.
 
 Write `.github/workflows/triaging-gh-issue.yml` with the following OpenCode-format workflow content:
@@ -156,7 +171,7 @@ jobs:
           persist-credentials: false
 
       - name: Run skill
-        uses: anomalyco/opencode/github@main
+        uses: anomalyco/opencode/github@<resolved-reference>
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
