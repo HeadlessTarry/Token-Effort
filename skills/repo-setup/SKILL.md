@@ -165,12 +165,22 @@ jobs:
       issues: write
       id-token: write
     steps:
-      - name: Checkout repository
+      - name: ⤵️ Checkout skill source
+        uses: actions/checkout@v6
+        with:
+          repository: HeadlessTarry/Token-Effort
+          path: _skill-source
+          persist-credentials: false
+
+      - name: ⚙️ Install skill
+        run: bash _skill-source/install.sh --skill triaging-gh-issue
+
+      - name: ⤵️ Checkout repository
         uses: actions/checkout@v6
         with:
           persist-credentials: false
 
-      - name: Run skill
+      - name: ✨ Run OpenCode
         uses: anomalyco/opencode/github@<resolved-reference>
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
