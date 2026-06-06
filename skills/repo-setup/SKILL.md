@@ -366,6 +366,7 @@ No git commit is made. The user decides what to commit.
 - **Not confirming commands before writing** — always echo the command list back to the user and wait for a yes confirmation before writing `.opencode/skills/verify/SKILL.md`.
 - **Writing the file when the user skips** — if the user says they don't know or wants to skip, do not generate any file. Log the "not configured" message and move on.
 - **Making a git commit after setup** — no git commit is made. The user decides what to commit.
+- **Hardcoding `@main` in Step 3** — the skill must resolve the OpenCode action version dynamically via `gh api` before writing the workflow file. Never hardcode `@main` or any unpinned branch reference.
 
 ## Eval
 
