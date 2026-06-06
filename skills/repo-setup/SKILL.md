@@ -158,7 +158,7 @@ on:
 
 jobs:
   triage:
-    name: Triage
+    name: 🔍 Triage
     runs-on: ubuntu-latest
     permissions:
       contents: read
