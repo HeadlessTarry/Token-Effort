@@ -124,6 +124,21 @@ If `.github/workflows/triaging-gh-issue.yml` exists:
 
 Wait for confirmation. If the user says no, note "Triage workflow: skipped (overwrite declined)" in the summary and continue.
 
+**Resolve OpenCode action version**: Before writing the workflow file, resolve the latest release commit SHA:
+
+1. Run `gh api repos/anomalyco/opencode/releases/latest --jq .tag_name` to get the latest release tag (e.g. `v1.15.13`).
+2. Run `gh api repos/anomalyco/opencode/commits/tags/<tag> --jq .sha` to resolve that tag to a full commit SHA.
+
+On success, construct the pinned reference as `<sha> # <tag>` (e.g. `385cb694419f98103af0e8fc6187ddcbcbb6eecb # v1.15.13`).
+
+On failure of either command, use the fallback value:
+
+```
+385cb694419f98103af0e8fc6187ddcbcbb6eecb # v1.15.13
+```
+
+Substitute the resolved (or fallback) reference into the `uses:` line of the workflow template below.
+
 Create directory `.github/workflows/` if it does not exist.
 
 Write `.github/workflows/triaging-gh-issue.yml` with the following OpenCode-format workflow content:
@@ -156,7 +171,7 @@ jobs:
           persist-credentials: false
 
       - name: Run skill
-        uses: anomalyco/opencode/github@main
+        uses: anomalyco/opencode/github@<resolved-reference>
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -351,6 +366,7 @@ No git commit is made. The user decides what to commit.
 - **Not confirming commands before writing** — always echo the command list back to the user and wait for a yes confirmation before writing `.opencode/skills/verify/SKILL.md`.
 - **Writing the file when the user skips** — if the user says they don't know or wants to skip, do not generate any file. Log the "not configured" message and move on.
 - **Making a git commit after setup** — no git commit is made. The user decides what to commit.
+- **Hardcoding `@main` in Step 3** — the skill must resolve the OpenCode action version dynamically via `gh api` before writing the workflow file. Never hardcode `@main` or any unpinned branch reference.
 
 ## Eval
 
@@ -368,6 +384,7 @@ No git commit is made. The user decides what to commit.
 - [ ] Step 3: Referenced docs/github-setup.md for prerequisites
 - [ ] Step 3: Asked if prerequisites set up; skipped workflow on "no"/"skip"
 - [ ] Step 3: Warned and confirmed before overwriting existing workflow file
+- [ ] Step 3: Resolves the OpenCode action SHA via `gh api` before writing the workflow file
 - [ ] Step 4: Warned and confirmed before overwriting any existing template files
 - [ ] Step 4: Wrote all three template files with correct content
 - [ ] Step 5: Delegated to `configuring-dependabot` via Skill tool
