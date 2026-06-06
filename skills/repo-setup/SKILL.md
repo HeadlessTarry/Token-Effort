@@ -384,6 +384,7 @@ No git commit is made. The user decides what to commit.
 - [ ] Step 3: Referenced docs/github-setup.md for prerequisites
 - [ ] Step 3: Asked if prerequisites set up; skipped workflow on "no"/"skip"
 - [ ] Step 3: Warned and confirmed before overwriting existing workflow file
+- [ ] Step 3 resolves the OpenCode action SHA via `gh api` before writing the workflow file
 - [ ] Step 4: Warned and confirmed before overwriting any existing template files
 - [ ] Step 4: Wrote all three template files with correct content
 - [ ] Step 5: Delegated to `configuring-dependabot` via Skill tool
