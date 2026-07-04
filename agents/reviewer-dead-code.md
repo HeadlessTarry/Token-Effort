@@ -2,7 +2,6 @@
 name: reviewer-dead-code
 description: Use when reviewing files for dead code — unreachable branches, unused symbols, orphaned files, stale flags, and commented-out blocks.
 mode: subagent
-model: opencode-go/qwen3.5-plus
 permission:
   edit: deny
   bash:
