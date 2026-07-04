@@ -2,7 +2,6 @@
 name: reviewer-docs
 description: Use when reviewing documentation files (README.md, docs/*, docs/**) for quality, accuracy, and completeness — read-only, outputs structured VERDICT.
 mode: subagent
-model: opencode-go/qwen3.5-plus
 permission:
   edit: deny
   bash:

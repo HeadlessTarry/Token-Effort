@@ -2,7 +2,6 @@
 name: reviewer-newcomer
 description: Use when reviewing source files for naming clarity, missing comments, implicit assumptions, and error message quality.
 mode: subagent
-model: opencode-go/qwen3.5-plus
 permission:
   edit: deny
   bash:
