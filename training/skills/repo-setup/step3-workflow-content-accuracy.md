@@ -14,6 +14,6 @@ input), and prompt text.
 - [ ] Uses `anomalyco/opencode/github` action
 - [ ] Uses `secrets.GITHUB_TOKEN` for authentication
 - [ ] Uses `secrets.OPENCODE_API_KEY` env var
-- [ ] Model is `opencode-go/qwen3.6-plus`
+- [ ] Model uses `vars.OPENCODE_MODEL` with fallback default
 - [ ] Prompt instructs to use the triaging-gh-issue skill
 - [ ] Prompt passes the issue number: `${{ github.event.issue.number || inputs.issue_number }}`
