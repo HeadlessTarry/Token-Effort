@@ -4,18 +4,18 @@ The user runs `/brainstorming-gh-issue 28`. Brainstorming completes and the user
 
 ## Expected Behaviour
 
-- The skill posts the spec as a GitHub comment using `gh issue comment` with `--body-file` pointing to a temp file, not `--body` with inline content.
-- The spec content is written to a temporary file before posting.
-- The temp file is cleaned up after the comment is posted.
+- The skill writes the spec to a temp file, posts it with `gh issue comment --body-file`, and cleans up — all in a single bash command using a heredoc with `&&` chaining.
+- The Write tool is NOT used for temp file creation.
 
 ## Pass Criteria
 
 - [ ] `gh issue comment` is called with `--body-file` (not `--body`).
-- [ ] Spec content is written to a temp file before posting.
-- [ ] The temp file is cleaned up after posting.
+- [ ] Write, post, and cleanup are in a single bash command using heredoc.
+- [ ] The temp file is cleaned up via `&& rm` after posting.
 
 ## Common Mistakes
 
-- Using `--body` with inline spec content instead of `--body-file` — this fails for large specs due to shell argument length limits and makes the command harder to read.
-- Forgetting to write the spec to a temp file before calling `gh issue comment`.
-- Not cleaning up the temp file after posting, leaving orphaned files in the working directory.
+- Using `--body` with inline spec content instead of `--body-file`.
+- Using the Write tool for temp file creation (triggers `external_directory` permission check in CI).
+- Using separate bash commands for write/post/cleanup.
+- Not cleaning up the temp file after posting.
