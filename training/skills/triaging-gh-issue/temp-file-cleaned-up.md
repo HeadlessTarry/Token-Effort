@@ -1,18 +1,18 @@
 ## Scenario
 
-The triaging-gh-issue skill cleaned up the temp file after posting the triage summary.
+The triaging-gh-issue skill cleans up the temp file after posting the triage summary.
 
 ## Expected Behaviour
 
-After `gh issue comment` succeeds, the skill runs `rm <temp-path>` to remove the temp file.
+The `rm` command is chained via `&&` after `gh issue comment` in the same bash command that wrote the temp file via heredoc.
 
 ## Pass Criteria
 
-- [ ] `rm` command executed after `gh issue comment` succeeds
+- [ ] `rm` command chained with `&&` after `gh issue comment` in the same bash command
 - [ ] Temp file path matches the one used for writing
 
 ## Common Mistakes
 
+- Using a separate bash command for cleanup (may trigger `external_directory` permission check)
 - Forgetting to clean up the temp file
-- Cleaning up the wrong file
 - Running `rm` before `gh issue comment` completes
