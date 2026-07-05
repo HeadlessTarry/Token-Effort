@@ -29,7 +29,7 @@ The `gh` CLI must be authenticated and available in the session. All GitHub oper
 
 > **Shell expansion:** Never use `${VARIABLE}` or any `${...}` form in bash commands. Use `printenv VARIABLE` to read environment variables.
 
-> **Posting GitHub content:** Always write the comment/issue body to a temp file first, then use `--body-file` with `gh` commands. Never pass body content directly via `--body "..."` as this is vulnerable to shell escaping issues.
+> **Posting GitHub content:** Always write the comment/issue body, post it with `--body-file`, and clean up the temp file in a **single bash command** using a heredoc with `&&` chaining. Never use the Write tool or separate operations for temp files — this triggers `external_directory` permission checks that hang in non-interactive CI. Never pass body content directly via `--body "..."` as this is vulnerable to shell escaping issues.
 
 ## Process
 
@@ -156,19 +156,40 @@ Take the spec file content and post it to the issue as a comment using this exac
 
 Run:
 
-1. Write the formatted spec to a temp file:
-   - **Linux/macOS:** `<TMPDIR>/gh-comment-body.md` (use `printenv TMPDIR` to check; fall back to `/tmp/gh-comment-body.md` if unset)
-   - **Windows:** `<TEMP>/gh-comment-body.md` (use `printenv TEMP` to get the path)
+Write the formatted spec, post the comment, and clean up the temp file in a single bash command using a heredoc:
 
-2. Post the comment:
-   ```bash
-   gh issue comment <N> --body-file <temp-path>
-   ```
+- **Linux/macOS:**
+  ```bash
+  cat > "$(printenv TMPDIR)/gh-comment-body.md" << 'EOF'
+  <!-- brainstorming-gh-issue:spec -->
+  ## 🤖🧠 Design Spec
 
-3. Clean up the temp file:
-   ```bash
-   rm <temp-path>
-   ```
+  <approved design content>
+
+  ---
+  *AI-generated design spec. Mistakes do happen — please review carefully before approving.*
+
+  **To approve this spec:** remove the `pending-review` label and move the issue to the next status on the project board.
+  EOF
+  gh issue comment <N> --body-file "$(printenv TMPDIR)/gh-comment-body.md" && rm "$(printenv TMPDIR)/gh-comment-body.md"
+  ```
+  Fall back to `/tmp/gh-comment-body.md` if `TMPDIR` is unset.
+
+- **Windows:**
+  ```bash
+  cat > "$(printenv TEMP)/gh-comment-body.md" << 'EOF'
+  <!-- brainstorming-gh-issue:spec -->
+  ## 🤖🧠 Design Spec
+
+  <approved design content>
+
+  ---
+  *AI-generated design spec. Mistakes do happen — please review carefully before approving.*
+
+  **To approve this spec:** remove the `pending-review` label and move the issue to the next status on the project board.
+  EOF
+  gh issue comment <N> --body-file "$(printenv TEMP)/gh-comment-body.md" && rm "$(printenv TEMP)/gh-comment-body.md"
+  ```
 
 #### Step 5b — Ensure the `pending-review` label exists
 
@@ -207,6 +228,7 @@ After Phase 5 completes, report:
 ## Common Mistakes
 
 - **Using `--body` instead of `--body-file`** — always write the comment body to a temp file first, then use `gh issue comment <N> --body-file <temp-path>`. Never pass body content directly via `--body "..."` as this is vulnerable to shell escaping issues.
+- **Using separate operations for temp file write/post/cleanup** — always consolidate the write, post, and cleanup into a single bash command using a heredoc with `&&` chaining. Never use the Write tool or separate bash commands for these operations, as this triggers `external_directory` permission checks that hang in non-interactive CI environments.
 - **Jumping to execution before brainstorming** — the issue content (title, body, comments) is the brief for brainstorming, not a work order. Do NOT start reading files, creating implementation todo lists, or executing changes until brainstorming has completed and the user has approved the design.
 - **Skipping the status pull in re-entry mode** — `move-issue-status "Brainstorming"` must be called on every invocation, including when the issue already has a `pending-review` label and is being re-entered.
 - **Using MCP tools for issue operations** — all issue interactions must use `gh` CLI commands. Never call any `mcp__*` tool, even if it is available.
