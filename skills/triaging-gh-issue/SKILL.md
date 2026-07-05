@@ -24,7 +24,7 @@ Fetches a single GitHub issue, classifies it by reading its content and searchin
 
 The `gh` CLI must be authenticated and available in the session. All GitHub issue operations use `gh` commands via `Bash`.
 
-> **Posting GitHub content:** Always write the comment/issue body to a temp file first, then use `--body-file` with `gh` commands. Never pass body content directly via `--body "..."` as this is vulnerable to shell escaping issues.
+> **Posting GitHub content:** Always write the comment/issue body, post it with `--body-file`, and clean up the temp file in a **single bash command** using a heredoc with `&&` chaining. Never use the Write tool or separate operations for temp files — this triggers `external_directory` permission checks that hang in non-interactive CI. Never pass body content directly via `--body "..."` as this is vulnerable to shell escaping issues.
 
 ## Labels
 
@@ -175,32 +175,40 @@ Note the current labels from Phase 2:
 
 **Post comment** (always, for every issue — regardless of label action):
 
-1. Write the triage summary to a temp file:
-   - **Linux/macOS:** `<TMPDIR>/gh-comment-body.md` (use `printenv TMPDIR`; fall back to `/tmp/gh-comment-body.md` if unset)
-   - **Windows:** `<TEMP>/gh-comment-body.md` (use `printenv TEMP`)
+Write the triage summary, post the comment, and clean up the temp file in a single bash command using a heredoc:
 
-   The file content (including the `<!-- triaging-gh-issue:summary -->` marker):
-```
-<!-- triaging-gh-issue:summary -->
-## 🤖 Triage Summary
+- **Linux/macOS:**
+  ```bash
+  cat > "$(printenv TMPDIR)/gh-comment-body.md" << 'EOF'
+  <!-- triaging-gh-issue:summary -->
+  ## 🤖 Triage Summary
 
-**Label applied:** `<label>`
-**Confidence:** <N>%
+  **Label applied:** `<label>`
+  **Confidence:** <N>%
 
-**Reasoning:** <one-sentence rationale>
+  **Reasoning:** <one-sentence rationale>
 
-**Duplicate check:** <No substantially similar issues found. | Potential duplicate of #<M>: <title>.>
-```
+  **Duplicate check:** <No substantially similar issues found. | Potential duplicate of #<M>: <title>.>
+  EOF
+  gh issue comment <N> --body-file "$(printenv TMPDIR)/gh-comment-body.md" && rm "$(printenv TMPDIR)/gh-comment-body.md"
+  ```
+  Fall back to `/tmp/gh-comment-body.md` if `TMPDIR` is unset.
 
-2. Post the comment:
-```bash
-gh issue comment <N> --body-file <temp-path>
-```
+- **Windows:**
+  ```bash
+  cat > "$(printenv TEMP)/gh-comment-body.md" << 'EOF'
+  <!-- triaging-gh-issue:summary -->
+  ## 🤖 Triage Summary
 
-3. Clean up:
-```bash
-rm <temp-path>
-```
+  **Label applied:** `<label>`
+  **Confidence:** <N>%
+
+  **Reasoning:** <one-sentence rationale>
+
+  **Duplicate check:** <No substantially similar issues found. | Potential duplicate of #<M>: <title>.>
+  EOF
+  gh issue comment <N> --body-file "$(printenv TEMP)/gh-comment-body.md" && rm "$(printenv TEMP)/gh-comment-body.md"
+  ```
 
 If confidence < 70%, the Label applied line reads:
 
@@ -231,6 +239,7 @@ Triage complete:
 ## Common Mistakes
 
 - **Using `--body` instead of `--body-file`** — always write the comment body to a temp file first, then use `gh issue comment <N> --body-file <temp-path>`. Never pass body content directly via `--body "..."` as this is vulnerable to shell escaping issues.
+- **Using separate operations for temp file write/post/cleanup** — always consolidate the write, post, and cleanup into a single bash command using a heredoc with `&&` chaining. Never use the Write tool or separate bash commands for these operations, as this triggers `external_directory` permission checks that hang in non-interactive CI environments.
 - **Calling `gh issue list` instead of `gh issue view`** — always use `gh issue view <N>` for single-issue triage.
 - **Calling `git branch --show-current` when args were provided** — only fall back to branch name when no args given.
 - **Not posting the comment** — Phase 5 always posts a triage comment, even for first-time label applications.
