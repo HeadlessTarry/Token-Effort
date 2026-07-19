@@ -83,7 +83,3 @@ graph LR
 ```
 
 Issue states (📋 New, 🧠 Brainstorming, 🏗️ Building, ✅ Done) correspond to GitHub Project board columns. Each skill automatically advances the issue from an earlier status.
-
-## Migration Status
-
-This repo is migrating from a Claude Code plugin to native OpenCode skills and agents. The `pending-migration/` directory contains legacy content that will be removed once migration is complete. Do not modify or add to it.
