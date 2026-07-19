@@ -15,5 +15,6 @@ input), and prompt text.
 - [ ] Uses `secrets.GITHUB_TOKEN` for authentication
 - [ ] Uses `secrets.OPENCODE_API_KEY` env var
 - [ ] Model uses `vars.OPENCODE_MODEL` with fallback default
+- [ ] `share: false` is set to prevent duplicate comments
 - [ ] Prompt instructs to use the triaging-gh-issue skill
 - [ ] Prompt passes the issue number: `${{ github.event.issue.number || inputs.issue_number }}`
