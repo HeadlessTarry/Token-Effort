@@ -30,7 +30,7 @@ config_read_plugins() {
         echo "Error: Invalid JSON in $config_path — aborting. Fix the JSON or delete the file to let the installer recreate it." >&2
         return 1
     fi
-    jq -c '.plugins // []' "$config_path"
+    jq -c '.plugin // []' "$config_path"
 }
 
 # Check if a plugin spec already exists in the plugins array
@@ -87,19 +87,19 @@ config_apply_plugins() {
     # Build updated JSON
     local updated
     if [[ ! -f "$config_path" ]]; then
-        updated='{"plugins":[]}'
+        updated='{"plugin":[]}'
     else
         updated=$(cat "$config_path")
     fi
 
     # Ensure plugins array exists
-    if ! echo "$updated" | jq -e '.plugins' >/dev/null 2>&1; then
-        updated=$(echo "$updated" | jq '. + {"plugins":[]}')
+    if ! echo "$updated" | jq -e '.plugin' >/dev/null 2>&1; then
+        updated=$(echo "$updated" | jq '. + {"plugin":[]}')
     fi
 
     # Append each new plugin
     for spec in "${new_specs[@]}"; do
-        updated=$(echo "$updated" | jq --arg s "$spec" '.plugins += [$s]')
+        updated=$(echo "$updated" | jq --arg s "$spec" '.plugin += [$s]')
     done
 
     # Write
