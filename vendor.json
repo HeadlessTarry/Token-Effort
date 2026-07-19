@@ -1,0 +1,10 @@
+{
+  "plugins": [
+    {
+      "name": "superpowers",
+      "repo": "https://github.com/obra/superpowers.git",
+      "opencode_plugin_spec": "superpowers@git+https://github.com/obra/superpowers.git"
+    }
+  ],
+  "skills": []
+}

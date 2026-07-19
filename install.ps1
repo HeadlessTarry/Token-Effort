@@ -2,6 +2,7 @@
     [switch]$Local,
     [string]$Skill,
     [string]$Agent,
+    [switch]$Update,
     [switch]$Help
 )
 
@@ -9,12 +10,13 @@ $ErrorActionPreference = "Stop"
 
 if ($Help) {
     Write-Host @"
-Usage: install.ps1 [-Local] [-Skill <name>] [-Agent <name>]
+Usage: install.ps1 [-Local] [-Skill <name>] [-Agent <name>] [-Update]
 
 Options:
   -Local         Install to .opencode/ instead of `$env:USERPROFILE\.config\opencode\
   -Skill <name>  Install only the specified skill
   -Agent <name>  Install only the specified agent
+  -Update        Pull latest for each vendor repo
   -Help          Show this help message
 
 If no -Skill or -Agent is specified, all skills and agents are installed.
@@ -24,12 +26,14 @@ If no -Skill or -Agent is specified, all skills and agents are installed.
 
 # Defaults
 $ScriptDir = $PSScriptRoot
-if (-not $Local) {
-    $Dest = Join-Path $env:USERPROFILE ".config\opencode"
+$Dest = if ($Local) {
+    Join-Path (Get-Location).Path ".opencode"
 }
 else {
-    $Dest = Join-Path (Get-Location).Path ".opencode"
+    Join-Path $env:USERPROFILE ".config\opencode"
 }
+
+$ShouldUpdate = [bool]$Update
 
 # Validate mutually exclusive flags
 if ($Skill -and $Agent) {
@@ -38,29 +42,123 @@ if ($Skill -and $Agent) {
 }
 
 # Validate skill name
-if ($Skill) {
-    if ($Skill -match '\.\.|[/\\]') {
-        Write-Error "Invalid skill name: $Skill"
-        exit 1
-    }
-}
-
-# Validate agent name
-if ($Agent) {
-    if ($Agent -match '\.\.|[/\\]') {
-        Write-Error "Invalid agent name: $Agent"
-        exit 1
-    }
-}
-
-# Check prerequisites
-if (-not (Get-Command jq -ErrorAction SilentlyContinue)) {
-    Write-Error "jq is not installed."
-    Write-Error "Install jq: https://jqlang.github.io/jq/download/"
+if ($Skill -and ($Skill -match '\.\.|[/\\]')) {
+    Write-Error "Invalid skill name: $Skill"
     exit 1
 }
 
-# Create destination directories
+# Validate agent name
+if ($Agent -and ($Agent -match '\.\.|[/\\]')) {
+    Write-Error "Invalid agent name: $Agent"
+    exit 1
+}
+
+# Check prerequisites
+foreach ($cmd in @("jq", "git")) {
+    if (-not (Get-Command $cmd -ErrorAction SilentlyContinue)) {
+        Write-Error "$cmd is not installed."
+        exit 1
+    }
+}
+
+# Import helpers
+. (Join-Path $ScriptDir "lib\vendor.ps1")
+. (Join-Path $ScriptDir "lib\config.ps1")
+
+# --- Vendor processing ---
+
+$VendorDir = Join-Path $ScriptDir ".vendor"
+$ManifestPath = Join-Path $ScriptDir "vendor.json"
+$PluginSpecs = @()
+
+if (Test-Path $ManifestPath) {
+    Write-Host "Processing vendor manifest..."
+
+    $vendors = Get-VendorManifest -ManifestPath $ManifestPath
+
+    foreach ($vendor in $vendors) {
+        Write-Host ""
+        Write-Host "Vendor: $($vendor.Name) ($($vendor.Type))"
+
+        $success = Invoke-VendorCloneOrUpdate -VendorDir $VendorDir -Name $vendor.Name -RepoUrl $vendor.Repo -ShouldUpdate $ShouldUpdate
+
+        if (-not $success) {
+            Write-Host "Failed to process vendor '$($vendor.Name)'"
+            $choice = Read-Host "Retry? (r)etry / (s)kip / (a)bort"
+            switch ($choice) {
+                { $_ -match '^[rR]' } {
+                    $success = Invoke-VendorCloneOrUpdate -VendorDir $VendorDir -Name $vendor.Name -RepoUrl $vendor.Repo -ShouldUpdate $ShouldUpdate
+                    if (-not $success) {
+                        Write-Error "Aborting."
+                        exit 1
+                    }
+                }
+                { $_ -match '^[sS]' } {
+                    Write-Host "  Skipping vendor '$($vendor.Name)'"
+                    continue
+                }
+                default {
+                    Write-Error "Unrecognized choice '$choice' — aborting."
+                    exit 1
+                }
+            }
+        }
+
+        # Queue plugins
+        if ($vendor.Type -eq "plugin" -and $vendor.OpencodePluginSpec) {
+            $PluginSpecs += $vendor.OpencodePluginSpec
+        }
+
+        # Copy vendor skills
+        if ($vendor.Type -eq "skill" -and $vendor.ExtractSkills.Count -gt 0) {
+            foreach ($skillName in $vendor.ExtractSkills) {
+                $sourcePath = Join-Path $VendorDir "$($vendor.Name)\skills\$skillName"
+                if (Test-Path $sourcePath -PathType Container) {
+                    $destPath = Join-Path $Dest "skills\$skillName"
+                    New-Item -ItemType Directory -Force -Path $destPath | Out-Null
+                    Copy-Item -Recurse -Force -Path "$sourcePath\*" -Destination $destPath
+                    Write-Host "  Copied skill: $skillName"
+                }
+                else {
+                    Write-Host "  Warning: skill '$skillName' not found in vendor '$($vendor.Name)'"
+                    $skipChoice = Read-Host "  Skip this skill and continue? (y/n)"
+                    if ($skipChoice -notin @("y", "Y")) {
+                        Write-Error "Aborting."
+                        exit 1
+                    }
+                }
+            }
+        }
+    }
+
+    # Process plugin queue
+    if ($PluginSpecs.Count -gt 0) {
+        Write-Host ""
+        Write-Host "Updating opencode.json plugins..."
+
+        $configPath = Join-Path $Dest "opencode.json"
+        New-Item -ItemType Directory -Force -Path $Dest | Out-Null
+
+        Write-Host "  Proposed changes:"
+        foreach ($spec in $PluginSpecs) {
+            Write-Host "    + $spec"
+        }
+
+        $confirm = Read-Host "  Apply these changes? (y/n)"
+        if ($confirm -match '^[yY]') {
+            Set-ConfigPlugins -ConfigPath $configPath -PluginSpecs $PluginSpecs
+        }
+        else {
+            Write-Host "  Skipping opencode.json update"
+        }
+    }
+}
+
+# --- Own skills/agents install ---
+
+Write-Host ""
+Write-Host "Installing Token-Effort skills and agents..."
+
 New-Item -ItemType Directory -Force -Path (Join-Path $Dest "skills") | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $Dest "agents") | Out-Null
 
@@ -91,7 +189,6 @@ else {
         $SourceDir = Join-Path $ScriptDir $DirName
         if (Test-Path $SourceDir -PathType Container) {
             $Items = Get-ChildItem -Path $SourceDir -Force
-            # Filter out .gitkeep
             $Items = $Items | Where-Object { $_.Name -ne ".gitkeep" }
             if ($Items.Count -gt 0) {
                 foreach ($Item in $Items) {
@@ -107,10 +204,11 @@ else {
                 Write-Host "  Synced $DirName/ -> $(Join-Path $Dest $DirName)"
             }
             else {
-                Write-Host "  Skipping $DirName/ — empty"
+                Write-Host "  Skipping $DirName/ - empty"
             }
         }
     }
 }
 
+Write-Host ""
 Write-Host "Done. Restart OpenCode to pick up changes."

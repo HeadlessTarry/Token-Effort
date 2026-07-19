@@ -13,3 +13,6 @@ docs/superpowers/
 node_modules/
 package.json
 package-lock.json
+
+# Vendor dependencies
+.vendor/
