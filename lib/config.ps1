@@ -24,8 +24,8 @@ function Get-ConfigPlugins {
 
     try {
         $config = Get-Content $ConfigPath -Raw | ConvertFrom-Json
-        if ($config.plugins) {
-            return ,@($config.plugins)
+        if ($config.plugin) {
+            return ,@($config.plugin)
         }
         return ,@()
     }
@@ -84,12 +84,12 @@ function Set-ConfigPlugins {
         $config = [PSCustomObject]@{}
     }
 
-    if (-not $config.plugins) {
-        $config | Add-Member -NotePropertyName "plugins" -NotePropertyValue @()
+    if (-not $config.plugin) {
+        $config | Add-Member -NotePropertyName "plugin" -NotePropertyValue @()
     }
 
     foreach ($spec in $newSpecs) {
-        $config.plugins += $spec
+        $config.plugin += $spec
     }
 
     # Write
