@@ -11,6 +11,7 @@ usage() {
     echo "  --skill <name> Install only the specified skill"
     echo "  --agent <name> Install only the specified agent"
     echo "  --update       Pull latest for each vendor repo"
+    echo "  --help         Show this help message"
     echo ""
     echo "If no --skill or --agent is specified, all skills and agents are installed."
 }
@@ -103,7 +104,7 @@ if [[ -f "$MANIFEST" ]]; then
                     continue
                     ;;
                 *)
-                    echo "Aborting." >&2
+                    echo "Unrecognized choice '$choice' — aborting." >&2
                     exit 1
                     ;;
             esac

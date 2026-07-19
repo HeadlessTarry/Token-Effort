@@ -98,7 +98,7 @@ if (Test-Path $ManifestPath) {
                     continue
                 }
                 default {
-                    Write-Error "Aborting."
+                    Write-Error "Unrecognized choice '$choice' — aborting."
                     exit 1
                 }
             }

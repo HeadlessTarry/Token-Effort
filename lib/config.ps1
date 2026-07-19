@@ -18,6 +18,7 @@ function Get-ConfigPlugins {
     param([string]$ConfigPath)
 
     if (-not (Test-Path $ConfigPath)) {
+        # Leading comma prevents PowerShell from unrolling single-element arrays
         return ,@()
     }
 
@@ -29,7 +30,7 @@ function Get-ConfigPlugins {
         return ,@()
     }
     catch {
-        Write-Error "Invalid JSON in $ConfigPath - aborting"
+        Write-Error "Invalid JSON in $ConfigPath - aborting. Fix the JSON or delete the file to let the installer recreate it."
         return $null
     }
 }

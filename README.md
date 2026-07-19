@@ -39,12 +39,13 @@ Both scripts install Token-Effort's own skills and agents, plus any third-party 
 | `-Agent <name>` | `--agent <name>` | Install only the specified agent |
 | `-Local` | `--local` | Install to `.opencode/` in the project directory instead |
 | `-Update` | `--update` | Pull latest for each vendor repo |
+| `-Help` | `--help` | Show usage information |
 
 ## 📦 What Gets Installed
 
 **Token-Effort's own content:**
-- `skills/` → OpenCode skill definitions
-- `agents/` → OpenCode agent definitions
+- `skills/` → OpenCode skill definitions (each skill is a directory: `skills/<name>/`)
+- `agents/` → OpenCode agent definitions (each agent is a markdown file: `agents/<name>.md`)
 
 **Vendor dependencies** (declared in `vendor.json`):
 - **Plugins** — cloned to `.vendor/<name>/` and registered in `opencode.json` (with your confirmation)
@@ -55,6 +56,18 @@ The install is idempotent — safe to re-run. Re-running with `--update` / `-Upd
 ## 🔌 Vendor Dependencies
 
 Third-party dependencies are declared in `vendor.json` at the repo root. Vendors are cloned into `.vendor/` (gitignored) during install.
+
+**File structure:**
+```json
+{
+  "plugins": [
+    { "name": "...", "repo": "...", "opencode_plugin_spec": "..." }
+  ],
+  "skills": [
+    { "name": "...", "repo": "...", "extract_skills": ["..."] }
+  ]
+}
+```
 
 **Plugin example** (registered in `opencode.json`):
 ```json

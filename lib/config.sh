@@ -27,7 +27,7 @@ config_read_plugins() {
         return 0
     fi
     if ! jq empty "$config_path" 2>/dev/null; then
-        echo "Error: Invalid JSON in $config_path — aborting" >&2
+        echo "Error: Invalid JSON in $config_path — aborting. Fix the JSON or delete the file to let the installer recreate it." >&2
         return 1
     fi
     jq -c '.plugins // []' "$config_path"
