@@ -6,8 +6,6 @@ permission:
   edit: deny
   bash:
     "git diff*": allow
-    "npm test*": allow
-    "yarn test*": allow
     "*": deny
 ---
 
