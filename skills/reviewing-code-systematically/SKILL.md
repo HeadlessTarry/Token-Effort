@@ -28,7 +28,7 @@ Detects review mode (feature branch vs default branch), computes review scope, d
 - `reviewer-docs` agent (parallel dispatch target)
 - `reviewer-newcomer` agent (parallel dispatch target)
 - `reviewer-test-quality` agent (parallel dispatch target)
-- All agents must be installed in the `agents/` directory
+- All agents must exist as `.md` files in the `agents/` directory at the repository root. Each file must have YAML frontmatter with at minimum `name`, `description`, and `mode: subagent`. See existing `agents/reviewer-*.md` files for the expected structure.
 
 ## Reviewers
 
