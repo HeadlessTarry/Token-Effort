@@ -8,7 +8,7 @@ user-invocable: true
 
 ## Overview
 
-Detects review mode (feature branch vs default branch), computes review scope, dispatches 3 specialist reviewer agents in parallel via OpenCode's native `task` tool, and collates their verdicts into a single unified report. Each reviewer runs concurrently — the review takes as long as the slowest agent, not the sum of them all.
+Detects review mode (feature branch vs default branch), computes review scope, dispatches 4 specialist reviewer agents in parallel via OpenCode's native `task` tool, and collates their verdicts into a single unified report. Each reviewer runs concurrently — the review takes as long as the slowest agent, not the sum of them all.
 
 ## When to Use
 
