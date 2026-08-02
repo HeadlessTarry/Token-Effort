@@ -67,6 +67,8 @@ foreach ($cmd in @("jq", "git")) {
 
 # --- Vendor processing ---
 
+if (-not $Skill -and -not $Agent) {
+
 $VendorDir = Join-Path $ScriptDir ".vendor"
 $ManifestPath = Join-Path $ScriptDir "vendor.json"
 $PluginSpecs = @()
@@ -153,6 +155,8 @@ if (Test-Path $ManifestPath) {
         }
     }
 }
+
+} # end: full install (no -Skill/-Agent filter)
 
 # --- Own skills/agents install ---
 

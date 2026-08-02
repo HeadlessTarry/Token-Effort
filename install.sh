@@ -81,6 +81,8 @@ VENDOR_DIR="$SCRIPT_DIR/.vendor"
 MANIFEST="$SCRIPT_DIR/vendor.json"
 PLUGIN_SPECS=()
 
+if [[ -z "$INSTALL_SKILL" ]] && [[ -z "$INSTALL_AGENT" ]]; then
+
 if [[ -f "$MANIFEST" ]]; then
     echo "Processing vendor manifest..."
 
@@ -154,6 +156,8 @@ if [[ -f "$MANIFEST" ]]; then
             echo "  Skipping opencode.json update"
         fi
     fi
+fi
+
 fi
 
 # --- Own skills/agents install ---
