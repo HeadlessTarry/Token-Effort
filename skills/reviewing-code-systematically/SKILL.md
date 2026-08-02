@@ -8,7 +8,7 @@ user-invocable: true
 
 ## Overview
 
-Detects review mode (feature branch vs default branch), computes review scope, dispatches 3 specialist reviewer agents in parallel via OpenCode's native `task` tool, and collates their verdicts into a single unified report. Each reviewer runs concurrently — the review takes as long as the slowest agent, not the sum of them all.
+Detects review mode (feature branch vs default branch), computes review scope, dispatches 4 specialist reviewer agents in parallel via OpenCode's native `task` tool, and collates their verdicts into a single unified report. Each reviewer runs concurrently — the review takes as long as the slowest agent, not the sum of them all.
 
 ## When to Use
 
@@ -27,7 +27,8 @@ Detects review mode (feature branch vs default branch), computes review scope, d
 - `reviewer-dead-code` agent (parallel dispatch target)
 - `reviewer-docs` agent (parallel dispatch target)
 - `reviewer-newcomer` agent (parallel dispatch target)
-- All agents must be installed in the `agents/` directory
+- `reviewer-test-quality` agent (parallel dispatch target)
+- All agents must exist as `.md` files in the `agents/` directory at the repository root. Each file must have YAML frontmatter with at minimum `name`, `description`, and `mode: subagent`. See existing `agents/reviewer-*.md` files for the expected structure.
 
 ## Reviewers
 
@@ -36,6 +37,7 @@ Detects review mode (feature branch vs default branch), computes review scope, d
 | `reviewer-dead-code` | Unreachable code, unused symbols, orphaned files, stale flags, commented-out blocks |
 | `reviewer-docs` | README and docs/* accuracy, completeness, cross-reference validity |
 | `reviewer-newcomer` | Naming clarity, missing comments, implicit assumptions, error message quality |
+| `reviewer-test-quality` | Spec alignment, edge case coverage, DAMP principles, testing anti-patterns |
 
 ## Process
 
@@ -83,7 +85,7 @@ STATUS=ok
 
 ### Phase 3 — Dispatch all reviewers in parallel
 
-Dispatch all 3 reviewers in a single parallel batch using the `task` tool. For each reviewer, use:
+Dispatch all 4 reviewers in a single parallel batch using the `task` tool. For each reviewer, use:
 
 - `description`: A short description (e.g. "Dead code review")
 - `prompt`: The full review prompt (see below)
@@ -106,12 +108,15 @@ If MODE=full-repo, review ALL files listed in ALL_FILES.
 Return your complete structured output exactly as defined in your Output Format, starting with the VERDICT line.
 ```
 
-All 3 task calls must be made in the same message to enable parallel execution:
+**Conditional dispatch:** Only dispatch `reviewer-test-quality` if test files exist in the review scope. Filter `CHANGED_FILES` or `ALL_FILES` to test patterns (`*.test.*`, `*.spec.*`, `__tests__/`, `test/`, `tests/`, `spec/`) before dispatch. If no test files are present, skip the `reviewer-test-quality` dispatch.
+
+All 4 task calls must be made in the same message to enable parallel execution:
 
 ```
 task(description="Dead code review", prompt="<full prompt>", subagent_type="reviewer-dead-code")
 task(description="Docs review", prompt="<full prompt>", subagent_type="reviewer-docs")
 task(description="Newcomer review", prompt="<full prompt>", subagent_type="reviewer-newcomer")
+task(description="Test quality review", prompt="<full prompt>", subagent_type="reviewer-test-quality")
 ```
 
 ### Phase 4 — Collect all verdicts
@@ -142,6 +147,7 @@ UNIFIED VERDICT: BLOCK | NEEDS_CHANGES | PASS | SKIP
 
 | Reviewer | Verdict |
 |----------|---------|
+| <reviewer name> | <VERDICT> |
 | <reviewer name> | <VERDICT> |
 | <reviewer name> | <VERDICT> |
 | <reviewer name> | <VERDICT> |

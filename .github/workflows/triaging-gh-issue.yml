@@ -42,7 +42,7 @@ jobs:
           EOF
 
       - name: ✨ Run OpenCode
-        uses: anomalyco/opencode/github@127bdb30784d508cc556c71a0f32b508a3061517 # v1.18.3
+        uses: anomalyco/opencode/github@4da7bb44c84e013fa53e9c5d02ac753d1435c81a # v1.18.9
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
