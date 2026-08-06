@@ -19,7 +19,7 @@ Guides the user through filing a well-structured GitHub feature request. Discove
 - The user has a rough idea and wants help shaping it into a clear GitHub issue
 
 **Do not use when:**
-- The issue already exists on GitHub — use `/brainstorming-gh-issue` to turn it into a design spec instead
+- The issue already exists on GitHub — use `/triage` to categorize and route it instead
 - The user wants to file a bug report — this skill is for feature/enhancement requests only
 
 ## Prerequisites

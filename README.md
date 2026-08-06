@@ -2,144 +2,144 @@
 
 > Low-stakes intelligence for high-latency humans
 
-A collection of OpenCode skills and agents that do just enough to avoid being replaced by a shell script.
+A complementary skill pack that supplements [Matt Pocock's skills ecosystem](https://github.com/mattpocock/skills) with GitHub-specific workflows.
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=HeadlessTarry_Token-Effort&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=HeadlessTarry_Token-Effort)
 
-## 📋 Prerequisites
+## 📦 What is Token-Effort?
 
-- [gh CLI](https://cli.github.com/) — authenticated with `gh auth login`
-- [jq](https://jqlang.github.io/jq/download/) — JSON parsing
-- [git](https://git-scm.com/) — version control (for vendor repo cloning)
+Token-Effort provides 4 skills that complement the MP ecosystem:
+
+| Skill | Purpose |
+|-------|---------|
+| `/repo-setup` | Interactive onboarding for the MP ecosystem (fresh repos or migrations) |
+| `/propose-feature` | Guides feature proposals with structured issue creation |
+| `/report-bug` | Guides bug reports with structured issue creation |
+| `/configuring-dependabot` | Configures Dependabot for automated dependency updates |
+
+These skills fill gaps in the MP ecosystem for GitHub-specific workflows that MP doesn't cover.
 
 ## ⤵️ Installation
 
+Install using `npx skills`:
+
 ```bash
-git clone https://github.com/HeadlessTarry/Token-Effort.git
-cd Token-Effort
+npx skills add HeadlessTarry/Token-Effort
 ```
 
-**PowerShell (Windows):**
-```powershell
-.\install.ps1
-```
+This installs all 4 Token-Effort skills into your OpenCode skills directory.
 
-**Bash (Linux/macOS/WSL):**
+### Recommended: Install MP Skills First
+
+For the complete experience, install the MP skills ecosystem first:
+
 ```bash
-./install.sh
+npx skills add mattpocock/skills
+npx skills add HeadlessTarry/Token-Effort
 ```
 
-Both scripts install Token-Effort's own skills and agents, plus any third-party vendor dependencies declared in `vendor.json`. Restart OpenCode to pick up changes.
+Then run `/repo-setup` to complete your onboarding (issue templates, Dependabot, labels, etc.).
 
-**Options:**
+## 🚀 Quick Start
 
-| Flag (PS) | Flag (Bash) | Description |
-|-----------|-------------|-------------|
-| `-Skill <name>` | `--skill <name>` | Install only the specified skill |
-| `-Agent <name>` | `--agent <name>` | Install only the specified agent |
-| `-Local` | `--local` | Install to `.opencode/` in the project directory instead |
-| `-Update` | `--update` | Pull latest for each vendor repo |
-| `-Help` | `--help` | Show usage information |
+1. **Set up your repository:**
+   ```bash
+   /repo-setup
+   ```
+   This interactive skill walks you through:
+   - Installing MP skills (if not already installed)
+   - Installing Token-Effort skills
+   - Configuring GitHub labels for the MP triage workflow
+   - Creating issue templates
+   - Setting up Dependabot
 
-## 📦 What Gets Installed
+2. **Configure MP skills for your repo:**
+   ```bash
+   /setup-matt-pocock-skills
+   ```
+   This sets up your issue tracker, triage labels, and domain docs.
 
-**Token-Effort's own content:**
-- `skills/` → OpenCode skill definitions (each skill is a directory: `skills/<name>/`)
-- `agents/` → OpenCode agent definitions (each agent is a markdown file: `agents/<name>.md`)
+3. **Start using the skills:**
+   - `/triage` — Triage a new issue (adds labels, detects duplicates, routes to agent/human)
+   - `/implement` — Implement a feature or fix from a spec or ticket
+   - `/code-review` — Review code changes since a commit, branch, or PR
+   - `/propose-feature` — Propose a new feature with structured issue creation
+   - `/report-bug` — Report a bug with structured issue creation
 
-**Vendor dependencies** (declared in `vendor.json`):
-- **Plugins** — cloned to `.vendor/<name>/` and registered in `opencode.json` (with your confirmation)
-- **Skills** — cloned to `.vendor/<name>/` and cherry-picked skills copied to OpenCode's skills directory
+## 🔄 The Workflow
 
-The install is idempotent — safe to re-run. Re-running with `--update` / `-Update` pulls the latest from vendor repos.
+Token-Effort uses MP's **label-based state tracking** instead of a project board:
 
-## 🔌 Vendor Dependencies
-
-Third-party dependencies are declared in `vendor.json` at the repo root. Vendors are cloned into `.vendor/` (gitignored) during install.
-
-**File structure:**
-```json
-{
-  "plugins": [
-    { "name": "...", "repo": "...", "opencode_plugin_spec": "..." }
-  ],
-  "skills": [
-    { "name": "...", "repo": "...", "extract_skills": ["..."] }
-  ]
-}
+```
+needs-triage → needs-info (if clarification needed)
+            → ready-for-agent (if AI can handle it)
+            → ready-for-human (if human implementation needed)
+            → wontfix (if out of scope)
 ```
 
-**Plugin example** (registered in `opencode.json`):
-```json
-{
-  "name": "superpowers",
-  "repo": "https://github.com/obra/superpowers.git",
-  "opencode_plugin_spec": "superpowers@git+https://github.com/obra/superpowers.git"
-}
-```
+### Typical Flow
 
-**Skill example** (cherry-picked to OpenCode's skills directory):
-```json
-{
-  "name": "addyosmani-agent-skills",
-  "repo": "https://github.com/addyosmani/agent-skills.git",
-  "extract_skills": ["debugging-and-error-recovery", "doubt-driven-development"]
-}
-```
+1. **Issue opened** → labeled `needs-triage` (via issue template)
+2. **Run `/triage`** → categorizes, detects duplicates, routes appropriately
+3. **Run `/implement`** → builds the feature or fix
+4. **Run `/code-review`** → reviews the changes
+5. **Merge PR** → done!
 
-To add a new vendor, add an entry to `vendor.json` and re-run the install script.
+## 📋 Prerequisites
 
-## 🛡️ Safety
-
-- `opencode.json` is backed up before any modification (timestamped `.bak` file)
-- Existing plugin entries are never removed — only new ones are appended
-- Invalid JSON in an existing config aborts the install (no corruption)
-- Vendor failures prompt for retry/skip/abort
+- [OpenCode](https://opencode.ai) — AI-assisted development platform
+- [gh CLI](https://cli.github.com/) — authenticated with `gh auth login` (for GitHub operations)
+- [Node.js](https://nodejs.org/) — for `npx skills`
 
 ## 🗂️ Directory Structure
 
 ```
-skills/          → OpenCode skill definitions
-agents/          → OpenCode agent definitions
-lib/             → Install helper scripts (vendor + config management)
-vendor.json      → Declarative vendor manifest
-.vendor/         → Gitignored: cloned vendor repos
+skills/              → OpenCode skill definitions
+  repo-setup/        → Onboarding skill
+  propose-feature/   → Feature proposal skill
+  report-bug/        → Bug report skill
+  configuring-dependabot/ → Dependabot configuration skill
+.opencode/skills/    → Project-local skills (not distributed)
+  agent-skill-crafter/ → Create new skills
+  run-training/      → Iteratively improve skills via training evals
+docs/                → Documentation
+  adr/               → Architectural Decision Records
+  github-setup.md    → GitHub setup guide
 ```
 
-## 🔄 Workflows
+## 🧪 Development
 
-### 🧩 Feature Development & Bug Fix Workflow
+### Project-Local Skills
 
-```mermaid
-graph LR
-    A1["/propose-feature"]
-    A2["/report-bug"]
-    DONE["✅ Done"]
+Token-Effort uses two project-local skills for development (in `.opencode/skills/`):
 
-    subgraph COL1["📋 New"]
-        direction TB
-        TRIAGE["/triaging-gh-issue"]
-    end
+- `agent-skill-crafter` — Create and iterate on new skills
+- `run-training` — Run training evals to improve skill definitions
 
-    subgraph COL2["🧠 Brainstorming"]
-        direction TB
-        BRAIN["/brainstorming-gh-issue"]
-        SPEC(["📄 Design Spec"])
-    end
+These are not distributed with the package but are available when working on Token-Effort itself.
 
-    subgraph COL3["🏗️ Building"]
-        direction TB
-        BUILD["/building-gh-issue + agents"]
-        PR(["📄 Pull Request + Decision Record(s)"])
-    end
+### Running Tests
 
-    A1 --> TRIAGE
-    A2 --> TRIAGE
-    TRIAGE --> BRAIN
-    BRAIN -.-> SPEC
-    BRAIN --> BUILD
-    BUILD -.-> PR
-    BUILD --> DONE
-```
+Token-Effort uses training evals to test skill behavior. See `docs/training-guide.md` for details.
 
-Issue states (📋 New, 🧠 Brainstorming, 🏗️ Building, ✅ Done) correspond to GitHub Project board columns. Each skill automatically advances the issue from an earlier status.
+## 📚 Documentation
+
+- [GitHub Setup Guide](docs/github-setup.md) — Configure labels, secrets, and workflows
+- [Training Guide](docs/training-guide.md) — How to write and run training evals
+- [Architectural Decision Records](docs/adr/) — Design decisions and rationale
+
+## 🤝 Contributing
+
+Contributions welcome! To contribute:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run training evals if you've modified a skill
+5. Submit a pull request
+
+For major changes, please open an issue first to discuss the proposed changes.
+
+## 📄 License
+
+This project is open source and available under the MIT License.

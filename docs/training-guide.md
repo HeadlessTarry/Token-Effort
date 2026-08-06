@@ -22,8 +22,8 @@ Run training after:
 
 Examples:
 ```bash
-/run-training skills/triaging-gh-issue/SKILL.md
-/run-training agents/reviewer-docs.md
+/run-training skills/repo-setup/SKILL.md
+/run-training skills/propose-feature/SKILL.md
 ```
 
 On the first run for a given skill or agent, training will auto-generate a set of starter eval cases from the definition content, show them to you, and ask for approval before writing any files. You can edit them before approving.

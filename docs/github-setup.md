@@ -1,6 +1,6 @@
 # ⚙️ GitHub Setup Guide
 
-This guide covers the GitHub infrastructure required to use the skills and agents. The full workflow — triaging issues, brainstorming specs, building features, and cutting releases — depends on this foundation. It does **not** cover platform configuration, plugin installation, or the release pipeline — only the GitHub-side setup.
+This guide covers the GitHub infrastructure required to use the Matt Pocock (MP) skills ecosystem with Token-Effort. The workflow uses label-based state tracking and conversational triage — no project board required.
 
 **Audience:** Project maintainers, contributors, and external users who want to use these skills on their own GitHub repositories.
 
@@ -10,62 +10,82 @@ This guide covers the GitHub infrastructure required to use the skills and agent
 
 Use this checklist to see what you still need to set up. Each item links to the detailed section below.
 
-- [ ] [GitHub organisation](#1-github-organisation) (or personal account)
-- [ ] [GitHub Project board](#3-github-project-board) with Status field: `New` → `Brainstorming` → `Building` → `Done`
-- [ ] [Project board linked to the repository](#3-github-project-board) (Settings → Linked repositories)
-- [ ] [Issue labels](#4-issue-labels): `enhancement`, `bug`, `documentation`, `duplicate`, `pending-review`
-- [ ] [Repository secret](#5-repository-secrets--variables): `OPENCODE_API_KEY`
-- [ ] [Triage workflow](#6-triage-workflow) added to `.github/workflows/`
+- [ ] [GitHub repository](#1-github-repository) with Issues enabled
+- [ ] [Issue labels](#2-issue-labels): MP triage labels + category labels
+- [ ] [Repository secret](#3-repository-secrets): `OPENCODE_API_KEY` (for AI-powered workflows)
 
 ---
 
-## 📋 2. GitHub Project Board
+## 📋 1. GitHub Repository
 
-The project board tracks issue status through the workflow lifecycle. The triage skill reads and writes the `Status` field to move issues between columns automatically.
+Ensure your repository has GitHub Issues enabled:
 
-**Steps:**
+1. Navigate to your repository on GitHub.
+2. Go to **Settings** → **General** → **Features**.
+3. Ensure **Issues** is checked.
 
-1. Navigate to your organisation's **Projects** tab → **New project**.
-2. Choose **Board** or **Table** layout (either works).
-3. Link the project to your repository:
-   - Open the project → **Settings** → **Linked repositories** → add your repo.
-4. Add a single-select field named exactly **`Status`** with options in this exact order:
-    - `New`
-    - `Brainstorming`
-    - `Building`
-    - `Done`
-
-> **Important:** The field must be named exactly `Status` (case-sensitive). The `move-issue-status` skill searches for this field by name.
+That's it! No project board is needed — MP's workflow uses labels for state tracking.
 
 ---
 
-## 🏷️ 3. Issue Labels
+## 🏷️ 2. Issue Labels
 
-These labels are used by the triage skill to classify issues by type. Run the following commands against your repository to create them:
+The MP ecosystem uses two categories of labels:
+
+### Triage Labels (State Tracking)
+
+These labels track the issue through the triage workflow:
+
+| Label | Description | Color |
+|-------|-------------|-------|
+| `needs-triage` | New issue, awaiting triage | `#f9d0c4` |
+| `needs-info` | More information needed from reporter | `#fef2c0` |
+| `ready-for-agent` | Triage complete, ready for AI agent to work on | `#c5def5` |
+| `ready-for-human` | Ready for human implementation | `#d4c5f9` |
+| `wontfix` | Will not be fixed (out of scope, won't implement) | `#eeeeee` |
+
+### Category Labels (Issue Type)
+
+These labels categorize the issue by type:
+
+| Label | Description | Color |
+|-------|-------------|-------|
+| `enhancement` | New feature or request | `#a2eeef` |
+| `bug` | Something isn't working | `#d73a4a` |
+| `documentation` | Improvements or additions to documentation | `#0075ca` |
+| `duplicate` | This issue or pull request already exists | `#cfd3d7` |
+
+### Creating Labels
+
+Run the following commands to create all labels:
 
 ```bash
-# Check what labels already exist to avoid duplicates with GitHub defaults
+# Check what labels already exist to avoid duplicates
 gh label list
 
-# Create the required labels
-gh label create "enhancement"    --color "#a2eeef" --description "New feature or request"
-gh label create "bug"            --color "#d73a4a" --description "Something isn't working"
-gh label create "documentation"  --color "#0075ca" --description "Improvements or additions to documentation"
-gh label create "duplicate"      --color "#cfd3d7" --description "This issue or pull request already exists"
-gh label create "pending-review" --color "#FEF2C0" --description "Spec posted, awaiting human approval"
+# Create triage labels
+gh label create "needs-triage"     --color "#f9d0c4" --description "New issue, awaiting triage"
+gh label create "needs-info"       --color "#fef2c0" --description "More information needed from reporter"
+gh label create "ready-for-agent"  --color "#c5def5" --description "Triage complete, ready for AI agent"
+gh label create "ready-for-human"  --color "#d4c5f9" --description "Ready for human implementation"
+gh label create "wontfix"          --color "#eeeeee" --description "This will not be worked on"
+
+# Create category labels (skip if they already exist)
+gh label create "enhancement"      --color "#a2eeef" --description "New feature or request"
+gh label create "bug"              --color "#d73a4a" --description "Something isn't working"
+gh label create "documentation"    --color "#0075ca" --description "Improvements or additions to documentation"
+gh label create "duplicate"        --color "#cfd3d7" --description "This issue or pull request already exists"
 ```
 
 Alternatively, you can create labels via **Settings** → **Labels** in the GitHub UI.
 
-> **Note:** GitHub creates several default labels (e.g. `bug`, `documentation`, `duplicate`, `enhancement`) when a repository is initialised. Run `gh label list` first and skip `gh label create` for any that already exist.
+> **Note:** GitHub creates several default labels (`bug`, `documentation`, `duplicate`, `enhancement`) when a repository is initialized. Run `gh label list` first and skip `gh label create` for any that already exist.
 
 ---
 
-## 🔐 4. Repository Secrets & Variables
+## 🔐 3. Repository Secrets
 
-The triage workflow uses one repository secret. Add it under **Settings** → **Secrets and variables** → **Actions** → **Secrets**.
-
-### Secrets (Secrets tab)
+If you plan to use AI-powered workflows (like automated triage), add the following secret under **Settings** → **Secrets and variables** → **Actions** → **Secrets**.
 
 | Secret | Value |
 |--------|-------|
@@ -75,15 +95,43 @@ The triage workflow uses one repository secret. Add it under **Settings** → **
 
 ---
 
-## ⚙️ 5. Triage Workflow
+## 🔄 The Triage Workflow
 
-The triage workflow runs when a new issue is opened and can also be triggered manually. It invokes the `triaging-gh-issue` skill, which labels issues by type, detects duplicates, and advances issue statuses on the project board.
+MP's triage workflow is **conversational** — you run `/triage` on an issue when you're ready, rather than having an automated workflow run on every new issue.
 
-**Steps:**
+### How to Triage an Issue
 
-1. Add the workflow file to `.github/workflows/triaging-gh-issue.yml` in your repository. The workflow uses the `anomalyco/opencode/github` action with `OPENCODE_API_KEY` and `GITHUB_TOKEN` secrets.
+1. A new issue is opened (it will have the `needs-triage` label if you've set up issue templates correctly).
+2. When you're ready, run `/triage` in your AI assistant.
+3. The skill will:
+   - Read the issue and categorize it (enhancement, bug, documentation)
+   - Detect duplicates by searching for similar issues
+   - Ask clarifying questions if needed (adds `needs-info` label)
+   - Mark the issue as `ready-for-agent` or `ready-for-human` based on complexity
+   - Mark as `wontfix` if it's out of scope
 
-2. The workflow triggers automatically on new issues (`issues: types: [opened]`) and supports manual triggering via `workflow_dispatch` with an `issue_number` input.
+### Label State Machine
+
+Issues move through labels as they're triaged:
+
+```
+needs-triage → needs-info (if clarification needed)
+            → ready-for-agent (if AI can handle it)
+            → ready-for-human (if human implementation needed)
+            → wontfix (if out of scope)
+```
+
+---
+
+## 📝 Issue Templates
+
+Issue templates help ensure new issues have the right information and labels from the start. Token-Effort provides templates at `.github/ISSUE_TEMPLATE/`:
+
+- `01-feature_request.md` — automatically applies the `enhancement` label
+- `02-bug_report.md` — automatically applies the `bug` label
+- `config.yml` — disables blank issues to encourage using templates
+
+To set up issue templates, run `/repo-setup` and follow the prompts.
 
 ---
 
@@ -92,15 +140,15 @@ The triage workflow runs when a new issue is opened and can also be triggered ma
 After completing all steps above, run the following to confirm everything is in place:
 
 ```bash
-# Confirm all 5 required labels exist
+# Confirm all labels exist
 gh label list
 
-# Confirm the project board is visible
-gh project list --owner <your-org>
+# Expected labels:
+# - needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix
+# - enhancement, bug, documentation, duplicate
 
-# Trigger the triage workflow manually (run from inside a cloned copy of your repo,
-# or pass --repo explicitly)
-gh workflow run triaging-gh-issue.yml --repo <your-org>/<your-repo>
+# Confirm Issues are enabled
+gh repo view --json hasIssuesEnabled
 ```
 
 ---
@@ -109,7 +157,7 @@ gh workflow run triaging-gh-issue.yml --repo <your-org>/<your-repo>
 
 This guide does not cover:
 
-- Installing the plugin
+- Installing the MP skills — run `npx skills add mattpocock/skills`
+- Installing Token-Effort skills — run `npx skills add HeadlessTarry/Token-Effort`
 - Configuring the platform itself (model settings, permissions)
-- Setting up the Release Manager GitHub App
-- Creating issue templates — not required for triage to run, but recommended. This repository's templates at [`.github/ISSUE_TEMPLATE/`](https://github.com/HeadlessTarry/Token-Effort/tree/main/.github/ISSUE_TEMPLATE) can be used as a starting point.
+- Running `/repo-setup` for complete onboarding — this handles templates, Dependabot, and more
