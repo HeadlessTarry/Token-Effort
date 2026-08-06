@@ -105,7 +105,11 @@ Ask:
 
 > "Would you like to run `/setup-matt-pocock-skills` now? [yes/no/skip]"
 
-If the user says yes, invoke `/setup-matt-pocock-skills` via the Skill tool and wait for it to complete.
+If the user says yes, print:
+
+> "Run `/setup-matt-pocock-skills` in your AI assistant to configure your issue tracker, labels, and domain docs."
+
+Note "MP skills configuration: user will run separately" and continue.
 If the user says no or skips, note "MP skills configuration: skipped (user declined)" and continue.
 
 ---
@@ -395,7 +399,11 @@ Ask:
 
 > "Would you like to run `/setup-matt-pocock-skills` now? [yes/no/skip]"
 
-If the user says yes, invoke `/setup-matt-pocock-skills` via the Skill tool and wait for it to complete.
+If the user says yes, print:
+
+> "Run `/setup-matt-pocock-skills` in your AI assistant to configure your issue tracker and domain docs."
+
+Note "MP skills configuration: user will run separately" and continue.
 If the user says no or skips, note "MP skills configuration: skipped (user declined)" and continue.
 
 ---
@@ -496,7 +504,7 @@ No git commit is made. The user decides what to commit.
 ## Common Mistakes
 
 - **Not asking for setup type** — always start by asking if this is a fresh repo or a migration.
-- **Invoking `/setup-matt-pocock-skills` directly** — recommend it, but let the user choose whether to run it.
+- **Invoking `/setup-matt-pocock-skills` directly** — recommend it, but tell the user to run it themselves. Never invoke it via the Skill tool.
 - **Performing Dependabot logic directly** — always delegate to `/configuring-dependabot`.
 - **Skipping overwrite checks** — always warn and ask before writing any file that already exists.
 - **Making a git commit after setup** — no git commit is made. The user decides what to commit.
