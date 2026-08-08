@@ -1,7 +1,6 @@
 ---
 name: report-bug
 description: Use when the user wants to file a new GitHub bug report through a guided interview.
-user-invocable: true
 ---
 
 # 🐛 Report a Bug

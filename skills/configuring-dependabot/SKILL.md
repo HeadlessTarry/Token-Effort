@@ -1,7 +1,6 @@
 ---
 name: configuring-dependabot
 description: Scans the repository for package ecosystem indicators and writes `.github/dependabot.yml` with one entry per detected ecosystem.
-user-invocable: true
 ---
 
 # Configuring Dependabot
