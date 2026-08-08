@@ -1,7 +1,6 @@
 ---
 name: propose-feature
 description: Use when the user wants to file a new GitHub feature request through a guided interview.
-user-invocable: true
 ---
 
 # 📝 Propose a Feature

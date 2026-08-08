@@ -1,6 +1,6 @@
 # 2026-07-vendor-dependency-install-system
 
-> **Status:** Active
+> **Status:** Superseded by [2026-08-migrate-to-vercel-labs-skills-ecosystem.md](./2026-08-migrate-to-vercel-labs-skills-ecosystem.md)
 > **Issue:** [#188 — Overhaul install system to manage third-party dependencies and provide single-command setup](https://github.com/HeadlessTarry/Token-Effort/issues/188)
 > **Date:** 2026-07-19
 
