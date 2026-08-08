@@ -14,4 +14,4 @@ Single-context layout — one `CONTEXT.md` at root, ADRs in `docs/adr/`. See `do
 
 ### Creating skills
 
-A new skill is one ticket: definition + eval suite + training to 100%. Do not split into horizontal layers. See `docs/agents/creating-skills.md`.
+A new skill is one ticket: SKILL.md + training evals + iterate training to 100%. Do not split into separate tickets for "write the skill", "write the evals", "run training" — the skill is not verifiable without evals, and the work is not complete until evals are green. See `docs/agents/creating-skills.md`.
