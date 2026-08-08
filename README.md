@@ -2,144 +2,119 @@
 
 > Low-stakes intelligence for high-latency humans
 
-A collection of OpenCode skills and agents that do just enough to avoid being replaced by a shell script.
+A set of practical skills for any developer. Use standalone or alongside other skill ecosystems like [Matt Pocock's skills](https://github.com/mattpocock/skills) or [Obra Superpowers](https://github.com/obra/superpowers).
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=HeadlessTarry_Token-Effort&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=HeadlessTarry_Token-Effort)
 
-## 📋 Prerequisites
+## 📦 What is Token-Effort?
 
-- [gh CLI](https://cli.github.com/) — authenticated with `gh auth login`
-- [jq](https://jqlang.github.io/jq/download/) — JSON parsing
-- [git](https://git-scm.com/) — version control (for vendor repo cloning)
+Token-Effort provides 4 skills for common GitHub workflows:
+
+| Skill | Purpose |
+|-------|---------|
+| `/repo-setup` | Quick repository setup (issue templates, Dependabot) |
+| `/propose-feature` | Guides feature proposals with structured issue creation |
+| `/report-bug` | Guides bug reports with structured issue creation |
+| `/configuring-dependabot` | Configures Dependabot for automated dependency updates |
+
+These skills are designed to be useful on their own, or as part of a larger skill ecosystem. They don't provide a complete workflow — just the tools you need for common tasks.
 
 ## ⤵️ Installation
 
+Install using `npx skills`:
+
 ```bash
-git clone https://github.com/HeadlessTarry/Token-Effort.git
-cd Token-Effort
+npx skills add HeadlessTarry/Token-Effort
 ```
 
-**PowerShell (Windows):**
-```powershell
-.\install.ps1
-```
+This installs all 4 Token-Effort skills into your OpenCode skills directory.
 
-**Bash (Linux/macOS/WSL):**
+### Using with Other Skill Ecosystems
+
+Token-Effort works alongside other skill sets:
+
 ```bash
-./install.sh
+# Matt Pocock's skills (optional)
+npx skills add mattpocock/skills
+
+# Obra Superpowers (optional)
+npx skills add obra/superpowers
+
+# Token-Effort
+npx skills add HeadlessTarry/Token-Effort
 ```
 
-Both scripts install Token-Effort's own skills and agents, plus any third-party vendor dependencies declared in `vendor.json`. Restart OpenCode to pick up changes.
+Then run `/repo-setup` to configure issue templates and Dependabot for your repo.
 
-**Options:**
+## 🚀 Quick Start
 
-| Flag (PS) | Flag (Bash) | Description |
-|-----------|-------------|-------------|
-| `-Skill <name>` | `--skill <name>` | Install only the specified skill |
-| `-Agent <name>` | `--agent <name>` | Install only the specified agent |
-| `-Local` | `--local` | Install to `.opencode/` in the project directory instead |
-| `-Update` | `--update` | Pull latest for each vendor repo |
-| `-Help` | `--help` | Show usage information |
+1. **Set up your repository:**
+   ```bash
+   /repo-setup
+   ```
+   This interactive skill walks you through:
+   - Creating issue templates (feature request, bug report)
+   - Configuring Dependabot for dependency updates
+2. **Start using the skills:**
+   - `/propose-feature` — Propose a new feature with structured issue creation
+   - `/report-bug` — Report a bug with structured issue creation
+   - `/configuring-dependabot` — Configure Dependabot for automated dependency updates
 
-## 📦 What Gets Installed
+## 📋 Prerequisites
 
-**Token-Effort's own content:**
-- `skills/` → OpenCode skill definitions (each skill is a directory: `skills/<name>/`)
-- `agents/` → OpenCode agent definitions (each agent is a markdown file: `agents/<name>.md`)
-
-**Vendor dependencies** (declared in `vendor.json`):
-- **Plugins** — cloned to `.vendor/<name>/` and registered in `opencode.json` (with your confirmation)
-- **Skills** — cloned to `.vendor/<name>/` and cherry-picked skills copied to OpenCode's skills directory
-
-The install is idempotent — safe to re-run. Re-running with `--update` / `-Update` pulls the latest from vendor repos.
-
-## 🔌 Vendor Dependencies
-
-Third-party dependencies are declared in `vendor.json` at the repo root. Vendors are cloned into `.vendor/` (gitignored) during install.
-
-**File structure:**
-```json
-{
-  "plugins": [
-    { "name": "...", "repo": "...", "opencode_plugin_spec": "..." }
-  ],
-  "skills": [
-    { "name": "...", "repo": "...", "extract_skills": ["..."] }
-  ]
-}
-```
-
-**Plugin example** (registered in `opencode.json`):
-```json
-{
-  "name": "superpowers",
-  "repo": "https://github.com/obra/superpowers.git",
-  "opencode_plugin_spec": "superpowers@git+https://github.com/obra/superpowers.git"
-}
-```
-
-**Skill example** (cherry-picked to OpenCode's skills directory):
-```json
-{
-  "name": "addyosmani-agent-skills",
-  "repo": "https://github.com/addyosmani/agent-skills.git",
-  "extract_skills": ["debugging-and-error-recovery", "doubt-driven-development"]
-}
-```
-
-To add a new vendor, add an entry to `vendor.json` and re-run the install script.
-
-## 🛡️ Safety
-
-- `opencode.json` is backed up before any modification (timestamped `.bak` file)
-- Existing plugin entries are never removed — only new ones are appended
-- Invalid JSON in an existing config aborts the install (no corruption)
-- Vendor failures prompt for retry/skip/abort
+- [OpenCode](https://opencode.ai) — AI-assisted development platform
+- [gh CLI](https://cli.github.com/) — authenticated with `gh auth login` (for GitHub operations)
+- [Node.js](https://nodejs.org/) — for `npx skills`
 
 ## 🗂️ Directory Structure
 
 ```
-skills/          → OpenCode skill definitions
-agents/          → OpenCode agent definitions
-lib/             → Install helper scripts (vendor + config management)
-vendor.json      → Declarative vendor manifest
-.vendor/         → Gitignored: cloned vendor repos
+skills/              → OpenCode skill definitions
+  repo-setup/        → Onboarding skill
+  propose-feature/   → Feature proposal skill
+  report-bug/        → Bug report skill
+  configuring-dependabot/ → Dependabot configuration skill
+.opencode/skills/    → Project-local skills (not distributed)
+  agent-skill-crafter/ → Create new skills
+  run-training/      → Iteratively improve skills via training evals
+docs/                → Documentation
+  adr/               → Architectural Decision Records
+  github-setup.md    → GitHub setup guide
 ```
 
-## 🔄 Workflows
+## 🧪 Development
 
-### 🧩 Feature Development & Bug Fix Workflow
+### Project-Local Skills
 
-```mermaid
-graph LR
-    A1["/propose-feature"]
-    A2["/report-bug"]
-    DONE["✅ Done"]
+Token-Effort uses two project-local skills for development (in `.opencode/skills/`):
 
-    subgraph COL1["📋 New"]
-        direction TB
-        TRIAGE["/triaging-gh-issue"]
-    end
+- `agent-skill-crafter` — Create and iterate on new skills
+- `run-training` — Run training evals to improve skill definitions
 
-    subgraph COL2["🧠 Brainstorming"]
-        direction TB
-        BRAIN["/brainstorming-gh-issue"]
-        SPEC(["📄 Design Spec"])
-    end
+These are not distributed with the package but are available when working on Token-Effort itself.
 
-    subgraph COL3["🏗️ Building"]
-        direction TB
-        BUILD["/building-gh-issue + agents"]
-        PR(["📄 Pull Request + Decision Record(s)"])
-    end
+### Running Tests
 
-    A1 --> TRIAGE
-    A2 --> TRIAGE
-    TRIAGE --> BRAIN
-    BRAIN -.-> SPEC
-    BRAIN --> BUILD
-    BUILD -.-> PR
-    BUILD --> DONE
-```
+Token-Effort uses training evals to test skill behavior. See `docs/training-guide.md` for details.
 
-Issue states (📋 New, 🧠 Brainstorming, 🏗️ Building, ✅ Done) correspond to GitHub Project board columns. Each skill automatically advances the issue from an earlier status.
+## 📚 Documentation
+
+- [GitHub Setup Guide](docs/github-setup.md) — Configure labels, secrets, and workflows
+- [Training Guide](docs/training-guide.md) — How to write and run training evals
+- [Architectural Decision Records](docs/adr/) — Design decisions and rationale
+
+## 🤝 Contributing
+
+Contributions welcome! To contribute:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run training evals if you've modified a skill
+5. Submit a pull request
+
+For major changes, please open an issue first to discuss the proposed changes.
+
+## 📄 License
+
+This project is open source and available under the MIT License.

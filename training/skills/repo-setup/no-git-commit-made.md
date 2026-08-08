@@ -1,9 +1,8 @@
 ## Scenario
-The user selects "all" and all five steps complete successfully in a clean repository.
+User completes the repo-setup flow with all steps successful.
 
 ## Expected Behavior
-After all steps complete, the skill prints the summary and stops. It does NOT run any
-git add, git commit, or git push commands. The user is left to decide what to commit.
+After all steps complete, the skill prints the summary and stops. It does NOT run any git add, git commit, or git push commands. The user is left to decide what to commit.
 
 ## Pass Criteria
 - [ ] Did NOT run git add

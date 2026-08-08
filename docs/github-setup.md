@@ -1,6 +1,6 @@
 # ⚙️ GitHub Setup Guide
 
-This guide covers the GitHub infrastructure required to use the skills and agents. The full workflow — triaging issues, brainstorming specs, building features, and cutting releases — depends on this foundation. It does **not** cover platform configuration, plugin installation, or the release pipeline — only the GitHub-side setup.
+This guide covers the GitHub infrastructure required to use Token-Effort skills. 
 
 **Audience:** Project maintainers, contributors, and external users who want to use these skills on their own GitHub repositories.
 
@@ -10,62 +10,57 @@ This guide covers the GitHub infrastructure required to use the skills and agent
 
 Use this checklist to see what you still need to set up. Each item links to the detailed section below.
 
-- [ ] [GitHub organisation](#1-github-organisation) (or personal account)
-- [ ] [GitHub Project board](#3-github-project-board) with Status field: `New` → `Brainstorming` → `Building` → `Done`
-- [ ] [Project board linked to the repository](#3-github-project-board) (Settings → Linked repositories)
-- [ ] [Issue labels](#4-issue-labels): `enhancement`, `bug`, `documentation`, `duplicate`, `pending-review`
-- [ ] [Repository secret](#5-repository-secrets--variables): `OPENCODE_API_KEY`
-- [ ] [Triage workflow](#6-triage-workflow) added to `.github/workflows/`
+- [ ] [GitHub repository](#1-github-repository) with Issues enabled
+- [ ] [Issue labels](#2-issue-labels): Category labels for issue types
+- [ ] [Repository secret](#3-repository-secrets): `OPENCODE_API_KEY` (for AI-powered workflows)
 
 ---
 
-## 📋 2. GitHub Project Board
+## 📋 1. GitHub Repository
 
-The project board tracks issue status through the workflow lifecycle. The triage skill reads and writes the `Status` field to move issues between columns automatically.
+Ensure your repository has GitHub Issues enabled:
 
-**Steps:**
-
-1. Navigate to your organisation's **Projects** tab → **New project**.
-2. Choose **Board** or **Table** layout (either works).
-3. Link the project to your repository:
-   - Open the project → **Settings** → **Linked repositories** → add your repo.
-4. Add a single-select field named exactly **`Status`** with options in this exact order:
-    - `New`
-    - `Brainstorming`
-    - `Building`
-    - `Done`
-
-> **Important:** The field must be named exactly `Status` (case-sensitive). The `move-issue-status` skill searches for this field by name.
+1. Navigate to your repository on GitHub.
+2. Go to **Settings** → **General** → **Features**.
+3. Ensure **Issues** is checked.
 
 ---
 
-## 🏷️ 3. Issue Labels
+## 🏷️ 2. Issue Labels
 
-These labels are used by the triage skill to classify issues by type. Run the following commands against your repository to create them:
+Token-Effort uses category labels to organize issues by type:
+
+| Label | Description | Color |
+|-------|-------------|-------|
+| `enhancement` | New feature or request | `#a2eeef` |
+| `bug` | Something isn't working | `#d73a4a` |
+| `documentation` | Improvements or additions to documentation | `#0075ca` |
+| `duplicate` | This issue or pull request already exists | `#cfd3d7` |
+
+### Creating Labels
+
+Run the following commands to create these labels:
 
 ```bash
-# Check what labels already exist to avoid duplicates with GitHub defaults
+# Check what labels already exist to avoid duplicates
 gh label list
 
-# Create the required labels
-gh label create "enhancement"    --color "#a2eeef" --description "New feature or request"
-gh label create "bug"            --color "#d73a4a" --description "Something isn't working"
-gh label create "documentation"  --color "#0075ca" --description "Improvements or additions to documentation"
-gh label create "duplicate"      --color "#cfd3d7" --description "This issue or pull request already exists"
-gh label create "pending-review" --color "#FEF2C0" --description "Spec posted, awaiting human approval"
+# Create category labels (skip if they already exist)
+gh label create "enhancement"      --color "#a2eeef" --description "New feature or request"
+gh label create "bug"              --color "#d73a4a" --description "Something isn't working"
+gh label create "documentation"    --color "#0075ca" --description "Improvements or additions to documentation"
+gh label create "duplicate"        --color "#cfd3d7" --description "This issue or pull request already exists"
 ```
 
 Alternatively, you can create labels via **Settings** → **Labels** in the GitHub UI.
 
-> **Note:** GitHub creates several default labels (e.g. `bug`, `documentation`, `duplicate`, `enhancement`) when a repository is initialised. Run `gh label list` first and skip `gh label create` for any that already exist.
+> **Note:** GitHub creates several default labels (`bug`, `documentation`, `duplicate`, `enhancement`) when a repository is initialized. Run `gh label list` first and skip `gh label create` for any that already exist.
 
 ---
 
-## 🔐 4. Repository Secrets & Variables
+## 🔐 3. Repository Secrets
 
-The triage workflow uses one repository secret. Add it under **Settings** → **Secrets and variables** → **Actions** → **Secrets**.
-
-### Secrets (Secrets tab)
+If you plan to use AI-powered workflows (like automated triage), add the following secret under **Settings** → **Secrets and variables** → **Actions** → **Secrets**.
 
 | Secret | Value |
 |--------|-------|
@@ -75,15 +70,23 @@ The triage workflow uses one repository secret. Add it under **Settings** → **
 
 ---
 
-## ⚙️ 5. Triage Workflow
+---
 
-The triage workflow runs when a new issue is opened and can also be triggered manually. It invokes the `triaging-gh-issue` skill, which labels issues by type, detects duplicates, and advances issue statuses on the project board.
+## 🔄 Issue Workflow
 
-**Steps:**
+Issues are labeled by type when created (via templates) and can be further categorized as needed. Token-Effort skills work with GitHub Issues directly — no project board or special workflow required.
 
-1. Add the workflow file to `.github/workflows/triaging-gh-issue.yml` in your repository. The workflow uses the `anomalyco/opencode/github` action with `OPENCODE_API_KEY` and `GITHUB_TOKEN` secrets.
+---
 
-2. The workflow triggers automatically on new issues (`issues: types: [opened]`) and supports manual triggering via `workflow_dispatch` with an `issue_number` input.
+## 📝 Issue Templates
+
+Issue templates help ensure new issues have the right information and labels from the start. Token-Effort provides templates at `.github/ISSUE_TEMPLATE/`:
+
+- `01-feature_request.md` — automatically applies the `enhancement` label
+- `02-bug_report.md` — automatically applies the `bug` label
+- `config.yml` — disables blank issues to encourage using templates
+
+To set up issue templates, run `/repo-setup` and follow the prompts.
 
 ---
 
@@ -92,15 +95,14 @@ The triage workflow runs when a new issue is opened and can also be triggered ma
 After completing all steps above, run the following to confirm everything is in place:
 
 ```bash
-# Confirm all 5 required labels exist
+# Confirm all labels exist
 gh label list
 
-# Confirm the project board is visible
-gh project list --owner <your-org>
+# Expected labels:
+# - enhancement, bug, documentation, duplicate
 
-# Trigger the triage workflow manually (run from inside a cloned copy of your repo,
-# or pass --repo explicitly)
-gh workflow run triaging-gh-issue.yml --repo <your-org>/<your-repo>
+# Confirm Issues are enabled
+gh repo view --json hasIssuesEnabled
 ```
 
 ---
@@ -109,7 +111,6 @@ gh workflow run triaging-gh-issue.yml --repo <your-org>/<your-repo>
 
 This guide does not cover:
 
-- Installing the plugin
+- Installing Token-Effort skills — run `npx skills add HeadlessTarry/Token-Effort`
 - Configuring the platform itself (model settings, permissions)
-- Setting up the Release Manager GitHub App
-- Creating issue templates — not required for triage to run, but recommended. This repository's templates at [`.github/ISSUE_TEMPLATE/`](https://github.com/HeadlessTarry/Token-Effort/tree/main/.github/ISSUE_TEMPLATE) can be used as a starting point.
+- Running `/repo-setup` for complete onboarding — this handles templates, Dependabot, and more
