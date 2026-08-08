@@ -2,22 +2,22 @@
 
 > Low-stakes intelligence for high-latency humans
 
-A complementary skill pack that supplements [Matt Pocock's skills ecosystem](https://github.com/mattpocock/skills) with GitHub-specific workflows.
+A set of practical skills for any developer. Use standalone or alongside other skill ecosystems like [Matt Pocock's skills](https://github.com/mattpocock/skills) or [Obra Superpowers](https://github.com/obra/superpowers).
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=HeadlessTarry_Token-Effort&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=HeadlessTarry_Token-Effort)
 
 ## 📦 What is Token-Effort?
 
-Token-Effort provides 4 skills that complement the MP ecosystem:
+Token-Effort provides 4 skills for common GitHub workflows:
 
 | Skill | Purpose |
 |-------|---------|
-| `/repo-setup` | Interactive onboarding for the MP ecosystem (fresh repos or migrations) |
+| `/repo-setup` | Quick repository setup (issue templates, Dependabot) |
 | `/propose-feature` | Guides feature proposals with structured issue creation |
 | `/report-bug` | Guides bug reports with structured issue creation |
 | `/configuring-dependabot` | Configures Dependabot for automated dependency updates |
 
-These skills fill gaps in the MP ecosystem for GitHub-specific workflows that MP doesn't cover.
+These skills are designed to be useful on their own, or as part of a larger skill ecosystem. They don't provide a complete workflow — just the tools you need for common tasks.
 
 ## ⤵️ Installation
 
@@ -29,16 +29,22 @@ npx skills add HeadlessTarry/Token-Effort
 
 This installs all 4 Token-Effort skills into your OpenCode skills directory.
 
-### Recommended: Install MP Skills First
+### Using with Other Skill Ecosystems
 
-For the complete experience, install the MP skills ecosystem first:
+Token-Effort works alongside other skill sets:
 
 ```bash
+# Matt Pocock's skills (optional)
 npx skills add mattpocock/skills
+
+# Obra Superpowers (optional)
+npx skills add obra/superpowers
+
+# Token-Effort
 npx skills add HeadlessTarry/Token-Effort
 ```
 
-Then run `/repo-setup` to complete your onboarding (issue templates, Dependabot, labels, etc.).
+Then run `/repo-setup` to configure issue templates and Dependabot for your repo.
 
 ## 🚀 Quick Start
 
@@ -47,43 +53,12 @@ Then run `/repo-setup` to complete your onboarding (issue templates, Dependabot,
    /repo-setup
    ```
    This interactive skill walks you through:
-   - Installing MP skills (if not already installed)
-   - Installing Token-Effort skills
-   - Configuring GitHub labels for the MP triage workflow
-   - Creating issue templates
-   - Setting up Dependabot
-
-2. **Configure MP skills for your repo:**
-   ```bash
-   /setup-matt-pocock-skills
-   ```
-   This sets up your issue tracker, triage labels, and domain docs.
-
-3. **Start using the skills:**
-   - `/triage` — Triage a new issue (adds labels, detects duplicates, routes to agent/human)
-   - `/implement` — Implement a feature or fix from a spec or ticket
-   - `/code-review` — Review code changes since a commit, branch, or PR
+   - Creating issue templates (feature request, bug report)
+   - Configuring Dependabot for dependency updates
+2. **Start using the skills:**
    - `/propose-feature` — Propose a new feature with structured issue creation
    - `/report-bug` — Report a bug with structured issue creation
-
-## 🔄 The Workflow
-
-Token-Effort uses MP's **label-based state tracking** instead of a project board:
-
-```
-needs-triage → needs-info (if clarification needed)
-            → ready-for-agent (if AI can handle it)
-            → ready-for-human (if human implementation needed)
-            → wontfix (if out of scope)
-```
-
-### Typical Flow
-
-1. **Issue opened** → labeled `needs-triage` (via issue template)
-2. **Run `/triage`** → categorizes, detects duplicates, routes appropriately
-3. **Run `/implement`** → builds the feature or fix
-4. **Run `/code-review`** → reviews the changes
-5. **Merge PR** → done!
+   - `/configuring-dependabot` — Configure Dependabot for automated dependency updates
 
 ## 📋 Prerequisites
 

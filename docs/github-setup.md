@@ -1,6 +1,6 @@
 # ⚙️ GitHub Setup Guide
 
-This guide covers the GitHub infrastructure required to use the Matt Pocock (MP) skills ecosystem with Token-Effort. The workflow uses label-based state tracking and conversational triage — no project board required.
+This guide covers the GitHub infrastructure required to use Token-Effort skills. 
 
 **Audience:** Project maintainers, contributors, and external users who want to use these skills on their own GitHub repositories.
 
@@ -11,7 +11,7 @@ This guide covers the GitHub infrastructure required to use the Matt Pocock (MP)
 Use this checklist to see what you still need to set up. Each item links to the detailed section below.
 
 - [ ] [GitHub repository](#1-github-repository) with Issues enabled
-- [ ] [Issue labels](#2-issue-labels): MP triage labels + category labels
+- [ ] [Issue labels](#2-issue-labels): Category labels for issue types
 - [ ] [Repository secret](#3-repository-secrets): `OPENCODE_API_KEY` (for AI-powered workflows)
 
 ---
@@ -24,29 +24,11 @@ Ensure your repository has GitHub Issues enabled:
 2. Go to **Settings** → **General** → **Features**.
 3. Ensure **Issues** is checked.
 
-That's it! No project board is needed — MP's workflow uses labels for state tracking.
-
 ---
 
 ## 🏷️ 2. Issue Labels
 
-The MP ecosystem uses two categories of labels:
-
-### Triage Labels (State Tracking)
-
-These labels track the issue through the triage workflow:
-
-| Label | Description | Color |
-|-------|-------------|-------|
-| `needs-triage` | New issue, awaiting triage | `#f9d0c4` |
-| `needs-info` | More information needed from reporter | `#fef2c0` |
-| `ready-for-agent` | Triage complete, ready for AI agent to work on | `#c5def5` |
-| `ready-for-human` | Ready for human implementation | `#d4c5f9` |
-| `wontfix` | Will not be fixed (out of scope, won't implement) | `#eeeeee` |
-
-### Category Labels (Issue Type)
-
-These labels categorize the issue by type:
+Token-Effort uses category labels to organize issues by type:
 
 | Label | Description | Color |
 |-------|-------------|-------|
@@ -57,18 +39,11 @@ These labels categorize the issue by type:
 
 ### Creating Labels
 
-Run the following commands to create all labels:
+Run the following commands to create these labels:
 
 ```bash
 # Check what labels already exist to avoid duplicates
 gh label list
-
-# Create triage labels
-gh label create "needs-triage"     --color "#f9d0c4" --description "New issue, awaiting triage"
-gh label create "needs-info"       --color "#fef2c0" --description "More information needed from reporter"
-gh label create "ready-for-agent"  --color "#c5def5" --description "Triage complete, ready for AI agent"
-gh label create "ready-for-human"  --color "#d4c5f9" --description "Ready for human implementation"
-gh label create "wontfix"          --color "#eeeeee" --description "This will not be worked on"
 
 # Create category labels (skip if they already exist)
 gh label create "enhancement"      --color "#a2eeef" --description "New feature or request"
@@ -95,31 +70,11 @@ If you plan to use AI-powered workflows (like automated triage), add the followi
 
 ---
 
-## 🔄 The Triage Workflow
+---
 
-MP's triage workflow is **conversational** — you run `/triage` on an issue when you're ready, rather than having an automated workflow run on every new issue.
+## 🔄 Issue Workflow
 
-### How to Triage an Issue
-
-1. A new issue is opened (it will have the `needs-triage` label if you've set up issue templates correctly).
-2. When you're ready, run `/triage` in your AI assistant.
-3. The skill will:
-   - Read the issue and categorize it (enhancement, bug, documentation)
-   - Detect duplicates by searching for similar issues
-   - Ask clarifying questions if needed (adds `needs-info` label)
-   - Mark the issue as `ready-for-agent` or `ready-for-human` based on complexity
-   - Mark as `wontfix` if it's out of scope
-
-### Label State Machine
-
-Issues move through labels as they're triaged:
-
-```
-needs-triage → needs-info (if clarification needed)
-            → ready-for-agent (if AI can handle it)
-            → ready-for-human (if human implementation needed)
-            → wontfix (if out of scope)
-```
+Issues are labeled by type when created (via templates) and can be further categorized as needed. Token-Effort skills work with GitHub Issues directly — no project board or special workflow required.
 
 ---
 
@@ -144,7 +99,6 @@ After completing all steps above, run the following to confirm everything is in 
 gh label list
 
 # Expected labels:
-# - needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix
 # - enhancement, bug, documentation, duplicate
 
 # Confirm Issues are enabled
@@ -157,7 +111,6 @@ gh repo view --json hasIssuesEnabled
 
 This guide does not cover:
 
-- Installing the MP skills — run `npx skills add mattpocock/skills`
 - Installing Token-Effort skills — run `npx skills add HeadlessTarry/Token-Effort`
 - Configuring the platform itself (model settings, permissions)
 - Running `/repo-setup` for complete onboarding — this handles templates, Dependabot, and more

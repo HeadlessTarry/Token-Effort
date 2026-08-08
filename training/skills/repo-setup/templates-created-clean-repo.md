@@ -1,8 +1,8 @@
 ## Scenario
-User is running the fresh repo bootstrap flow and reaches Step 4. No .github/ISSUE_TEMPLATE/ directory exists.
+No .github/ISSUE_TEMPLATE/ directory exists. User invokes `/repo-setup`.
 
 ## Expected Behavior
-Step 4 detects no existing template files, skips the overwrite warning, creates the .github/ISSUE_TEMPLATE/ directory, and writes all three template files.
+Phase 1 detects no existing template files, skips the overwrite warning, creates the .github/ISSUE_TEMPLATE/ directory, and writes all three template files.
 
 ## Pass Criteria
 - [ ] Did NOT show an overwrite warning (no files existed)
