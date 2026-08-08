@@ -11,3 +11,7 @@ Five canonical labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-f
 ### Domain docs
 
 Single-context layout — one `CONTEXT.md` at root, ADRs in `docs/adr/`. See `docs/agents/domain.md`.
+
+### Creating skills
+
+A new skill is one ticket: definition + eval suite + training to 100%. Do not split into horizontal layers. See `docs/agents/creating-skills.md`.
