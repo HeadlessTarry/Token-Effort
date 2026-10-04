@@ -127,6 +127,16 @@ NODE
 
 # ---------- Claude Code platform ----------
 
+# run_quiet <command>...: hide the command's output unless it fails
+run_quiet() {
+  local out status=0
+  out="$("$@" 2>&1)" || status=$?
+  if [[ "$status" -ne 0 ]]; then
+    printf '%s\n' "$out" >&2
+    return "$status"
+  fi
+}
+
 # claude_area <area> <command>...: run a command with CLAUDE_CONFIG_DIR pointed at the area
 claude_area() {
   local area="$1"; shift
@@ -174,7 +184,7 @@ ensure_marketplace() { # area name source
   local area="$1" name="$2" source="$3"
   marketplace_registered "$area" "$name" && return 0
   step "📍 Registering the '$name' marketplace..."
-  claude_area "$area" claude plugin marketplace add "$source" >/dev/null
+  run_quiet claude_area "$area" claude plugin marketplace add "$source"
 }
 
 install_or_update_plugin() { # area plugin@marketplace marketplace-name marketplace-source
@@ -182,10 +192,10 @@ install_or_update_plugin() { # area plugin@marketplace marketplace-name marketpl
   ensure_marketplace "$area" "$market_name" "$market_source"
   if plugin_installed "$area" "$id"; then
     step "🔄 $id is already here, checking for a fresher version..."
-    claude_area "$area" claude plugin update "$id" >/dev/null
+    run_quiet claude_area "$area" claude plugin update "$id"
   else
     step "🔌 Installing $id (this one can take a moment)..."
-    claude_area "$area" claude plugin install "$id" >/dev/null
+    run_quiet claude_area "$area" claude plugin install "$id"
   fi
   local version
   version="$(plugin_version "$area" "$id")"
@@ -224,8 +234,8 @@ npx_skills_add() { # area source skill
   local area="$1" source="$2" skill="$3" dir
   dir="$(area_dir "$area")"
   step "📚 Copying skill '$skill'..."
-  (cd "$REPO_DIR" && CLAUDE_CONFIG_DIR="$dir" XDG_STATE_HOME="$dir/.skills-state" \
-    npx --yes skills add "$source" --skill "$skill" -g -a claude-code --copy -y </dev/null >/dev/null)
+  (cd "$REPO_DIR" && run_quiet env CLAUDE_CONFIG_DIR="$dir" XDG_STATE_HOME="$dir/.skills-state" \
+    npx --yes skills add "$source" --skill "$skill" -g -a claude-code --copy -y </dev/null)
 }
 
 setup_persona() { # area
@@ -271,7 +281,7 @@ setup_persona() { # area
   while read -r other; do
     [[ -n "$other" ]] && [[ "$other" != "$keep" ]] || continue
     step "🧹 Retiring the old persona '$other'..."
-    claude_area "$area" claude plugin uninstall "$other@$PERSONA_MARKETPLACE" >/dev/null
+    run_quiet claude_area "$area" claude plugin uninstall "$other@$PERSONA_MARKETPLACE"
   done < <(installed_personas "$area")
   if [[ "$choice" = Default ]]; then
     note "$(area_title "$area"): persona Default"
