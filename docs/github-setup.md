@@ -57,8 +57,6 @@ Alternatively, you can create labels via **Settings** → **Labels** in the GitH
 
 ---
 
----
-
 ## 🔄 Issue Workflow
 
 Issues are labeled by type when created (via templates) and can be further categorized as needed. Token-Effort skills work with GitHub Issues directly — no project board or special workflow required.
