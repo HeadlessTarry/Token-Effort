@@ -53,6 +53,8 @@ Re-run it any time to update. It is safe to repeat; your answers are remembered 
 
 Each area gets a starter `permissions` block from `areas/<area>/settings.json`. Re-runs add any new entries and keep your own; entries you remove from an area will come back, so edit `areas/<area>/settings.json` to change the baseline.
 
+Each area also gets standing instructions from `areas/<area>/AGENTS.md`, copied to `~/.claude-<area>/AGENTS.md` on every run, so edit the repo copy rather than the installed one.
+
 It adds the `claude-lab` and `claude-forge` shell functions, and ends with a list of next steps (logging in, then `/setup-pstack` in Forge, and `/setup-matt-pocock-skills` or `/create-verification-skill` once per repo). It never runs slash commands itself.
 
 ### Prerequisites
@@ -73,7 +75,7 @@ To add one, create `personas/<id>/` and add a `marketplace.json` entry. No scrip
 ```
 install.sh           → installer and updater
 .claude-plugin/      → marketplace "token-effort" (personas)
-areas/<area>/        → settings.json merged into the area, manifest of what it gets
+areas/<area>/        → settings.json merged into the area, AGENTS.md instructions, manifest of what it gets
 personas/<id>/       → persona plugins
 skills/              → home-grown skills
 docs/                → ADRs and agent docs

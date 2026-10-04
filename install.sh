@@ -302,6 +302,10 @@ setup_area() { # area
   json_merge "$dir/settings.json" "$REPO_DIR/areas/$area/settings.json"
   ok "Settings merged"
   note_area "$area" "settings merged into $dir/settings.json"
+  step "📜 Installing area instructions (AGENTS.md is replaced on every run)..."
+  cp "$REPO_DIR/areas/$area/AGENTS.md" "$dir/AGENTS.md"
+  ok "Instructions installed"
+  note_area "$area" "instructions in $dir/AGENTS.md"
 
   setup_persona "$area"
   warn_duplicate_skills "$area"

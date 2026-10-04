@@ -16,6 +16,7 @@ Two isolated areas, **Lab** (explore and plan, outputs issues, uses `mattpocock/
   - This mechanism is specific to Claude Code. Other platforms need their own equivalent, and none is built yet. The planned one for OpenCode is a per-area `XDG_CONFIG_HOME` redirect, with one primary agent per area that allows only that area's skills via `permission.skill`. Until a platform has its own install step, areas are not isolated there.
 - **Native install per platform.** Claude Code plugins go in with `claude plugin install`; home-grown skills go in with `npx skills add --copy`, with `XDG_STATE_HOME` set per area so the areas don't share a lock file. Plugin auto-update is on via `extraKnownMarketplaces.<name>.autoUpdate`.
 - **Personas are plugins** (`personas/<id>/`), one per area, chosen at install. An output style with `force-for-plugin: true` plus a shell-only `UserPromptSubmit` reminder hook. Uninstalling means Default.
+- **Area instructions live in `areas/<area>/AGENTS.md`**, the portable format, and are copied to `~/.claude-<area>/AGENTS.md`, which Claude Code reads as user-level instructions. No `CLAUDE.md` is generated. These are context instructions, not a system-prompt replacement; output styles are left to personas.
 - **One `install.sh`** for setup and updates. It never runs slash commands; it prints next steps instead.
 - Every skill from each plugin is installed; no exclusion lists.
 
