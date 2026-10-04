@@ -14,6 +14,7 @@ PROFILE_END="# <<< token-effort <<<"
 
 PERSONA_LAB="" PERSONA_FORGE="" IDE="" RECONFIGURE=0
 SUMMARY=()
+LAST_PLUGIN_VERSION=""
 NEXT_STEPS=()
 
 if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
@@ -129,7 +130,7 @@ NODE
 # claude_area <area> <command>...: run a command with CLAUDE_CONFIG_DIR pointed at the area
 claude_area() {
   local area="$1"; shift
-  CLAUDE_CONFIG_DIR="$(area_dir "$area")" "$@"
+  CLAUDE_CONFIG_DIR="$(area_dir "$area")" "$@" </dev/null
 }
 
 # json_query <area> <claude-subcommand...> -- <node-expression-on-l> <arg>
@@ -189,7 +190,7 @@ install_or_update_plugin() { # area plugin@marketplace marketplace-name marketpl
   local version
   version="$(plugin_version "$area" "$id")"
   ok "$id is on v$version"
-  note "$(area_title "$area"): plugin $id $version"
+  LAST_PLUGIN_VERSION="$version"
 }
 
 list_personas() { # prints persona ids, one per line
@@ -224,7 +225,7 @@ npx_skills_add() { # area source skill
   dir="$(area_dir "$area")"
   step "📚 Copying skill '$skill'..."
   (cd "$REPO_DIR" && CLAUDE_CONFIG_DIR="$dir" XDG_STATE_HOME="$dir/.skills-state" \
-    npx --yes skills add "$source" --skill "$skill" -g -a claude-code --copy -y >/dev/null)
+    npx --yes skills add "$source" --skill "$skill" -g -a claude-code --copy -y </dev/null >/dev/null)
 }
 
 setup_persona() { # area
@@ -272,7 +273,11 @@ setup_persona() { # area
     step "🧹 Retiring the old persona '$other'..."
     claude_area "$area" claude plugin uninstall "$other@$PERSONA_MARKETPLACE" >/dev/null
   done < <(installed_personas "$area")
-  note "$(area_title "$area"): persona $choice"
+  if [[ "$choice" = Default ]]; then
+    note "$(area_title "$area"): persona Default"
+  else
+    note "$(area_title "$area"): persona $choice (v$LAST_PLUGIN_VERSION)"
+  fi
 }
 
 setup_area() { # area
@@ -292,7 +297,8 @@ setup_area() { # area
   while read -r kind a b; do
     case "$kind" in
       plugin)
-        install_or_update_plugin "$area" "$a" "${a#*@}" "$b" ;;
+        install_or_update_plugin "$area" "$a" "${a#*@}" "$b"
+        note "$(area_title "$area"): plugin $a v$LAST_PLUGIN_VERSION" ;;
       skill)
         npx_skills_add "$area" "$REPO_DIR/skills" "$a"
         note "$(area_title "$area"): skill $a" ;;
