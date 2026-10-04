@@ -28,7 +28,6 @@
       "Bash(gh issue *)",
       "Bash(gh label *)",
       "Bash(gh pr view *)",
-      "Bash(gh project *)",
       "Bash(gh repo view *)",
       "Bash(gh run view *)",
       "Bash(gh search *)",
@@ -69,11 +68,6 @@
       "Bash(git rebase *)",
       "Bash(git worktree *)"
     ],
-    "deny": [
-      "Read(node_modules/**)",
-      "Read(dist/**)",
-      "Read(coverage/**)",
-      "Read(*.lock)"
-    ]
+    "deny": []
   }
 }
