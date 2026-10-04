@@ -12,7 +12,6 @@ Use this checklist to see what you still need to set up. Each item links to the 
 
 - [ ] [GitHub repository](#1-github-repository) with Issues enabled
 - [ ] [Issue labels](#2-issue-labels): Category labels for issue types
-- [ ] [Repository secret](#3-repository-secrets): `OPENCODE_API_KEY` (for AI-powered workflows)
 
 ---
 
@@ -55,18 +54,6 @@ gh label create "duplicate"        --color "#cfd3d7" --description "This issue o
 Alternatively, you can create labels via **Settings** → **Labels** in the GitHub UI.
 
 > **Note:** GitHub creates several default labels (`bug`, `documentation`, `duplicate`, `enhancement`) when a repository is initialized. Run `gh label list` first and skip `gh label create` for any that already exist.
-
----
-
-## 🔐 3. Repository Secrets
-
-If you plan to use AI-powered workflows (like automated triage), add the following secret under **Settings** → **Secrets and variables** → **Actions** → **Secrets**.
-
-| Secret | Value |
-|--------|-------|
-| `OPENCODE_API_KEY` | Your API key — generated during setup. See your OpenCode documentation for key generation. |
-
-> **Note:** The workflow uses `${{ secrets.GITHUB_TOKEN }}` automatically — no additional token configuration is needed.
 
 ---
 

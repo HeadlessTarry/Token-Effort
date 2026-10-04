@@ -1,9 +1,3 @@
-# Training
-training/**/.training-results/
-
-# Planning
-.opencode/plans/
-
 # Worktrees
 .worktrees/
 
