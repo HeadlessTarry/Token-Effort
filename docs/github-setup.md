@@ -1,33 +1,32 @@
-# ⚙️ GitHub Setup Guide
+# ⚙️ GitHub Setup
 
-This guide covers the GitHub infrastructure required to use Token-Effort skills. 
+Token-Effort's home-grown skills (`propose-feature`, `report-bug`, `disclose-ai-content`, `configuring-dependabot`) and the Lab and Forge agent areas work through GitHub Issues and the `gh` CLI. This page lists what a repository needs before those skills work well in it.
 
-**Audience:** Project maintainers, contributors, and external users who want to use these skills on their own GitHub repositories.
-
----
-
-## ✅ Prerequisites Checklist
-
-Use this checklist to see what you still need to set up. Each item links to the detailed section below.
-
-- [ ] [GitHub repository](#1-github-repository) with Issues enabled
-- [ ] [Issue labels](#2-issue-labels): Category labels for issue types
+Install the skills first with `./install.sh` (see the [README](../README.md)).
 
 ---
 
-## 📋 1. GitHub Repository
+## ✅ Checklist
 
-Ensure your repository has GitHub Issues enabled:
-
-1. Navigate to your repository on GitHub.
-2. Go to **Settings** → **General** → **Features**.
-3. Ensure **Issues** is checked.
+- [ ] [`gh` CLI](#1-gh-cli) authenticated
+- [ ] [Issues](#2-issues-enabled) enabled on the repository
+- [ ] [Issue labels](#3-issue-labels) created
+- [ ] [Issue templates](#4-issue-templates) in place
+- [ ] [Triage labels and tracker config](#5-triage-labels-and-tracker-config) set up (Lab)
 
 ---
 
-## 🏷️ 2. Issue Labels
+## 1. `gh` CLI
 
-Token-Effort uses category labels to organize issues by type:
+Install the [GitHub CLI](https://cli.github.com/) and run `gh auth login`. The skills file issues with `gh issue create` and never use MCP tools.
+
+## 2. Issues enabled
+
+In the repository, go to **Settings** → **General** → **Features** and tick **Issues**.
+
+## 3. Issue labels
+
+`propose-feature` and `report-bug` rely on the labels their issue templates apply:
 
 | Label | Description | Color |
 |-------|-------------|-------|
@@ -36,66 +35,37 @@ Token-Effort uses category labels to organize issues by type:
 | `documentation` | Improvements or additions to documentation | `#0075ca` |
 | `duplicate` | This issue or pull request already exists | `#cfd3d7` |
 
-### Creating Labels
-
-Run the following commands to create these labels:
+GitHub creates these by default on new repositories. Check with `gh label list` and create any that are missing:
 
 ```bash
-# Check what labels already exist to avoid duplicates
-gh label list
-
-# Create category labels (skip if they already exist)
-gh label create "enhancement"      --color "#a2eeef" --description "New feature or request"
-gh label create "bug"              --color "#d73a4a" --description "Something isn't working"
-gh label create "documentation"    --color "#0075ca" --description "Improvements or additions to documentation"
-gh label create "duplicate"        --color "#cfd3d7" --description "This issue or pull request already exists"
+gh label create "enhancement"   --color "#a2eeef" --description "New feature or request"
+gh label create "bug"           --color "#d73a4a" --description "Something isn't working"
+gh label create "documentation" --color "#0075ca" --description "Improvements or additions to documentation"
+gh label create "duplicate"     --color "#cfd3d7" --description "This issue or pull request already exists"
 ```
 
-Alternatively, you can create labels via **Settings** → **Labels** in the GitHub UI.
+## 4. Issue templates
 
-> **Note:** GitHub creates several default labels (`bug`, `documentation`, `duplicate`, `enhancement`) when a repository is initialized. Run `gh label list` first and skip `gh label create` for any that already exist.
+The skills find templates in `.github/ISSUE_TEMPLATE/` by their `labels:` frontmatter, not by filename, and fall back to a plain format when none match. This repository's templates are the reference:
 
----
+- `01-feature_request.md` applies `enhancement`
+- `02-bug_report.md` applies `bug`
+- `config.yml` disables blank issues
 
-## 🔄 Issue Workflow
+Copy them into a repository to use them there.
 
-Issues are labeled by type when created (via templates) and can be further categorized as needed. Token-Effort skills work with GitHub Issues directly — no project board or special workflow required.
+## 5. Triage labels and tracker config
 
----
+The Lab skills (from `mattpocock/skills`) read per-repo config from `docs/agents/`. Run `/setup-matt-pocock-skills` once per repository in a Lab session to create it. This repository's own files are in [`docs/agents/`](agents/) as an example, including the five triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`).
 
-## 📝 Issue Templates
-
-Issue templates help ensure new issues have the right information and labels from the start. Token-Effort provides templates at `.github/ISSUE_TEMPLATE/`:
-
-- `01-feature_request.md` — automatically applies the `enhancement` label
-- `02-bug_report.md` — automatically applies the `bug` label
-- `config.yml` — disables blank issues to encourage using templates
-
-Copy these templates from the Token-Effort repository into your own `.github/ISSUE_TEMPLATE/`.
+For Forge, run `/create-verification-skill` once per repository in a Forge session.
 
 ---
 
 ## ✔️ Verification
 
-After completing all steps above, run the following to confirm everything is in place:
-
 ```bash
-# Confirm all labels exist
-gh label list
-
-# Expected labels:
-# - enhancement, bug, documentation, duplicate
-
-# Confirm Issues are enabled
+gh auth status
+gh label list                                   # enhancement, bug, documentation, duplicate
 gh repo view --json hasIssuesEnabled
 ```
-
----
-
-## 🚫 Out of Scope
-
-This guide does not cover:
-
-- Installing Token-Effort skills — run `./install.sh` from the Token-Effort repository
-- Configuring the platform itself (model settings, permissions)
-- Configuring Dependabot — run `/configuring-dependabot`
