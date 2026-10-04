@@ -291,7 +291,7 @@ setup_persona() { # area
 }
 
 setup_area() { # area
-  local area="$1" dir manifest kind a b
+  local area="$1" dir manifest kind a b skills_installed=0
   dir="$(area_dir "$area")"
   manifest="$REPO_DIR/areas/$area/manifest"
   heading "$(area_emoji "$area") Setting up $(area_title "$area") ($dir)"
@@ -311,13 +311,19 @@ setup_area() { # area
         note "$(area_title "$area"): plugin $a v$LAST_PLUGIN_VERSION" ;;
       skill)
         npx_skills_add "$area" "$REPO_DIR/skills" "$a"
+        skills_installed=$((skills_installed + 1))
         note "$(area_title "$area"): skill $a" ;;
       extskill)
         npx_skills_add "$area" "$a" "$b"
+        skills_installed=$((skills_installed + 1))
         note "$(area_title "$area"): skill $b (from $a)" ;;
       *) warn "ignoring unknown manifest entry '$kind' in $manifest" ;;
     esac
   done < <(manifest_entries "$area")
+
+  if [[ "$skills_installed" -gt 0 ]]; then
+    ok "Skills installed"
+  fi
 
   if [[ ! -f "$dir/.credentials.json" ]]; then
     NEXT_STEPS+=("Run claude-$area and log in (not logged in yet).")
