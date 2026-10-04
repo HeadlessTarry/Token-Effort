@@ -1,5 +1,6 @@
 {
   "syncClaudeAiSkills": false,
+  "effortLevel": "medium",
   "extraKnownMarketplaces": {
     "pstack-claude": {
       "source": {
@@ -9,6 +10,7 @@
       "autoUpdate": true
     }
   },
+  "model": "sonnet",
   "permissions": {
     "allow": [
       "Bash(* --version)",
@@ -68,6 +70,11 @@
       "Bash(git rebase *)",
       "Bash(git worktree *)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "auto"
+  },
+  "worktree": {
+    "baseRef": "fresh",
+    "bgIsolation": "worktree"
   }
 }

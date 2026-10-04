@@ -1,5 +1,6 @@
 {
   "syncClaudeAiSkills": false,
+  "effortLevel": "medium",
   "extraKnownMarketplaces": {
     "mattpocock": {
       "source": {
@@ -9,6 +10,7 @@
       "autoUpdate": true
     }
   },
+  "model": "opus",
   "permissions": {
     "allow": [
       "Bash(* --version)",
@@ -57,6 +59,7 @@
       "mcp__sonarqube__search_sonar_issues_in_projects",
       "mcp__sonarqube__get_component_measures"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "auto"
   }
 }
