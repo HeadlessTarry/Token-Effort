@@ -266,6 +266,10 @@ claude-lab()   { CLAUDE_CONFIG_DIR=\"\$HOME/.claude-lab\" claude \"\$@\"; }
 claude-forge() { CLAUDE_CONFIG_DIR=\"\$HOME/.claude-forge\" claude \"\$@\"; }
 $PROFILE_END"
   touch "$profile"
+  # Git Bash login shells read ~/.bash_profile; make sure it sources ~/.bashrc
+  if [ -z "${TOKEN_EFFORT_PROFILE:-}" ] && [ -f "$HOME/.bash_profile" ] && ! grep -q bashrc "$HOME/.bash_profile"; then
+    warn "~/.bash_profile does not source ~/.bashrc; the claude-lab/claude-forge functions may not load in login shells"
+  fi
   local tmp="$profile.token-effort.tmp"
   awk -v b="$PROFILE_BEGIN" -v e="$PROFILE_END" '
     $0 == b { skip = 1; next }
@@ -293,8 +297,9 @@ configure_ide_zed() {
   settings="$(zed_settings_path)"
   case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) npx_cmd=npx.cmd ;; esac
   mkdir -p "$(dirname "$settings")"
-  local rc=0
-  node - "$settings" "$HOME" "$npx_cmd" <<'NODE' || rc=$?
+  local rc=0 home_native="$HOME"
+  command -v cygpath >/dev/null && home_native="$(cygpath -m "$HOME")"
+  node - "$settings" "$home_native" "$npx_cmd" <<'NODE' || rc=$?
 const fs = require('fs');
 const [file, home, npx] = process.argv.slice(2);
 const strip = (t) => { // remove // and /* */ comments (outside strings) and trailing commas
