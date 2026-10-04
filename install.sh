@@ -14,6 +14,7 @@ PROFILE_END="# <<< token-effort <<<"
 
 PERSONA_LAB="" PERSONA_FORGE="" IDE="" RECONFIGURE=0
 SUMMARY=()
+AREA_NOTES=()
 LAST_PLUGIN_VERSION=""
 NEXT_STEPS=()
 
@@ -30,6 +31,7 @@ ok()      { printf '  %s✔%s %s\n' "$C_GREEN" "$C_RESET" "$*"; }
 warn()    { printf '  %s⚠ %s%s\n' "$C_YELLOW" "$*" "$C_RESET" >&2; }
 die()     { printf '%s💥 %s%s\n' "$C_RED" "$*" "$C_RESET" >&2; exit 1; }
 note()    { SUMMARY+=("$*"); }
+note_area() { local area="$1"; shift; AREA_NOTES+=("$area|$*"); }
 
 area_dir() { local area="$1"; printf '%s/.claude-%s' "$HOME" "$area"; }
 area_emoji() { local area="$1"; case "$area" in lab) printf '🧪' ;; forge) printf '🔨' ;; *) printf '📦' ;; esac; }
@@ -284,9 +286,9 @@ setup_persona() { # area
     run_quiet claude_area "$area" claude plugin uninstall "$other@$PERSONA_MARKETPLACE"
   done < <(installed_personas "$area")
   if [[ "$choice" = Default ]]; then
-    note "$(area_title "$area"): persona Default"
+    note_area "$area" "persona Default"
   else
-    note "$(area_title "$area"): persona $choice (v$LAST_PLUGIN_VERSION)"
+    note_area "$area" "persona $choice (v$LAST_PLUGIN_VERSION)"
   fi
 }
 
@@ -299,7 +301,7 @@ setup_area() { # area
   step "⚙️  Merging settings and starter permissions (your own entries stay put)..."
   json_merge "$dir/settings.json" "$REPO_DIR/areas/$area/settings.json"
   ok "Settings merged"
-  note "$(area_title "$area"): settings merged into $dir/settings.json"
+  note_area "$area" "settings merged into $dir/settings.json"
 
   setup_persona "$area"
   warn_duplicate_skills "$area"
@@ -308,15 +310,15 @@ setup_area() { # area
     case "$kind" in
       plugin)
         install_or_update_plugin "$area" "$a" "${a#*@}" "$b"
-        note "$(area_title "$area"): plugin $a v$LAST_PLUGIN_VERSION" ;;
+        note_area "$area" "plugin $a v$LAST_PLUGIN_VERSION" ;;
       skill)
         npx_skills_add "$area" "$REPO_DIR/skills" "$a"
         skills_installed=$((skills_installed + 1))
-        note "$(area_title "$area"): skill $a" ;;
+        note_area "$area" "skill $a" ;;
       extskill)
         npx_skills_add "$area" "$a" "$b"
         skills_installed=$((skills_installed + 1))
-        note "$(area_title "$area"): skill $b (from $a)" ;;
+        note_area "$area" "skill $b (from $a)" ;;
       *) warn "ignoring unknown manifest entry '$kind' in $manifest" ;;
     esac
   done < <(manifest_entries "$area")
@@ -367,7 +369,7 @@ $PROFILE_END"
   printf '%s\n' "$block" >> "$tmp"
   mv "$tmp" "$profile"
   ok "claude-lab and claude-forge are ready (open a new shell to use them)"
-  note "Shell functions claude-lab and claude-forge written to $profile"
+  note "🐚 Shell functions: claude-lab and claude-forge written to $profile"
 }
 
 # ---------- IDEs ----------
@@ -423,9 +425,9 @@ fs.writeFileSync(file, JSON.stringify(cfg, null, 2) + '\n');
 NODE
   if [[ "$rc" -eq 0 ]]; then
     ok "Zed knows about both agents now"
-    note "Zed: Claude Lab and Claude Forge agents configured in $settings"
+    note "🖥️  IDE: Zed agents (Claude Lab, Claude Forge) configured in $settings"
   else
-    note "Zed: settings contain comments; snippet printed above for manual edit"
+    note "🖥️  IDE: Zed settings contain comments, snippet printed above for manual edit"
   fi
 }
 
@@ -438,7 +440,7 @@ configure_ide() {
   state_set lab ide "$choice"
   heading "🖥️  IDE agents"
   case "$choice" in
-    none) step "Skipping IDE setup"; note "IDE: none" ;;
+    none) step "Skipping IDE setup"; note "🖥️  IDE: none" ;;
     zed)  configure_ide_zed || true ;;
     *)    die "unknown IDE '$choice' (available: none, zed)" ;;
   esac
@@ -456,7 +458,14 @@ warn_update_blockers() {
 
 print_summary() {
   heading "🎉 All done! Here's what happened"
-  local s; for s in "${SUMMARY[@]}"; do log "  - $s"; done
+  local area entry s
+  for area in "${AREAS[@]}"; do
+    log "  - $(area_emoji "$area") $(area_title "$area")"
+    for entry in "${AREA_NOTES[@]:-}"; do
+      [[ "${entry%%|*}" = "$area" ]] && log "      - ${entry#*|}"
+    done
+  done
+  for s in "${SUMMARY[@]:-}"; do [[ -n "$s" ]] && log "  - $s"; done
   heading "👉 Your next steps"
   for s in "${NEXT_STEPS[@]:-}"; do [[ -n "$s" ]] && log "  - $s"; done
   log "  - Once in Forge: run /setup-pstack (re-run after big model changes)."
