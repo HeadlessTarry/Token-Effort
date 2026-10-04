@@ -386,7 +386,7 @@ zed_settings_path() {
 configure_ide_zed() {
   local settings npx_cmd=npx
   settings="$(zed_settings_path)"
-  step "Adding 'Claude Lab' and 'Claude Forge' agents to Zed ($settings)..."
+  step "Adding 'Lab' and 'Forge' agents to Zed ($settings)..."
   case "$(uname -s)" in
     MINGW*|MSYS*|CYGWIN*) npx_cmd=npx.cmd ;;
     *) ;;
@@ -412,7 +412,7 @@ const strip = (t) => { // remove // and /* */ comments (outside strings) and tra
 const raw = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
 const hasComments = strip(raw) !== raw.replace(/,(\s*[}\]])/g, '$1');
 const entry = (area) => ({ type: 'custom', command: npx, args: ['-y', '@agentclientprotocol/claude-agent-acp@latest'], env: { CLAUDE_CONFIG_DIR: `${home}/.claude-${area}` } });
-const servers = { 'Claude Lab': entry('lab'), 'Claude Forge': entry('forge') };
+const servers = { Lab: entry('lab'), Forge: entry('forge') };
 if (hasComments) {
   console.error(`Zed settings at ${file} contain comments, so they were left untouched.`);
   console.error('Add this under "agent_servers" by hand:');
@@ -425,7 +425,7 @@ fs.writeFileSync(file, JSON.stringify(cfg, null, 2) + '\n');
 NODE
   if [[ "$rc" -eq 0 ]]; then
     ok "Zed knows about both agents now"
-    note "🖥️  IDE: Zed agents (Claude Lab, Claude Forge) configured in $settings"
+    note "🖥️  IDE: Zed agents (Lab, Forge) configured in $settings"
   else
     note "🖥️  IDE: Zed settings contain comments, snippet printed above for manual edit"
     # first in the list: the other steps are no use in Zed until this is done

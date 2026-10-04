@@ -48,7 +48,7 @@ Re-run it any time to update. It is safe to repeat; your answers are remembered 
 | Flag | Effect |
 |------|--------|
 | `--persona-lab <name>` / `--persona-forge <name>` | Pick `Default` or a persona from `personas/` for that area |
-| `--ide <none\|zed>` | Configure IDE agents (Zed adds "Claude Lab" and "Claude Forge") |
+| `--ide <none\|zed>` | Configure IDE agents (Zed adds "Lab" and "Forge") |
 | `--reconfigure` | Ask every question again |
 
 Each area gets a starter `permissions` block from `areas/<area>/settings.json`. Re-runs add any new entries and keep your own; entries you remove from an area will come back, so edit `areas/<area>/settings.json` to change the baseline.
