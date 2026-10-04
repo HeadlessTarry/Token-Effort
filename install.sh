@@ -16,12 +16,22 @@ PERSONA_LAB="" PERSONA_FORGE="" IDE="" RECONFIGURE=0
 SUMMARY=()
 NEXT_STEPS=()
 
-log()  { printf '%s\n' "$*"; }
-warn() { printf 'warning: %s\n' "$*" >&2; }
-die()  { printf 'error: %s\n' "$*" >&2; exit 1; }
-note() { SUMMARY+=("$*"); }
+if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
+  C_BOLD=$'\e[1m' C_DIM=$'\e[2m' C_GREEN=$'\e[32m' C_YELLOW=$'\e[33m' C_RED=$'\e[31m' C_RESET=$'\e[0m'
+else
+  C_BOLD="" C_DIM="" C_GREEN="" C_YELLOW="" C_RED="" C_RESET=""
+fi
+
+log()     { printf '%s\n' "$*"; }
+heading() { printf '\n%s%s%s\n' "$C_BOLD" "$*" "$C_RESET"; }
+step()    { printf '  %s%s%s\n' "$C_DIM" "$*" "$C_RESET"; }
+ok()      { printf '  %s✔%s %s\n' "$C_GREEN" "$C_RESET" "$*"; }
+warn()    { printf '  %s⚠ %s%s\n' "$C_YELLOW" "$*" "$C_RESET" >&2; }
+die()     { printf '%s💥 %s%s\n' "$C_RED" "$*" "$C_RESET" >&2; exit 1; }
+note()    { SUMMARY+=("$*"); }
 
 area_dir() { local area="$1"; printf '%s/.claude-%s' "$HOME" "$area"; }
+area_emoji() { local area="$1"; case "$area" in lab) printf '🧪' ;; forge) printf '🔨' ;; *) printf '📦' ;; esac; }
 area_title() { local a="$1"; printf '%s%s' "$(printf '%s' "${a:0:1}" | tr '[:lower:]' '[:upper:]')" "${a:1}"; }
 
 usage() {
@@ -162,6 +172,7 @@ marketplace_registered() { # area name
 ensure_marketplace() { # area name source
   local area="$1" name="$2" source="$3"
   marketplace_registered "$area" "$name" && return 0
+  step "📍 Registering the '$name' marketplace..."
   claude_area "$area" claude plugin marketplace add "$source" >/dev/null
 }
 
@@ -169,11 +180,16 @@ install_or_update_plugin() { # area plugin@marketplace marketplace-name marketpl
   local area="$1" id="$2" market_name="$3" market_source="$4"
   ensure_marketplace "$area" "$market_name" "$market_source"
   if plugin_installed "$area" "$id"; then
+    step "🔄 $id is already here, checking for a fresher version..."
     claude_area "$area" claude plugin update "$id" >/dev/null
   else
+    step "🔌 Installing $id (this one can take a moment)..."
     claude_area "$area" claude plugin install "$id" >/dev/null
   fi
-  note "$(area_title "$area"): plugin $id $(plugin_version "$area" "$id")"
+  local version
+  version="$(plugin_version "$area" "$id")"
+  ok "$id is on v$version"
+  note "$(area_title "$area"): plugin $id $version"
 }
 
 list_personas() { # prints persona ids, one per line
@@ -206,6 +222,7 @@ warn_duplicate_skills() {
 npx_skills_add() { # area source skill
   local area="$1" source="$2" skill="$3" dir
   dir="$(area_dir "$area")"
+  step "📚 Copying skill '$skill'..."
   (cd "$REPO_DIR" && CLAUDE_CONFIG_DIR="$dir" XDG_STATE_HOME="$dir/.skills-state" \
     npx --yes skills add "$source" --skill "$skill" -g -a claude-code --copy -y >/dev/null)
 }
@@ -242,13 +259,18 @@ setup_persona() { # area
   state_set "$area" persona "$choice"
 
   local keep=""
-  if [[ "$choice" != Default ]]; then
+  if [[ "$choice" = Default ]]; then
+    step "🎭 Persona: Default (no costume, just the facts)"
+  else
+    step "🎭 Persona: $choice - putting on the costume"
     keep="$choice"
     install_or_update_plugin "$area" "$choice@$PERSONA_MARKETPLACE" "$PERSONA_MARKETPLACE" "$REPO_DIR"
   fi
   local other
   while read -r other; do
-    [[ -n "$other" ]] && [[ "$other" != "$keep" ]] && claude_area "$area" claude plugin uninstall "$other@$PERSONA_MARKETPLACE" >/dev/null
+    [[ -n "$other" ]] && [[ "$other" != "$keep" ]] || continue
+    step "🧹 Retiring the old persona '$other'..."
+    claude_area "$area" claude plugin uninstall "$other@$PERSONA_MARKETPLACE" >/dev/null
   done < <(installed_personas "$area")
   note "$(area_title "$area"): persona $choice"
 }
@@ -257,8 +279,11 @@ setup_area() { # area
   local area="$1" dir manifest kind a b
   dir="$(area_dir "$area")"
   manifest="$REPO_DIR/areas/$area/manifest"
+  heading "$(area_emoji "$area") Setting up $(area_title "$area") ($dir)"
   mkdir -p "$dir"
+  step "⚙️  Merging settings and starter permissions (your own entries stay put)..."
   json_merge "$dir/settings.json" "$REPO_DIR/areas/$area/settings.json"
+  ok "Settings merged"
   note "$(area_title "$area"): settings merged into $dir/settings.json"
 
   setup_persona "$area"
@@ -280,12 +305,15 @@ setup_area() { # area
 
   if [[ ! -f "$dir/.credentials.json" ]]; then
     NEXT_STEPS+=("Run claude-$area and log in (not logged in yet).")
+    step "🔑 Not logged in yet - that's one for later"
+  else
+    ok "Already logged in"
   fi
 }
 
 install_claude_code() {
-  command -v claude >/dev/null || die "claude CLI not found on PATH"
-  command -v node   >/dev/null || die "node not found on PATH (needed for npx and JSON edits)"
+  command -v claude >/dev/null || die "Can't find the claude CLI on your PATH. Install Claude Code first, then come back!"
+  command -v node   >/dev/null || die "Can't find node on your PATH. It's needed for npx and the JSON edits."
   local area
   for area in "${AREAS[@]}"; do
     setup_area "$area"
@@ -301,6 +329,8 @@ write_shell_functions() {
 claude-lab()   { CLAUDE_CONFIG_DIR=\"\$HOME/.claude-lab\" claude \"\$@\"; }
 claude-forge() { CLAUDE_CONFIG_DIR=\"\$HOME/.claude-forge\" claude \"\$@\"; }
 $PROFILE_END"
+  heading "🐚 Shell functions"
+  step "Writing claude-lab and claude-forge into $profile..."
   touch "$profile"
   # Git Bash login shells read ~/.bash_profile; make sure it sources ~/.bashrc
   if [[ -z "${TOKEN_EFFORT_PROFILE:-}" ]] && [[ -f "$HOME/.bash_profile" ]] && ! grep -q bashrc "$HOME/.bash_profile"; then
@@ -314,6 +344,7 @@ $PROFILE_END"
   ' "$profile" > "$tmp"
   printf '%s\n' "$block" >> "$tmp"
   mv "$tmp" "$profile"
+  ok "claude-lab and claude-forge are ready (open a new shell to use them)"
   note "Shell functions claude-lab and claude-forge written to $profile"
 }
 
@@ -331,6 +362,7 @@ zed_settings_path() {
 configure_ide_zed() {
   local settings npx_cmd=npx
   settings="$(zed_settings_path)"
+  step "Adding 'Claude Lab' and 'Claude Forge' agents to Zed ($settings)..."
   case "$(uname -s)" in
     MINGW*|MSYS*|CYGWIN*) npx_cmd=npx.cmd ;;
     *) ;;
@@ -368,6 +400,7 @@ cfg.agent_servers = Object.assign(cfg.agent_servers || {}, servers);
 fs.writeFileSync(file, JSON.stringify(cfg, null, 2) + '\n');
 NODE
   if [[ "$rc" -eq 0 ]]; then
+    ok "Zed knows about both agents now"
     note "Zed: Claude Lab and Claude Forge agents configured in $settings"
   else
     note "Zed: settings contain comments; snippet printed above for manual edit"
@@ -381,8 +414,9 @@ configure_ide() {
   elif [[ -n "$saved" ]] && [[ "$RECONFIGURE" -eq 0 ]]; then choice="$saved"
   else choice="$(choose "Configure IDE agents?" "${saved:-none}" none zed)"; fi
   state_set lab ide "$choice"
+  heading "🖥️  IDE agents"
   case "$choice" in
-    none) note "IDE: none" ;;
+    none) step "Skipping IDE setup"; note "IDE: none" ;;
     zed)  configure_ide_zed || true ;;
     *)    die "unknown IDE '$choice' (available: none, zed)" ;;
   esac
@@ -399,11 +433,9 @@ warn_update_blockers() {
 }
 
 print_summary() {
-  log ""
-  log "== What was done =="
+  heading "🎉 All done! Here's what happened"
   local s; for s in "${SUMMARY[@]}"; do log "  - $s"; done
-  log ""
-  log "== Next steps =="
+  heading "👉 Your next steps"
   for s in "${NEXT_STEPS[@]:-}"; do [[ -n "$s" ]] && log "  - $s"; done
   log "  - Once in Forge: run /setup-pstack (re-run after big model changes)."
   log "  - Once per repo, in a Lab session: /setup-matt-pocock-skills"
@@ -413,6 +445,8 @@ print_summary() {
 
 main() {
   parse_args "$@"
+  log "$C_BOLD🪙 Token Effort: setting up your Lab and Forge$C_RESET"
+  log "$C_DIM   Safe to re-run any time. Re-running is how you update.$C_RESET"
   warn_update_blockers
   install_claude_code   # one step per platform; add install_opencode etc. here
   write_shell_functions
