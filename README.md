@@ -2,119 +2,83 @@
 
 > Low-stakes intelligence for high-latency humans
 
-A set of practical skills for any developer. Use standalone or alongside other skill ecosystems like [Matt Pocock's skills](https://github.com/mattpocock/skills) or [Obra Superpowers](https://github.com/obra/superpowers).
+A personal AI toolkit. It sets up two isolated agent areas for Claude Code so several sessions can run in parallel without babysitting each one.
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=HeadlessTarry_Token-Effort&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=HeadlessTarry_Token-Effort)
 
-## 📦 What is Token-Effort?
+## 🧭 The two areas
 
-Token-Effort provides 4 skills for common GitHub workflows:
+| Area | Purpose | Output | Third-party skills |
+|------|---------|--------|--------------------|
+| **Lab** | Explore an idea or issue, research, decide, plan. Human-in-the-loop | Well-formed GitHub issues | [`mattpocock/skills`](https://github.com/mattpocock/skills) |
+| **Forge** | Turn actionable issues into quality PRs | Pull requests | [`michael-denyer/pstack-claude`](https://github.com/michael-denyer/pstack-claude) |
 
-| Skill | Purpose |
-|-------|---------|
-| `/repo-setup` | Quick repository setup (issue templates, Dependabot) |
-| `/propose-feature` | Guides feature proposals with structured issue creation |
-| `/report-bug` | Guides bug reports with structured issue creation |
-| `/configuring-dependabot` | Configures Dependabot for automated dependency updates |
+```mermaid
+flowchart LR
+    idea([Idea or GitHub issue]) --> lab
+    subgraph lab ["Lab (~/.claude-lab) - human in the loop"]
+        explore[Explore, research, decide, plan]
+    end
+    lab -->|well-formed GitHub issues| forge
+    subgraph forge ["Forge (~/.claude-forge)"]
+        build[Build, verify, commit]
+    end
+    forge -->|pull requests| review([Review and merge])
+```
 
-These skills are designed to be useful on their own, or as part of a larger skill ecosystem. They don't provide a complete workflow — just the tools you need for common tasks.
+Each area is a separate `CLAUDE_CONFIG_DIR` (`~/.claude-lab`, `~/.claude-forge`), so skills, plugins, settings, credentials and memory never leak between them. Nothing is installed into repos, and your default `~/.claude` is left alone.
+
+Home-grown skills in `skills/`:
+
+| Skill | Lab | Forge |
+|-------|:---:|:-----:|
+| `propose-feature` | ✅ | |
+| `report-bug` | ✅ | |
+| `disclose-ai-content` | ✅ | ✅ |
+| `configuring-dependabot` | | ✅ |
 
 ## ⤵️ Installation
 
-Install using `npx skills`:
-
 ```bash
-npx skills add HeadlessTarry/Token-Effort
+./install.sh
 ```
 
-This installs all 4 Token-Effort skills into your OpenCode skills directory.
+Re-run it any time to update. It is safe to repeat; your answers are remembered in `~/.claude-<area>/.install-state`.
 
-### Using with Other Skill Ecosystems
+| Flag | Effect |
+|------|--------|
+| `--persona-lab <name>` / `--persona-forge <name>` | Pick `Default` or a persona from `personas/` for that area |
+| `--ide <none\|zed>` | Configure IDE agents (Zed adds "Lab" and "Forge") |
+| `--reconfigure` | Ask every question again |
 
-Token-Effort works alongside other skill sets:
+Each area gets a starter `permissions` block from `areas/<area>/settings.json`. Re-runs add any new entries and keep your own; entries you remove from an area will come back, so edit `areas/<area>/settings.json` to change the baseline.
 
-```bash
-# Matt Pocock's skills (optional)
-npx skills add mattpocock/skills
+It adds the `claude-lab` and `claude-forge` shell functions, and ends with a list of next steps (logging in, then `/setup-pstack` in Forge, and `/setup-matt-pocock-skills` or `/create-verification-skill` once per repo). It never runs slash commands itself.
 
-# Obra Superpowers (optional)
-npx skills add obra/superpowers
+### Prerequisites
 
-# Token-Effort
-npx skills add HeadlessTarry/Token-Effort
-```
+- [Claude Code](https://claude.com/claude-code) CLI
+- [Node.js](https://nodejs.org/) (for `npx skills`)
+- [gh CLI](https://cli.github.com/), authenticated with `gh auth login`
+- Bash (Git Bash on Windows)
 
-Then run `/repo-setup` to configure issue templates and Dependabot for your repo.
+## 🎭 Personas
 
-## 🚀 Quick Start
+Each area can have a persona, chosen during install: `Default` (none) or a plugin from `personas/`. A persona is a tiny plugin holding an output style and a reminder hook, served through the local `token-effort` marketplace (`.claude-plugin/marketplace.json`).
 
-1. **Set up your repository:**
-   ```bash
-   /repo-setup
-   ```
-   This interactive skill walks you through:
-   - Creating issue templates (feature request, bug report)
-   - Configuring Dependabot for dependency updates
-2. **Start using the skills:**
-   - `/propose-feature` — Propose a new feature with structured issue creation
-   - `/report-bug` — Report a bug with structured issue creation
-   - `/configuring-dependabot` — Configure Dependabot for automated dependency updates
-
-## 📋 Prerequisites
-
-- [OpenCode](https://opencode.ai) — AI-assisted development platform
-- [gh CLI](https://cli.github.com/) — authenticated with `gh auth login` (for GitHub operations)
-- [Node.js](https://nodejs.org/) — for `npx skills`
+To add one, create `personas/<id>/` and add a `marketplace.json` entry. No script change is needed. Bump the plugin `version` when you edit a persona, otherwise `claude plugin update` may not refresh the cached copy.
 
 ## 🗂️ Directory Structure
 
 ```
-skills/              → OpenCode skill definitions
-  repo-setup/        → Onboarding skill
-  propose-feature/   → Feature proposal skill
-  report-bug/        → Bug report skill
-  configuring-dependabot/ → Dependabot configuration skill
-.opencode/skills/    → Project-local skills (not distributed)
-  agent-skill-crafter/ → Create new skills
-  run-training/      → Iteratively improve skills via training evals
-docs/                → Documentation
-  adr/               → Architectural Decision Records
-  github-setup.md    → GitHub setup guide
+install.sh           → installer and updater
+.claude-plugin/      → marketplace "token-effort" (personas)
+areas/<area>/        → settings.json merged into the area, manifest of what it gets
+personas/<id>/       → persona plugins
+skills/              → home-grown skills
+docs/                → ADRs and agent docs
 ```
-
-## 🧪 Development
-
-### Project-Local Skills
-
-Token-Effort uses two project-local skills for development (in `.opencode/skills/`):
-
-- `agent-skill-crafter` — Create and iterate on new skills
-- `run-training` — Run training evals to improve skill definitions
-
-These are not distributed with the package but are available when working on Token-Effort itself.
-
-### Running Tests
-
-Token-Effort uses training evals to test skill behavior. See `docs/training-guide.md` for details.
-
-## 📚 Documentation
-
-- [GitHub Setup Guide](docs/github-setup.md) — Configure labels, secrets, and workflows
-- [Training Guide](docs/training-guide.md) — How to write and run training evals
-- [Architectural Decision Records](docs/adr/) — Design decisions and rationale
 
 ## 🤝 Contributing
 
-Contributions welcome! To contribute:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run training evals if you've modified a skill
-5. Submit a pull request
-
-For major changes, please open an issue first to discuss the proposed changes.
-
-## 📄 License
-
-This project is open source and available under the MIT License.
+All changes to skill files use mattpocock's `writing-for-agents` skill, and skills are verified with pstack's `eval` playbook. See `AGENTS.md`.
