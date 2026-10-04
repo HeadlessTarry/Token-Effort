@@ -428,6 +428,8 @@ NODE
     note "🖥️  IDE: Zed agents (Claude Lab, Claude Forge) configured in $settings"
   else
     note "🖥️  IDE: Zed settings contain comments, snippet printed above for manual edit"
+    # first in the list: the other steps are no use in Zed until this is done
+    NEXT_STEPS=("Copy the Zed agent snippet printed above into the \"agent_servers\" block of $settings." "${NEXT_STEPS[@]:-}")
   fi
 }
 
