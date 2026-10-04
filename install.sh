@@ -94,7 +94,7 @@ choose() {
 
 # ---------- JSON helpers (node is already required for npx) ----------
 
-# json_merge <target-file> <source-file>: deep-merge source keys into target, never overwriting other keys.
+# json_merge <target-file> <source-file>: deep-merge source keys into target (arrays are unioned), never dropping other keys.
 json_merge() {
   local target="$1" source="$2"
   node - "$target" "$source" <<'NODE'
@@ -102,7 +102,11 @@ const fs = require('fs');
 const [target, source] = process.argv.slice(2);
 const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
 const merge = (a, b) => {
-  for (const [k, v] of Object.entries(b)) a[k] = isObj(v) && isObj(a[k]) ? merge(a[k], v) : v;
+  for (const [k, v] of Object.entries(b)) {
+    if (isObj(v) && isObj(a[k])) a[k] = merge(a[k], v);
+    else if (Array.isArray(v) && Array.isArray(a[k])) a[k] = [...a[k], ...v.filter((x) => !a[k].some((y) => JSON.stringify(y) === JSON.stringify(x)))];
+    else a[k] = v;
+  }
   return a;
 };
 const current = fs.existsSync(target) ? JSON.parse(fs.readFileSync(target, 'utf8') || '{}') : {};

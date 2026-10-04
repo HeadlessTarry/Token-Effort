@@ -2,8 +2,67 @@
   "syncClaudeAiSkills": false,
   "extraKnownMarketplaces": {
     "mattpocock": {
-      "source": { "source": "github", "repo": "mattpocock/skills" },
+      "source": {
+        "source": "github",
+        "repo": "mattpocock/skills"
+      },
       "autoUpdate": true
     }
+  },
+  "permissions": {
+    "allow": [
+      "Bash(* --version)",
+      "Bash(* --help *)",
+      "Bash(awk *)",
+      "Bash(cat *)",
+      "Bash(cd *)",
+      "Bash(date *)",
+      "Bash(diff *)",
+      "Bash(du *)",
+      "Bash(echo *)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(head *)",
+      "Bash(ls *)",
+      "Bash(wc *)",
+      "Bash(gh issue *)",
+      "Bash(gh label *)",
+      "Bash(gh pr view *)",
+      "Bash(gh project *)",
+      "Bash(gh repo view *)",
+      "Bash(gh run view *)",
+      "Bash(gh search *)",
+      "Bash(git add *)",
+      "Bash(git branch *)",
+      "Bash(git check-ignore *)",
+      "Bash(git commit *)",
+      "Bash(git diff *)",
+      "Bash(git *log *)",
+      "Bash(git ls-tree *)",
+      "Bash(git merge-base *)",
+      "Bash(git remote *)",
+      "Bash(git rev-parse *)",
+      "Bash(git *show *)",
+      "Bash(git *status*)",
+      "Bash(git symbolic-ref *)",
+      "WebSearch",
+      "WebFetch(domain:docs.anthropic.com)",
+      "WebFetch(domain:docs.github.com)",
+      "WebFetch(domain:docs.sonarsource.com)",
+      "mcp__plugin_github_github__list_issues",
+      "mcp__plugin_github_github__search_issues",
+      "mcp__plugin_github_github__issue_read",
+      "mcp__plugin_github_github__pull_request_read",
+      "mcp__sonarqube__search_my_sonarqube_projects",
+      "mcp__sonarqube__get_project_quality_gate_status",
+      "mcp__sonarqube__search_sonar_issues_in_projects",
+      "mcp__sonarqube__get_component_measures"
+    ],
+    "deny": [
+      "Read(node_modules/**)",
+      "Read(dist/**)",
+      "Read(coverage/**)",
+      "Read(*.lock)"
+    ]
   }
 }
