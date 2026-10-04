@@ -13,6 +13,19 @@ A personal AI toolkit. It sets up two isolated agent areas for Claude Code so se
 | **Lab** | Explore an idea or issue, research, decide, plan. Human-in-the-loop | Well-formed GitHub issues | [`mattpocock/skills`](https://github.com/mattpocock/skills) |
 | **Forge** | Turn actionable issues into quality PRs | Pull requests | [`michael-denyer/pstack-claude`](https://github.com/michael-denyer/pstack-claude) |
 
+```mermaid
+flowchart LR
+    idea([Idea or GitHub issue]) --> lab
+    subgraph lab ["Lab (~/.claude-lab) - human in the loop"]
+        explore[Explore, research, decide, plan]
+    end
+    lab -->|well-formed GitHub issues| forge
+    subgraph forge ["Forge (~/.claude-forge)"]
+        build[Build, verify, commit]
+    end
+    forge -->|pull requests| review([Review and merge])
+```
+
 Each area is a separate `CLAUDE_CONFIG_DIR` (`~/.claude-lab`, `~/.claude-forge`), so skills, plugins, settings, credentials and memory never leak between them. Nothing is installed into repos, and your default `~/.claude` is left alone.
 
 Home-grown skills in `skills/`:

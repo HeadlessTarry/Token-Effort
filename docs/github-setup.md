@@ -1,6 +1,6 @@
 # ⚙️ GitHub Setup
 
-Token-Effort's home-grown skills (`propose-feature`, `report-bug`, `disclose-ai-content`, `configuring-dependabot`) and the Lab and Forge agent areas work through GitHub Issues and the `gh` CLI. This page lists what a repository needs before those skills work well in it.
+Token-Effort's home-grown skills (under [skills](../skills)) and the Lab and Forge agent areas work through GitHub Issues and the `gh` CLI. This page lists what a repository needs before those skills work well in it.
 
 Install the skills first with `./install.sh` (see the [README](../README.md)).
 

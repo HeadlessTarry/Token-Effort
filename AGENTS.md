@@ -14,4 +14,4 @@ Single-context layout — one `CONTEXT.md` at root, ADRs in `docs/adr/`. See `do
 
 ### Changing skills
 
-All changes to skill files use mattpocock's `writing-for-agents` skill, and skills are verified with pstack's `eval` playbook. Write or plan in Lab, verify in Forge.
+All changes to skill files use mattpocock's `writing-for-agents` skill, and skills are verified with pstack's `eval` playbook.
