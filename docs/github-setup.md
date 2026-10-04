@@ -86,7 +86,7 @@ Issue templates help ensure new issues have the right information and labels fro
 - `02-bug_report.md` — automatically applies the `bug` label
 - `config.yml` — disables blank issues to encourage using templates
 
-To set up issue templates, run `/repo-setup` and follow the prompts.
+Copy these templates from the Token-Effort repository into your own `.github/ISSUE_TEMPLATE/`.
 
 ---
 
@@ -111,6 +111,6 @@ gh repo view --json hasIssuesEnabled
 
 This guide does not cover:
 
-- Installing Token-Effort skills — run `npx skills add HeadlessTarry/Token-Effort`
+- Installing Token-Effort skills — run `./install.sh` from the Token-Effort repository
 - Configuring the platform itself (model settings, permissions)
-- Running `/repo-setup` for complete onboarding — this handles templates, Dependabot, and more
+- Configuring Dependabot — run `/configuring-dependabot`

@@ -1,0 +1,9 @@
+{
+  "syncClaudeAiSkills": false,
+  "extraKnownMarketplaces": {
+    "mattpocock": {
+      "source": { "source": "github", "repo": "mattpocock/skills" },
+      "autoUpdate": true
+    }
+  }
+}

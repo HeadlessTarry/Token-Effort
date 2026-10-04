@@ -1,0 +1,9 @@
+{
+  "syncClaudeAiSkills": false,
+  "extraKnownMarketplaces": {
+    "pstack-claude": {
+      "source": { "source": "github", "repo": "michael-denyer/pstack-claude" },
+      "autoUpdate": true
+    }
+  }
+}

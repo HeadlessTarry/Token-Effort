@@ -1,0 +1,11 @@
+{
+  "name": "token-effort",
+  "owner": { "name": "HeadlessTarry" },
+  "plugins": [
+    {
+      "name": "skaven",
+      "source": "./personas/skaven",
+      "description": "Skaven persona: a scheming ratman voice for prose, with plain professional artefacts"
+    }
+  ]
+}

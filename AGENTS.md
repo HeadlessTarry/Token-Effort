@@ -12,6 +12,6 @@ Five canonical labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-f
 
 Single-context layout — one `CONTEXT.md` at root, ADRs in `docs/adr/`. See `docs/agents/domain.md`.
 
-### Creating skills
+### Changing skills
 
-A new skill is one ticket: SKILL.md + training evals + iterate training to 100%. Do not split into separate tickets for "write the skill", "write the evals", "run training" — the skill is not verifiable without evals, and the work is not complete until evals are green. See `docs/agents/creating-skills.md`.
+All changes to skill files use mattpocock's `writing-for-agents` skill, and skills are verified with pstack's `eval` playbook. Write or plan in Lab, verify in Forge.
