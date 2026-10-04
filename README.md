@@ -67,7 +67,3 @@ docs/                → ADRs and agent docs
 ## 🤝 Contributing
 
 All changes to skill files use mattpocock's `writing-for-agents` skill, and skills are verified with pstack's `eval` playbook. See `AGENTS.md`.
-
-## 📄 License
-
-This project is open source and available under the MIT License.
