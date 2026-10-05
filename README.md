@@ -2,40 +2,20 @@
 
 > Low-stakes intelligence for high-latency humans
 
-A personal AI toolkit. It sets up two isolated agent areas for Claude Code so several sessions can run in parallel without babysitting each one.
+A personal AI toolkit. It configures Claude Code in your existing `~/.claude` with standing instructions, starter settings, a choice of third-party skill sets, and home-grown skills.
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=HeadlessTarry_Token-Effort&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=HeadlessTarry_Token-Effort)
 
-## 🧭 The two areas
+## 🧰 Skill sets
 
-| Area | Purpose | Output | Third-party skills |
-|------|---------|--------|--------------------|
-| **Lab** | Explore an idea or issue, research, decide, plan. Human-in-the-loop | Well-formed GitHub issues | [`mattpocock/skills`](https://github.com/mattpocock/skills) |
-| **Forge** | Turn actionable issues into quality PRs | Pull requests | [`michael-denyer/pstack-claude`](https://github.com/michael-denyer/pstack-claude) |
+Pick one or both at install:
 
-```mermaid
-flowchart LR
-    idea([Idea or GitHub issue]) --> lab
-    subgraph lab ["Lab (~/.claude-lab) - human in the loop"]
-        explore[Explore, research, decide, plan]
-    end
-    lab -->|well-formed GitHub issues| forge
-    subgraph forge ["Forge (~/.claude-forge)"]
-        build[Build, verify, commit]
-    end
-    forge -->|pull requests| review([Review and merge])
-```
+| Skill set | Plugin | Good for |
+|-----------|--------|----------|
+| `mattpocock` | [`mattpocock/skills`](https://github.com/mattpocock/skills) | Exploring, researching, deciding and planning work as GitHub issues |
+| `pstack` | [`michael-denyer/pstack-claude`](https://github.com/michael-denyer/pstack-claude) | Turning actionable issues into verified pull requests |
 
-Each area is a separate `CLAUDE_CONFIG_DIR` (`~/.claude-lab`, `~/.claude-forge`), so skills, plugins, settings, credentials and memory never leak between them. Nothing is installed into repos, and your default `~/.claude` is left alone.
-
-Home-grown skills in `skills/`:
-
-| Skill | Lab | Forge |
-|-------|:---:|:-----:|
-| `propose-feature` | ✅ | |
-| `report-bug` | ✅ | |
-| `disclose-ai-content` | ✅ | ✅ |
-| `configuring-dependabot` | | ✅ |
+Every home-grown skill in `skills/` is always installed. Skill sets are defined at the top of `install.sh`.
 
 ## ⤵️ Installation
 
@@ -43,19 +23,21 @@ Home-grown skills in `skills/`:
 ./install.sh
 ```
 
-Re-run it any time to update. It is safe to repeat; your answers are remembered in `~/.claude-<area>/.install-state`.
+Re-run it any time to update. It is safe to repeat; your answers are remembered in `~/.claude/.token-effort-state`.
 
 | Flag | Effect |
 |------|--------|
-| `--persona-lab <name>` / `--persona-forge <name>` | Pick `Default` or a persona from `personas/` for that area |
-| `--ide <none\|zed>` | Configure IDE agents (Zed adds "Lab" and "Forge") |
+| `--skills <id,...\|all>` | Pick skill sets, e.g. `--skills pstack` or `--skills all`. Skill sets left out are uninstalled |
+| `--persona <name>` | Pick `Default` or a persona from `personas/` |
 | `--reconfigure` | Ask every question again |
 
-Each area gets a starter `permissions` block from `areas/<area>/settings.json`. Re-runs add any new entries and keep your own; entries you remove from an area will come back, so edit `areas/<area>/settings.json` to change the baseline.
+It configures `~/.claude`, or `$CLAUDE_CONFIG_DIR` when that is set. If the directory doesn't exist yet it is created; run `claude` afterwards to log in.
 
-Each area also gets standing instructions from `areas/<area>/AGENTS.md`, copied to `~/.claude-<area>/AGENTS.md` on every run, so edit the repo copy rather than the installed one.
+Starter settings and permissions come from `config/settings.json`. Re-runs add any new entries and keep your own; entries you remove will come back, so edit `config/settings.json` to change the baseline.
 
-It adds the `claude-lab` and `claude-forge` shell functions, and ends with a list of next steps (logging in, then `/setup-pstack` in Forge, and `/setup-matt-pocock-skills` or `/create-verification-skill` once per repo). It never runs slash commands itself.
+Standing instructions come from `config/AGENTS.md`, copied to `~/.claude/AGENTS.md` on every run, so edit the repo copy rather than the installed one.
+
+It ends with a list of next steps (`/setup-pstack`, and `/setup-matt-pocock-skills` or `/create-verification-skill` once per repo, depending on your skill sets). It never runs slash commands itself.
 
 ### Prerequisites
 
@@ -66,7 +48,7 @@ It adds the `claude-lab` and `claude-forge` shell functions, and ends with a lis
 
 ## 🎭 Personas
 
-Each area can have a persona, chosen during install: `Default` (none) or a plugin from `personas/`. A persona is a tiny plugin holding an output style and a reminder hook, served through the local `token-effort` marketplace (`.claude-plugin/marketplace.json`).
+You can pick a persona during install: `Default` (none) or a plugin from `personas/`. A persona is a tiny plugin holding an output style and a reminder hook, served through the local `token-effort` marketplace (`.claude-plugin/marketplace.json`).
 
 To add one, create `personas/<id>/` and add a `marketplace.json` entry. No script change is needed. Bump the plugin `version` when you edit a persona, otherwise `claude plugin update` may not refresh the cached copy.
 
@@ -75,7 +57,7 @@ To add one, create `personas/<id>/` and add a `marketplace.json` entry. No scrip
 ```
 install.sh           → installer and updater
 .claude-plugin/      → marketplace "token-effort" (personas)
-areas/<area>/        → settings.json merged into the area, AGENTS.md instructions, manifest of what it gets
+config/              → settings.json merged into ~/.claude, AGENTS.md instructions
 personas/<id>/       → persona plugins
 skills/              → home-grown skills
 docs/                → ADRs and agent docs

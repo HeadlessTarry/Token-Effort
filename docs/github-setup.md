@@ -1,6 +1,6 @@
 # ⚙️ GitHub Setup
 
-Token-Effort's home-grown skills (under [skills](../skills)) and the Lab and Forge agent areas work through GitHub Issues and the `gh` CLI. This page lists what a repository needs before those skills work well in it.
+Token-Effort's home-grown skills (under [skills](../skills)) and the installed skill sets work through GitHub Issues and the `gh` CLI. This page lists what a repository needs before those skills work well in it.
 
 Install the skills first with `./install.sh` (see the [README](../README.md)).
 
@@ -12,7 +12,7 @@ Install the skills first with `./install.sh` (see the [README](../README.md)).
 - [ ] [Issues](#2-issues-enabled) enabled on the repository
 - [ ] [Issue labels](#3-issue-labels) created
 - [ ] [Issue templates](#4-issue-templates) in place
-- [ ] [Triage labels and tracker config](#5-triage-labels-and-tracker-config) set up (Lab)
+- [ ] [Triage labels and tracker config](#5-triage-labels-and-tracker-config) set up
 
 ---
 
@@ -56,9 +56,9 @@ Copy them into a repository to use them there.
 
 ## 5. Triage labels and tracker config
 
-The Lab skills (from `mattpocock/skills`) read per-repo config from `docs/agents/`. Run `/setup-matt-pocock-skills` once per repository in a Lab session to create it. This repository's own files are in [`docs/agents/`](agents/) as an example, including the five triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`).
+The `mattpocock` skill set reads per-repo config from `docs/agents/`. Run `/setup-matt-pocock-skills` once per repository to create it. This repository's own files are in [`docs/agents/`](agents/) as an example, including the five triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`).
 
-For Forge, run `/create-verification-skill` once per repository in a Forge session.
+With the `pstack` skill set, run `/create-verification-skill` once per repository.
 
 ---
 

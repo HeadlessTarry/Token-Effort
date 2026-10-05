@@ -1,6 +1,6 @@
 # 2026-10-lab-forge-agent-areas
 
-> **Status:** Accepted
+> **Status:** Superseded by [2026-10-single-claude-setup.md](./2026-10-single-claude-setup.md)
 > **Date:** 2026-10-04
 > **Supersedes:** [2026-08-migrate-to-vercel-labs-skills-ecosystem.md](./2026-08-migrate-to-vercel-labs-skills-ecosystem.md) (installation method and retained-skills list)
 

@@ -2,6 +2,13 @@
   "syncClaudeAiSkills": false,
   "effortLevel": "medium",
   "extraKnownMarketplaces": {
+    "mattpocock": {
+      "source": {
+        "source": "github",
+        "repo": "mattpocock/skills"
+      },
+      "autoUpdate": true
+    },
     "pstack-claude": {
       "source": {
         "source": "github",
@@ -10,7 +17,7 @@
       "autoUpdate": true
     }
   },
-  "model": "sonnet",
+  "model": "opus",
   "permissions": {
     "allow": [
       "Bash(* --version)",
