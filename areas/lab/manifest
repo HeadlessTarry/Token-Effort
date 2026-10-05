@@ -1,8 +1,0 @@
-# One entry per line:
-#   plugin <plugin>@<marketplace> <github-repo>
-#   skill <name>                    local skill from ./skills
-#   extskill <github-repo> <name>   individual external skill
-plugin mattpocock-skills@mattpocock mattpocock/skills
-skill disclose-ai-content
-skill propose-feature
-skill report-bug

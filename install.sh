@@ -1,22 +1,24 @@
 #!/usr/bin/env bash
-# Token-Effort installer: sets up the Lab and Forge agent areas.
+# Token-Effort installer: configures Claude Code in ~/.claude (or $CLAUDE_CONFIG_DIR).
 # Safe to re-run; running it again is how updates happen.
 #
-# Usage: ./install.sh [--persona-lab <name>] [--persona-forge <name>]
-#                     [--ide <none|zed>] [--reconfigure]
+# Usage: ./install.sh [--persona <name>] [--skills <id,...|all>] [--reconfigure]
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-AREAS=(lab forge)
+CONFIG_SRC="$REPO_DIR/config"
+CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+STATE_FILE="$CLAUDE_DIR/.token-effort-state"
 PERSONA_MARKETPLACE="token-effort"
-PROFILE_BEGIN="# >>> token-effort >>>"
-PROFILE_END="# <<< token-effort <<<"
+# Third-party skill sets offered at install, one per line: <id> <plugin>@<marketplace> <github-repo>
+SKILLSETS_AVAILABLE="mattpocock mattpocock-skills@mattpocock mattpocock/skills
+pstack pstack@pstack-claude michael-denyer/pstack-claude"
 
-PERSONA_LAB="" PERSONA_FORGE="" IDE="" RECONFIGURE=0
+PERSONA="" SKILLSETS="" RECONFIGURE=0
 SUMMARY=()
-AREA_NOTES=()
 LAST_PLUGIN_VERSION=""
 NEXT_STEPS=()
+CHOSEN_SKILLSETS=()
 
 if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
   C_BOLD=$'\e[1m' C_DIM=$'\e[2m' C_GREEN=$'\e[32m' C_YELLOW=$'\e[33m' C_RED=$'\e[31m' C_RESET=$'\e[0m'
@@ -31,25 +33,19 @@ ok()      { printf '  %s✔%s %s\n' "$C_GREEN" "$C_RESET" "$*"; }
 warn()    { printf '  %s⚠ %s%s\n' "$C_YELLOW" "$*" "$C_RESET" >&2; }
 die()     { printf '%s💥 %s%s\n' "$C_RED" "$*" "$C_RESET" >&2; exit 1; }
 note()    { SUMMARY+=("$*"); }
-note_area() { local area="$1"; shift; AREA_NOTES+=("$area|$*"); }
-
-area_dir() { local area="$1"; printf '%s/.claude-%s' "$HOME" "$area"; }
-area_emoji() { local area="$1"; case "$area" in lab) printf '🧪' ;; forge) printf '🔨' ;; *) printf '📦' ;; esac; }
-area_title() { local a="$1"; printf '%s%s' "$(printf '%s' "${a:0:1}" | tr '[:lower:]' '[:upper:]')" "${a:1}"; }
 
 usage() {
-  sed -n '2,6p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  sed -n '2,5p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 parse_args() {
   while [[ $# -gt 0 ]]; do
     local flag="$1" value="${2:-}"
     case "$flag" in
-      --persona-lab)   PERSONA_LAB="${value:?--persona-lab needs a value}"; shift 2 ;;
-      --persona-forge) PERSONA_FORGE="${value:?--persona-forge needs a value}"; shift 2 ;;
-      --ide)           IDE="${value:?--ide needs a value}"; shift 2 ;;
-      --reconfigure)   RECONFIGURE=1; shift ;;
-      -h|--help)       usage; exit 0 ;;
+      --persona)     PERSONA="${value:?--persona needs a value}"; shift 2 ;;
+      --skills)      SKILLSETS="${value:?--skills needs a value}"; shift 2 ;;
+      --reconfigure) RECONFIGURE=1; shift ;;
+      -h|--help)     usage; exit 0 ;;
       *) usage >&2; die "unknown argument: $flag" ;;
     esac
   done
@@ -58,29 +54,21 @@ parse_args() {
 # lower <text>: lower-case the text
 lower() { local text="$1"; printf '%s' "$text" | tr '[:upper:]' '[:lower:]'; }
 
-# manifest_entries <area>: manifest lines without comments or blanks
-manifest_entries() {
-  local area="$1"
-  grep -v '^[[:space:]]*#' "$REPO_DIR/areas/$area/manifest" | grep -v '^[[:space:]]*$' || true
+# skillset_entries: the skill set table, one "<id> <plugin> <repo>" line each
+skillset_entries() { printf '%s\n' "$SKILLSETS_AVAILABLE"; }
+
+# ---------- state (key=value file) ----------
+
+state_get() { # key
+  local key="$1"
+  [[ -f "$STATE_FILE" ]] || return 0
+  sed -n "s/^$key=//p" "$STATE_FILE" | tail -n 1
 }
 
-# ---------- state (per-area key=value file) ----------
-
-state_file() { local area="$1"; printf '%s/.install-state' "$(area_dir "$area")"; }
-
-state_get() { # area key
-  local area="$1" key="$2" f
-  f="$(state_file "$area")"
-  [[ -f "$f" ]] || return 0
-  sed -n "s/^$key=//p" "$f" | tail -n 1
-}
-
-state_set() { # area key value
-  local area="$1" key="$2" value="$3" f tmp
-  f="$(state_file "$area")"; tmp="$f.tmp"
-  mkdir -p "$(dirname "$f")"
-  { [[ -f "$f" ]] && grep -v "^$key=" "$f" || true; printf '%s=%s\n' "$key" "$value"; } > "$tmp"
-  mv "$tmp" "$f"
+state_set() { # key value
+  local key="$1" value="$2" tmp="$STATE_FILE.tmp"
+  { [[ -f "$STATE_FILE" ]] && grep -v "^$key=" "$STATE_FILE" || true; printf '%s=%s\n' "$key" "$value"; } > "$tmp"
+  mv "$tmp" "$STATE_FILE"
 }
 
 # ---------- prompts ----------
@@ -103,6 +91,15 @@ choose() {
     done
     printf 'Please pick one of: %s\n' "$*" >&2
   done
+}
+
+# ask <prompt> <default> -> prints the free-text reply (default when no terminal)
+ask() {
+  local prompt="$1" default="$2" reply
+  if ! can_prompt; then printf '%s' "$default"; return; fi
+  printf '%s (default: %s): ' "$prompt" "$default" >&2
+  read -r reply || reply=""
+  printf '%s' "${reply:-$default}"
 }
 
 # ---------- JSON helpers (node is already required for npx) ----------
@@ -139,16 +136,9 @@ run_quiet() {
   fi
 }
 
-# claude_area <area> <command>...: run a command with CLAUDE_CONFIG_DIR pointed at the area
-claude_area() {
-  local area="$1"; shift
-  CLAUDE_CONFIG_DIR="$(area_dir "$area")" "$@" </dev/null
-}
-
-# json_query <area> <claude-subcommand...> -- <node-expression-on-l> <arg>
-# Runs `claude <subcommand> --json` in the area and evaluates a node expression over the parsed list `l`.
+# json_query <claude-subcommand...> -- <node-expression-on-l> <arg>
+# Runs `claude <subcommand> --json` and evaluates a node expression over the parsed list `l`.
 json_query() {
-  local area="$1"; shift
   local -a subcommand=()
   local word
   while [[ $# -gt 0 ]]; do
@@ -157,7 +147,7 @@ json_query() {
     subcommand+=("$word")
   done
   local expr="$1" arg="$2"
-  claude_area "$area" claude "${subcommand[@]}" --json 2>/dev/null | node -e '
+  claude "${subcommand[@]}" --json </dev/null 2>/dev/null | node -e '
     let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
       let l = [];
       try { l = JSON.parse(s); } catch {}
@@ -167,42 +157,49 @@ json_query() {
     });' "$expr" "$arg"
 }
 
-plugin_installed() { # area plugin@marketplace
-  local area="$1" id="$2"
-  json_query "$area" plugin list -- 'process.exit(l.some(p => p.id === arg) ? 0 : 1)' "$id"
+plugin_installed() { # plugin@marketplace
+  local id="$1"
+  json_query plugin list -- 'process.exit(l.some(p => p.id === arg) ? 0 : 1)' "$id"
 }
 
-plugin_version() { # area plugin@marketplace
-  local area="$1" id="$2"
-  json_query "$area" plugin list -- 'const p = l.find(p => p.id === arg); process.stdout.write(p && p.version ? p.version : "unknown")' "$id"
+plugin_version() { # plugin@marketplace
+  local id="$1"
+  json_query plugin list -- 'const p = l.find(p => p.id === arg); process.stdout.write(p && p.version ? p.version : "unknown")' "$id"
 }
 
-marketplace_registered() { # area name
-  local area="$1" name="$2"
-  json_query "$area" plugin marketplace list -- 'process.exit(l.some(m => m.name === arg) ? 0 : 1)' "$name"
+marketplace_registered() { # name
+  local name="$1"
+  json_query plugin marketplace list -- 'process.exit(l.some(m => m.name === arg) ? 0 : 1)' "$name"
 }
 
-ensure_marketplace() { # area name source
-  local area="$1" name="$2" source="$3"
-  marketplace_registered "$area" "$name" && return 0
+ensure_marketplace() { # name source
+  local name="$1" source="$2"
+  marketplace_registered "$name" && return 0
   step "📍 Registering the '$name' marketplace..."
-  run_quiet claude_area "$area" claude plugin marketplace add "$source"
+  run_quiet claude plugin marketplace add "$source" </dev/null
 }
 
-install_or_update_plugin() { # area plugin@marketplace marketplace-name marketplace-source
-  local area="$1" id="$2" market_name="$3" market_source="$4"
-  ensure_marketplace "$area" "$market_name" "$market_source"
-  if plugin_installed "$area" "$id"; then
+install_or_update_plugin() { # plugin@marketplace marketplace-source
+  local id="$1" market_source="$2"
+  ensure_marketplace "${id#*@}" "$market_source"
+  if plugin_installed "$id"; then
     step "🔄 $id is already here, checking for a fresher version..."
-    run_quiet claude_area "$area" claude plugin update "$id"
+    run_quiet claude plugin update "$id" </dev/null
   else
     step "🔌 Installing $id (this one can take a moment)..."
-    run_quiet claude_area "$area" claude plugin install "$id"
+    run_quiet claude plugin install "$id" </dev/null
   fi
   local version
-  version="$(plugin_version "$area" "$id")"
+  version="$(plugin_version "$id")"
   ok "$id is on v$version"
   LAST_PLUGIN_VERSION="$version"
+}
+
+uninstall_plugin_if_present() { # plugin@marketplace label
+  local id="$1" label="$2"
+  plugin_installed "$id" || return 0
+  step "🧹 Retiring $label ($id)..."
+  run_quiet claude plugin uninstall "$id" </dev/null
 }
 
 list_personas() { # prints persona ids, one per line
@@ -212,54 +209,31 @@ list_personas() { # prints persona ids, one per line
   done
 }
 
-installed_personas() { # area -> persona ids currently installed from the token-effort marketplace
-  local area="$1"
-  json_query "$area" plugin list -- 'for (const p of l) if (p.id && p.id.endsWith("@" + arg)) console.log(p.id.split("@")[0])' "$PERSONA_MARKETPLACE"
+installed_personas() { # prints persona ids currently installed from the token-effort marketplace
+  json_query plugin list -- 'for (const p of l) if (p.id && p.id.endsWith("@" + arg)) console.log(p.id.split("@")[0])' "$PERSONA_MARKETPLACE"
 }
 
-# warn_duplicate_skills <area>: individual skills that duplicate an installed plugin of the same repo
-warn_duplicate_skills() {
-  local area="$1" kind a b r
-  local plugin_repos=()
-  while read -r kind a b; do
-    [[ "$kind" = plugin ]] && plugin_repos+=("$b")
-  done < <(manifest_entries "$area")
-  while read -r kind a b; do
-    [[ "$kind" = extskill ]] || continue
-    for r in "${plugin_repos[@]:-}"; do
-      [[ "$r" = "$a" ]] && warn "$area: skill '$b' from $a is also covered by that repo's plugin; you will get two copies"
-    done
-  done < <(manifest_entries "$area")
-}
-
-npx_skills_add() { # area source skill
-  local area="$1" source="$2" skill="$3" dir
-  dir="$(area_dir "$area")"
+npx_skills_add() { # source skill
+  local source="$1" skill="$2"
   step "📚 Copying skill '$skill'..."
-  (cd "$REPO_DIR" && run_quiet env CLAUDE_CONFIG_DIR="$dir" XDG_STATE_HOME="$dir/.skills-state" \
-    npx --yes skills add "$source" --skill "$skill" -g -a claude-code --copy -y </dev/null)
+  (cd "$REPO_DIR" && run_quiet npx --yes skills add "$source" --skill "$skill" -g -a claude-code --copy -y </dev/null)
 }
 
-setup_persona() { # area
-  local area="$1" flag_val saved choice
-  case "$area" in
-    lab)   flag_val="$PERSONA_LAB" ;;
-    forge) flag_val="$PERSONA_FORGE" ;;
-    *)     flag_val="" ;;
-  esac
-  saved="$(state_get "$area" persona)"
+setup_persona() {
+  local saved choice
+  saved="$(state_get persona)"
 
   local options=(Default) id
   while read -r id; do
     [[ -n "$id" ]] && options+=("$id")
   done < <(list_personas)
 
-  if [[ -n "$flag_val" ]]; then
-    choice="$flag_val"
+  if [[ -n "$PERSONA" ]]; then
+    choice="$PERSONA"
   elif [[ -n "$saved" ]] && [[ "$RECONFIGURE" -eq 0 ]]; then
     choice="$saved"
   else
-    choice="$(choose "Persona for $(area_title "$area")" "${saved:-Default}" "${options[@]}")"
+    choice="$(choose "Persona" "${saved:-Default}" "${options[@]}")"
   fi
 
   # normalise case against the known options
@@ -269,187 +243,117 @@ setup_persona() { # area
   done
   [[ -n "$match" ]] || die "unknown persona '$choice' (available: ${options[*]})"
   choice="$match"
-  state_set "$area" persona "$choice"
+  state_set persona "$choice"
 
+  heading "🎭 Persona"
   local keep=""
   if [[ "$choice" = Default ]]; then
-    step "🎭 Persona: Default (no costume, just the facts)"
+    step "Default (no costume, just the facts)"
   else
-    step "🎭 Persona: $choice - putting on the costume"
+    step "$choice - putting on the costume"
     keep="$choice"
-    install_or_update_plugin "$area" "$choice@$PERSONA_MARKETPLACE" "$PERSONA_MARKETPLACE" "$REPO_DIR"
+    install_or_update_plugin "$choice@$PERSONA_MARKETPLACE" "$REPO_DIR"
   fi
   local other
   while read -r other; do
     [[ -n "$other" ]] && [[ "$other" != "$keep" ]] || continue
-    step "🧹 Retiring the old persona '$other'..."
-    run_quiet claude_area "$area" claude plugin uninstall "$other@$PERSONA_MARKETPLACE"
-  done < <(installed_personas "$area")
+    uninstall_plugin_if_present "$other@$PERSONA_MARKETPLACE" "the old persona '$other'"
+  done < <(installed_personas)
   if [[ "$choice" = Default ]]; then
-    note_area "$area" "persona Default"
+    note "🎭 Persona: Default"
   else
-    note_area "$area" "persona $choice (v$LAST_PLUGIN_VERSION)"
+    note "🎭 Persona: $choice (v$LAST_PLUGIN_VERSION)"
   fi
 }
 
-setup_area() { # area
-  local area="$1" dir manifest kind a b skills_installed=0
-  dir="$(area_dir "$area")"
-  manifest="$REPO_DIR/areas/$area/manifest"
-  heading "$(area_emoji "$area") Setting up $(area_title "$area") ($dir)"
-  mkdir -p "$dir"
-  step "⚙️  Merging settings and starter permissions (your own entries stay put)..."
-  json_merge "$dir/settings.json" "$REPO_DIR/areas/$area/settings.json"
+# skillset_ids: prints the skill set ids, one per line
+skillset_ids() {
+  local id rest
+  while read -r id rest; do printf '%s\n' "$id"; done < <(skillset_entries)
+}
+
+# choose_skillsets: fills CHOSEN_SKILLSETS from the flag, saved state or a prompt
+choose_skillsets() {
+  local -a known=()
+  local id
+  while read -r id; do known+=("$id"); done < <(skillset_ids)
+  local all saved reply
+  all="$(IFS=,; printf '%s' "${known[*]}")"
+  saved="$(state_get skillsets)"
+
+  if [[ -n "$SKILLSETS" ]]; then
+    reply="$SKILLSETS"
+  elif [[ -n "$saved" ]] && [[ "$RECONFIGURE" -eq 0 ]]; then
+    reply="$saved"
+  else
+    reply="$(ask "Skill sets to install (comma-separated: $all, or 'all')" "${saved:-all}")"
+  fi
+  [[ "$(lower "$reply")" = all ]] && reply="$all"
+
+  CHOSEN_SKILLSETS=()
+  local wanted k match
+  for wanted in ${reply//,/ }; do
+    match=""
+    for k in "${known[@]}"; do
+      [[ "$(lower "$k")" = "$(lower "$wanted")" ]] && match="$k"
+    done
+    [[ -n "$match" ]] || die "unknown skill set '$wanted' (available: $all, all)"
+    CHOSEN_SKILLSETS+=("$match")
+  done
+  [[ "${#CHOSEN_SKILLSETS[@]}" -gt 0 ]] || die "pick at least one skill set (available: $all, all)"
+  state_set skillsets "$(IFS=,; printf '%s' "${CHOSEN_SKILLSETS[*]}")"
+}
+
+skillset_chosen() { # id
+  local id="$1" c
+  for c in "${CHOSEN_SKILLSETS[@]:-}"; do [[ "$c" = "$id" ]] && return 0; done
+  return 1
+}
+
+setup_skillsets() {
+  heading "🧰 Skill sets"
+  local id plugin repo
+  while read -r id plugin repo; do
+    if skillset_chosen "$id"; then
+      install_or_update_plugin "$plugin" "$repo"
+      note "🧰 Skill set: $id ($plugin v$LAST_PLUGIN_VERSION)"
+    else
+      uninstall_plugin_if_present "$plugin" "the '$id' skill set"
+    fi
+  done < <(skillset_entries)
+}
+
+setup_skills() {
+  heading "📚 Home-grown skills"
+  local d name
+  for d in "$REPO_DIR"/skills/*/; do
+    [[ -f "$d/SKILL.md" ]] || continue
+    name="$(basename "$d")"
+    npx_skills_add "$REPO_DIR/skills" "$name"
+    note "📚 Skill: $name"
+  done
+  ok "Skills installed"
+}
+
+setup_config() {
+  heading "⚙️  Settings and instructions ($CLAUDE_DIR)"
+  step "Merging settings and starter permissions (your own entries stay put)..."
+  json_merge "$CLAUDE_DIR/settings.json" "$CONFIG_SRC/settings.json"
   ok "Settings merged"
-  note_area "$area" "settings merged into $dir/settings.json"
-  step "📜 Installing area instructions (AGENTS.md is replaced on every run)..."
-  cp "$REPO_DIR/areas/$area/AGENTS.md" "$dir/AGENTS.md"
+  note "⚙️  Settings merged into $CLAUDE_DIR/settings.json"
+  step "Installing instructions (AGENTS.md is replaced on every run)..."
+  cp "$CONFIG_SRC/AGENTS.md" "$CLAUDE_DIR/AGENTS.md"
   ok "Instructions installed"
-  note_area "$area" "instructions in $dir/AGENTS.md"
-
-  setup_persona "$area"
-  warn_duplicate_skills "$area"
-
-  while read -r kind a b; do
-    case "$kind" in
-      plugin)
-        install_or_update_plugin "$area" "$a" "${a#*@}" "$b"
-        note_area "$area" "plugin $a v$LAST_PLUGIN_VERSION" ;;
-      skill)
-        npx_skills_add "$area" "$REPO_DIR/skills" "$a"
-        skills_installed=$((skills_installed + 1))
-        note_area "$area" "skill $a" ;;
-      extskill)
-        npx_skills_add "$area" "$a" "$b"
-        skills_installed=$((skills_installed + 1))
-        note_area "$area" "skill $b (from $a)" ;;
-      *) warn "ignoring unknown manifest entry '$kind' in $manifest" ;;
-    esac
-  done < <(manifest_entries "$area")
-
-  if [[ "$skills_installed" -gt 0 ]]; then
-    ok "Skills installed"
-  fi
-
-  if [[ ! -f "$dir/.credentials.json" ]]; then
-    NEXT_STEPS+=("Run claude-$area and log in (not logged in yet).")
-    step "🔑 Not logged in yet - that's one for later"
-  else
-    ok "Already logged in"
-  fi
+  note "📜 Instructions in $CLAUDE_DIR/AGENTS.md"
 }
 
-install_claude_code() {
+check_prerequisites() {
   command -v claude >/dev/null || die "Can't find the claude CLI on your PATH. Install Claude Code first, then come back!"
   command -v node   >/dev/null || die "Can't find node on your PATH. It's needed for npx and the JSON edits."
-  local area
-  for area in "${AREAS[@]}"; do
-    setup_area "$area"
-  done
-}
-
-# ---------- shell functions ----------
-
-write_shell_functions() {
-  local profile="${TOKEN_EFFORT_PROFILE:-$HOME/.bashrc}"
-  local block
-  block="$PROFILE_BEGIN
-claude-lab()   { CLAUDE_CONFIG_DIR=\"\$HOME/.claude-lab\" claude \"\$@\"; }
-claude-forge() { CLAUDE_CONFIG_DIR=\"\$HOME/.claude-forge\" claude \"\$@\"; }
-$PROFILE_END"
-  heading "🐚 Shell functions"
-  step "Writing claude-lab and claude-forge into $profile..."
-  touch "$profile"
-  # Git Bash login shells read ~/.bash_profile; make sure it sources ~/.bashrc
-  if [[ -z "${TOKEN_EFFORT_PROFILE:-}" ]] && [[ -f "$HOME/.bash_profile" ]] && ! grep -q bashrc "$HOME/.bash_profile"; then
-    warn "~/.bash_profile does not source ~/.bashrc; the claude-lab/claude-forge functions may not load in login shells"
+  if [[ ! -d "$CLAUDE_DIR" ]]; then
+    warn "$CLAUDE_DIR doesn't exist yet; creating it (run claude afterwards to log in)"
+    mkdir -p "$CLAUDE_DIR"
   fi
-  local tmp="$profile.token-effort.tmp"
-  awk -v b="$PROFILE_BEGIN" -v e="$PROFILE_END" '
-    $0 == b { skip = 1; next }
-    $0 == e { skip = 0; next }
-    !skip
-  ' "$profile" > "$tmp"
-  printf '%s\n' "$block" >> "$tmp"
-  mv "$tmp" "$profile"
-  ok "claude-lab and claude-forge are ready (open a new shell to use them)"
-  note "🐚 Shell functions: claude-lab and claude-forge written to $profile"
-}
-
-# ---------- IDEs ----------
-
-zed_settings_path() {
-  if [[ -n "${TOKEN_EFFORT_ZED_SETTINGS:-}" ]]; then printf '%s' "$TOKEN_EFFORT_ZED_SETTINGS"; return; fi
-  case "$(uname -s)" in
-    MINGW*|MSYS*|CYGWIN*) printf '%s/Zed/settings.json' "${APPDATA:-$HOME/AppData/Roaming}" ;;
-    Darwin) printf '%s/.config/zed/settings.json' "$HOME" ;;
-    *) printf '%s/zed/settings.json' "${XDG_CONFIG_HOME:-$HOME/.config}" ;;
-  esac
-}
-
-configure_ide_zed() {
-  local settings npx_cmd=npx
-  settings="$(zed_settings_path)"
-  step "Adding 'Lab' and 'Forge' agents to Zed ($settings)..."
-  case "$(uname -s)" in
-    MINGW*|MSYS*|CYGWIN*) npx_cmd=npx.cmd ;;
-    *) ;;
-  esac
-  mkdir -p "$(dirname "$settings")"
-  local rc=0 home_native="$HOME"
-  command -v cygpath >/dev/null && home_native="$(cygpath -m "$HOME")"
-  node - "$settings" "$home_native" "$npx_cmd" <<'NODE' || rc=$?
-const fs = require('fs');
-const [file, home, npx] = process.argv.slice(2);
-const strip = (t) => { // remove // and /* */ comments (outside strings) and trailing commas
-  let out = '', i = 0, str = false;
-  while (i < t.length) {
-    const c = t[i], n = t[i + 1];
-    if (str) { out += c; if (c === '\\') { out += n; i += 2; continue; } if (c === '"') str = false; i++; continue; }
-    if (c === '"') { str = true; out += c; i++; continue; }
-    if (c === '/' && n === '/') { while (i < t.length && t[i] !== '\n') i++; continue; }
-    if (c === '/' && n === '*') { i += 2; while (i < t.length && !(t[i] === '*' && t[i + 1] === '/')) i++; i += 2; continue; }
-    out += c; i++;
-  }
-  return out.replace(/,(\s*[}\]])/g, '$1');
-};
-const raw = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
-const hasComments = strip(raw) !== raw.replace(/,(\s*[}\]])/g, '$1');
-const entry = (area) => ({ type: 'custom', command: npx, args: ['-y', '@agentclientprotocol/claude-agent-acp@latest'], env: { CLAUDE_CONFIG_DIR: `${home}/.claude-${area}` } });
-const servers = { Lab: entry('lab'), Forge: entry('forge') };
-if (hasComments) {
-  console.error(`Zed settings at ${file} contain comments, so they were left untouched.`);
-  console.error('Add this under "agent_servers" by hand:');
-  console.error(JSON.stringify(servers, null, 2));
-  process.exit(3);
-}
-const cfg = raw.trim() ? JSON.parse(strip(raw)) : {};
-cfg.agent_servers = Object.assign(cfg.agent_servers || {}, servers);
-fs.writeFileSync(file, JSON.stringify(cfg, null, 2) + '\n');
-NODE
-  if [[ "$rc" -eq 0 ]]; then
-    ok "Zed knows about both agents now"
-    note "🖥️  IDE: Zed agents (Lab, Forge) configured in $settings"
-  else
-    note "🖥️  IDE: Zed settings contain comments, snippet printed above for manual edit"
-    # first in the list: the other steps are no use in Zed until this is done
-    NEXT_STEPS=("Copy the Zed agent snippet printed above into the \"agent_servers\" block of $settings." "${NEXT_STEPS[@]:-}")
-  fi
-}
-
-configure_ide() {
-  local saved choice
-  saved="$(state_get lab ide)"
-  if [[ -n "$IDE" ]]; then choice="$IDE"
-  elif [[ -n "$saved" ]] && [[ "$RECONFIGURE" -eq 0 ]]; then choice="$saved"
-  else choice="$(choose "Configure IDE agents?" "${saved:-none}" none zed)"; fi
-  state_set lab ide "$choice"
-  heading "🖥️  IDE agents"
-  case "$choice" in
-    none) step "Skipping IDE setup"; note "🖥️  IDE: none" ;;
-    zed)  configure_ide_zed || true ;;
-    *)    die "unknown IDE '$choice' (available: none, zed)" ;;
-  esac
 }
 
 # ---------- checks and summary ----------
@@ -464,30 +368,31 @@ warn_update_blockers() {
 
 print_summary() {
   heading "🎉 All done! Here's what happened"
-  local area entry s
-  for area in "${AREAS[@]}"; do
-    log "  - $(area_emoji "$area") $(area_title "$area")"
-    for entry in "${AREA_NOTES[@]:-}"; do
-      [[ "${entry%%|*}" = "$area" ]] && log "      - ${entry#*|}"
-    done
-  done
+  local s
   for s in "${SUMMARY[@]:-}"; do [[ -n "$s" ]] && log "  - $s"; done
   heading "👉 Your next steps"
   for s in "${NEXT_STEPS[@]:-}"; do [[ -n "$s" ]] && log "  - $s"; done
-  log "  - Once in Forge: run /setup-pstack (re-run after big model changes)."
-  log "  - Once per repo, in a Lab session: /setup-matt-pocock-skills"
-  log "  - Once per repo, in a Forge session: /create-verification-skill"
-  log "  - Restart running sessions and Zed threads to pick up changes."
+  if skillset_chosen pstack; then
+    log "  - Run /setup-pstack (re-run after big model changes)."
+    log "  - Once per repo: /create-verification-skill"
+  fi
+  if skillset_chosen mattpocock; then
+    log "  - Once per repo: /setup-matt-pocock-skills"
+  fi
+  log "  - Restart running sessions to pick up changes."
 }
 
 main() {
   parse_args "$@"
-  log "$C_BOLD🪙 Token Effort: setting up your Lab and Forge$C_RESET"
+  log "$C_BOLD🪙 Token Effort: configuring Claude Code in $CLAUDE_DIR$C_RESET"
   log "$C_DIM   Safe to re-run any time. Re-running is how you update.$C_RESET"
+  check_prerequisites
   warn_update_blockers
-  install_claude_code   # one step per platform; add install_opencode etc. here
-  write_shell_functions
-  configure_ide
+  choose_skillsets
+  setup_config
+  setup_persona
+  setup_skillsets
+  setup_skills
   print_summary
 }
 
