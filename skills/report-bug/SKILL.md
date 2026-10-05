@@ -19,7 +19,7 @@ Guides the user through filing a well-structured GitHub bug report. Discovers an
 
 **Do not use when:**
 - The user wants to file a feature request — use `/propose-feature` instead
-- The issue already exists on GitHub — use `/brainstorming-gh-issue` to turn it into a design spec instead
+- The issue already exists on GitHub — use `/triage` to categorize and route it instead
 
 ## Prerequisites
 
