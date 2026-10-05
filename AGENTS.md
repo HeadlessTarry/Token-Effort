@@ -10,7 +10,7 @@ Five canonical labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-f
 
 ### Domain docs
 
-Single-context layout — one `CONTEXT.md` at root, ADRs in `docs/adr/`. See `docs/agents/domain.md`.
+Single-context layout: one `GLOSSARY.md` at root, ADRs in `docs/adr/`. See `docs/agents/domain.md`.
 
 ### Changing skills
 
