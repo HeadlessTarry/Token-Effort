@@ -1,8 +1,8 @@
-# 2026-10-single-claude-setup
+# 0003-single-claude-setup
 
 > **Status:** Accepted
 > **Date:** 2026-10-05
-> **Supersedes:** [2026-10-lab-forge-agent-areas.md](./2026-10-lab-forge-agent-areas.md)
+> **Supersedes:** [0002-lab-forge-agent-areas.md](./0002-lab-forge-agent-areas.md)
 
 ## Context
 

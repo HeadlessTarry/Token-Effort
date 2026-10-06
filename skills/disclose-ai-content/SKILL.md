@@ -1,7 +1,6 @@
 ---
 name: disclose-ai-content
 description: Always apply when creating or editing GitHub issues, pull requests, or comments. Prepends a visual banner to AI-generated or AI-edited content.
-user-invocable: false
 ---
 
 # ✨ Disclose AI-Generated Content
@@ -10,7 +9,7 @@ user-invocable: false
 
 Automatically prepends a visual banner to any GitHub content that was AI-generated or AI-edited. This ensures readers know before they start reading whether the content was created by a human or an agent.
 
-**Not user-invocable.** This skill activates automatically whenever an agent creates or edits GitHub issues, pull requests, or comments.
+This skill activates automatically whenever an agent creates or edits GitHub issues, pull requests, or comments.
 
 ## When to Use
 

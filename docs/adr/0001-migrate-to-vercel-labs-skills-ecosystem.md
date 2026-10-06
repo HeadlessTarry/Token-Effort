@@ -1,6 +1,6 @@
-# 2026-08-migrate-to-vercel-labs-skills-ecosystem
+# 0001-migrate-to-vercel-labs-skills-ecosystem
 
-> **Status:** Superseded by [2026-10-lab-forge-agent-areas.md](./2026-10-lab-forge-agent-areas.md)
+> **Status:** Superseded by [0002-lab-forge-agent-areas.md](./0002-lab-forge-agent-areas.md)
 > **Issues:** [#192 — Adopt vercel-labs/skills for skill installation](https://github.com/HeadlessTarry/Token-Effort/issues/192), [#199 — Migrate Token-Effort from Superpowers to Matt Pocock skills ecosystem](https://github.com/HeadlessTarry/Token-Effort/issues/199)
 > **Date:** 2026-08-08
 > **Supersedes:** 2026-07-vendor-dependency-install-system
