@@ -30,6 +30,11 @@ repos:
         entry: python scripts/check_positional_params.py
         language: python
         types: [shell]
+      - id: shell-header
+        name: Check shell script header
+        entry: python scripts/check_shell_header.py
+        language: python
+        types: [shell]
       - id: markdown-links
         name: Check relative Markdown links
         entry: python scripts/check_md_links.py

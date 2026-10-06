@@ -1,6 +1,5 @@
-#!/bin/bash
-set -e
-set -o pipefail
+#!/usr/bin/env bash
+set -euo pipefail
 
 echo "✅ Running pre-commit checks..."
 # no-commit-to-branch guards commits, not code; skip it so checks also pass on main.
