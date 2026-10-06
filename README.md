@@ -56,13 +56,18 @@ To add one, create `personas/<id>/` and add a `marketplace.json` entry. No scrip
 
 ```
 install.sh           → installer and updater
+setup_dev_env.sh     → installs git hooks for local development
+run_checks.sh        → local and CI checks (pre-commit)
+scripts/             → custom check scripts used by pre-commit
 .claude-plugin/      → marketplace "token-effort" (personas)
 config/              → settings.json merged into ~/.claude, AGENTS.md instructions
 personas/<id>/       → persona plugins
 skills/              → home-grown skills
-docs/                → ADRs and agent docs
+docs/                → ADRs, agent docs and developer docs
 ```
 
 ## 🤝 Contributing
 
-All changes to skill files use mattpocock's `writing-for-agents` skill, and skills are verified with pstack's `eval` playbook. See `AGENTS.md`.
+All changes to skill files use mattpocock's `writing-for-agents` skill. See `AGENTS.md`.
+
+Run `./setup_dev_env.sh` once per clone to install the git hooks, and `./run_checks.sh` before pushing. See [Development Environment](docs/development_environment.md) and [Running Checks](docs/running-checks.md).
