@@ -17,6 +17,7 @@ Pre-commit hooks on all files (see [.pre-commit-config.yaml](../.pre-commit-conf
 | `shellcheck` | Shell scripts, plus `[[ ]]` over `[ ]` and a default `*)` branch in every `case` |
 | `bash-syntax` | Shell scripts parse (`bash -n`) |
 | `positional-params` | `$1`..`$9` are only read to assign a named variable ([scripts/check_positional_params.py](../scripts/check_positional_params.py)) |
+| `shell-header` | Shell scripts open with `#!/usr/bin/env bash` and their first statement is `set -euo pipefail` ([scripts/check_shell_header.py](../scripts/check_shell_header.py)) |
 | `markdown-links` | Relative Markdown links point at files that exist; offline, URLs are not fetched ([scripts/check_md_links.py](../scripts/check_md_links.py)) |
 
 These hooks run on commit only, once installed by `./setup_dev_env.sh`:

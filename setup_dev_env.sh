@@ -1,6 +1,5 @@
-#!/bin/bash
-set -e
-set -o pipefail
+#!/usr/bin/env bash
+set -euo pipefail
 
 option="${1:-}"
 
