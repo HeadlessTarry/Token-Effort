@@ -16,6 +16,8 @@ Single-context layout: one `GLOSSARY.md` at root, ADRs in `docs/adr/`. See `docs
 
 All changes to skill files use mattpocock's `writing-for-agents` skill.
 
-### Checks
+### Local development
 
-Run `./run_checks.sh` before pushing; CI runs the same script.
+**Before making changes:** create a worktree, then run `./setup_dev_env.sh`. See `docs/development_environment.md` when setting up or troubleshooting local dev.
+
+**Before committing:** run `./run_checks.sh` and fix all failures. See `docs/running-checks.md` for what each check validates.
