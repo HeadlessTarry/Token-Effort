@@ -32,8 +32,11 @@ def main(paths: list[str]) -> int:
         if not resolved.is_relative_to(root):
             print(f"{path}: outside the repository, skipped")
             continue
-        with open(resolved, encoding="utf-8") as handle:
-            reason = check(handle.read().splitlines())
+        try:
+            with open(resolved, encoding="utf-8") as handle:
+                reason = check(handle.read().splitlines())
+        except UnicodeDecodeError:
+            reason = "not valid UTF-8"
         if reason:
             print(f"{path}: {reason}")
             failed = True
