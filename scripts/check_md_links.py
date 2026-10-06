@@ -27,9 +27,14 @@ def broken_links(path: Path) -> list[tuple[int, str]]:
 
 
 def main(paths: list[str]) -> int:
+    root = Path.cwd().resolve()
     failed = False
     for name in paths:
-        for number, target in broken_links(Path(name)):
+        path = (root / name).resolve()
+        if not path.is_relative_to(root):
+            print(f"{name}: outside the repository, skipped")
+            continue
+        for number, target in broken_links(path):
             print(f"{name}:{number}: broken link {target}")
             failed = True
     return 1 if failed else 0

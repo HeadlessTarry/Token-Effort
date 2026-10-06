@@ -6,15 +6,21 @@ into named (local) variables before use.
 
 import re
 import sys
+from pathlib import Path
 
 POSITIONAL = re.compile(r"\$\{?[1-9]")
 ASSIGNMENT = re.compile(r"\b\w+=\"?\$\{?[1-9][^\"\s;]*\"?")
 
 
 def main(paths: list[str]) -> int:
+    root = Path.cwd().resolve()
     failed = False
     for path in paths:
-        with open(path, encoding="utf-8") as handle:
+        resolved = (root / path).resolve()
+        if not resolved.is_relative_to(root):
+            print(f"{path}: outside the repository, skipped")
+            continue
+        with open(resolved, encoding="utf-8") as handle:
             for number, line in enumerate(handle, start=1):
                 if line.lstrip().startswith("#"):
                     continue
