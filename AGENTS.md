@@ -18,6 +18,6 @@ All changes to skill files use mattpocock's `writing-for-agents` skill.
 
 ### Local development
 
-**Before making changes:** create a worktree, then run `./setup_dev_env.sh`. See `docs/development_environment.md` when setting up or troubleshooting local dev.
+**Before making changes:** run `./setup_dev_env.sh --skip-checks`. See `docs/development_environment.md` when setting up or troubleshooting local dev.
 
 **Before committing:** run `./run_checks.sh` and fix all failures. See `docs/running-checks.md` for what each check validates.
