@@ -1,6 +1,9 @@
 {
   "syncClaudeAiSkills": false,
   "effortLevel": "medium",
+  "env": {
+    "PYTHONUTF8": "1"
+  },
   "extraKnownMarketplaces": {
     "mattpocock": {
       "source": {

@@ -56,6 +56,8 @@ To add one, create `personas/<id>/` and add a `marketplace.json` entry. No scrip
 
 ```
 install.sh           → installer and updater
+run_checks.sh        → local and CI checks (pre-commit)
+scripts/             → custom check scripts used by pre-commit
 .claude-plugin/      → marketplace "token-effort" (personas)
 config/              → settings.json merged into ~/.claude, AGENTS.md instructions
 personas/<id>/       → persona plugins
@@ -65,4 +67,10 @@ docs/                → ADRs and agent docs
 
 ## 🤝 Contributing
 
-All changes to skill files use mattpocock's `writing-for-agents` skill, and skills are verified with pstack's `eval` playbook. See `AGENTS.md`.
+All changes to skill files use mattpocock's `writing-for-agents` skill. See `AGENTS.md`.
+
+Run `./run_checks.sh` before pushing; CI runs the same script. It needs [uv](https://docs.astral.sh/uv/). To also check each commit (no commits to `main`, commit message format), install the hooks once per clone:
+
+```bash
+uvx pre-commit install
+```

@@ -14,4 +14,8 @@ Single-context layout: one `GLOSSARY.md` at root, ADRs in `docs/adr/`. See `docs
 
 ### Changing skills
 
-All changes to skill files use mattpocock's `writing-for-agents` skill, and skills are verified with pstack's `eval` playbook.
+All changes to skill files use mattpocock's `writing-for-agents` skill.
+
+### Checks
+
+Run `./run_checks.sh` before pushing; CI runs the same script.

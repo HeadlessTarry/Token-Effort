@@ -1,0 +1,42 @@
+---
+default_install_hook_types: [pre-commit, commit-msg]
+
+repos:
+  # Git
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: no-commit-to-branch
+        args: [--branch, main]
+
+  # Shell
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: [--enable=require-double-brackets, --enable=add-default-case]
+
+  # Local hooks
+  - repo: local
+    hooks:
+      - id: bash-syntax
+        name: Check Bash syntax
+        entry: bash -n
+        language: system
+        types: [shell]
+      - id: positional-params
+        name: Check positional parameters are assigned to locals
+        entry: python scripts/check_positional_params.py
+        language: python
+        types: [shell]
+      - id: markdown-links
+        name: Check relative Markdown links
+        entry: python scripts/check_md_links.py
+        language: python
+        types: [markdown]
+      - id: commit-msg-format
+        name: Check commit message format
+        entry: '\A(feat|fix|docs|chore): \S'
+        language: pygrep
+        args: [--multiline, --negate]
+        stages: [commit-msg]
