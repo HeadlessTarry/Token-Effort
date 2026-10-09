@@ -16,6 +16,18 @@
 - **Icons for markdown headers**: When editing markdown (`*.md`) insert relevant unicode icons at the start of any level 1/2 headers (e.g. `# 🂡 Level 1` or `## 🂢 Level 2`)
 - **Icons for CI/CD workflows**: When editing CI/CD workflows (e.g. GitHub actions) insert relevant unicode icons at the start of display names (e.g. `⤵️ Checkout repository`)
 
+## 🧭 Working Conventions
+
+These conventions are the same in every repo. Repos do not carry their own copies and must not create them.
+
+### Issue tracker
+
+Issues live in GitHub Issues. Where a skill refers to `docs/agents/issue-tracker.md`, use `$AI_CONFIG_DIR/docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Five canonical labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. Where a skill refers to `docs/agents/triage-labels.md`, use `$AI_CONFIG_DIR/docs/agents/triage-labels.md`.
+
 ## 🪟 Windows Shell Gotchas
 
 - **Temp paths**: Git Bash's `/tmp` is not Node's or Python's `/tmp` (they resolve it as `C:\tmp`). Pass paths to them through `cygpath -w`, or use a repo-local temp file.

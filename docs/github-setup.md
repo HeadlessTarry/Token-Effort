@@ -56,7 +56,7 @@ Copy them into a repository to use them there.
 
 ## 5. Triage labels and tracker config
 
-The `mattpocock` skill set reads per-repo config from `docs/agents/`. Run `/setup-matt-pocock-skills` once per repository to create it. This repository's own files are in [`docs/agents/`](agents/) as an example, including the five triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`).
+`install.sh` installs the issue-tracker and triage-label docs (the five labels `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) once per user, from [`config/docs/agents/`](../config/docs/agents/). Repos do not carry their own copies. In each repository, run `/setup-matt-pocock-skills` and accept only the domain docs.
 
 With the `pstack` skill set, run `/create-verification-skill` once per repository.
 
