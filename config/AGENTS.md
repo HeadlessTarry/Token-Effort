@@ -18,15 +18,15 @@
 
 ## 🧭 Working Conventions
 
-These conventions are the same in every repo. Repos do not carry their own copies and must not create them.
+These conventions are the same in every repo, and the copies in `$AI_CONFIG_DIR/docs/agents/` are the single source. When a skill refers to `docs/agents/issue-tracker.md` or `docs/agents/triage-labels.md`, read the installed copy; a repo's own `docs/agents/` holds only repo conventions such as `domain.md`.
 
 ### Issue tracker
 
-Issues live in GitHub Issues. Where a skill refers to `docs/agents/issue-tracker.md`, use `$AI_CONFIG_DIR/docs/agents/issue-tracker.md`.
+Issues live in GitHub Issues. See `$AI_CONFIG_DIR/docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
-Five canonical labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. Where a skill refers to `docs/agents/triage-labels.md`, use `$AI_CONFIG_DIR/docs/agents/triage-labels.md`.
+Five canonical labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `$AI_CONFIG_DIR/docs/agents/triage-labels.md`.
 
 ## 🪟 Windows Shell Gotchas
 
