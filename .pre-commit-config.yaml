@@ -40,6 +40,12 @@ repos:
         entry: python scripts/check_md_links.py
         language: python
         types: [markdown]
+      - id: skill-spec
+        name: Check SKILL.md against the Agent Skills spec
+        entry: python scripts/check_skill_spec.py
+        language: python
+        additional_dependencies: [skills-ref==0.1.1]
+        files: ^skills/[^/]+/SKILL\.md$
       - id: commit-msg-format
         name: Check commit message format
         entry: '\A(feat|fix|docs|chore): \S'
