@@ -7,7 +7,15 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_SRC="$REPO_DIR/config"
-CLAUDE_DIR="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+# platform_config_dir <platform>: the platform's config root (its env var, else its default dir)
+platform_config_dir() {
+  local platform="$1"
+  case "$platform" in
+    claude) printf '%s' "${CLAUDE_CONFIG_DIR:-$HOME/.claude}" ;;
+    *) printf 'unknown platform: %s\n' "$platform" >&2; return 1 ;;
+  esac
+}
+CLAUDE_DIR="$(platform_config_dir claude)"
 STATE_FILE="$CLAUDE_DIR/.token-effort-state"
 PERSONA_MARKETPLACE="token-effort"
 # Third-party skill sets offered at install, one per line: <id> <plugin>@<marketplace> <github-repo>
@@ -335,6 +343,14 @@ setup_skills() {
   ok "Skills installed"
 }
 
+# install_with_config_dir <source> <target> <config-dir>: write source to target, replacing $AI_CONFIG_DIR with config-dir
+install_with_config_dir() {
+  local source="$1" target="$2" config_dir="$3" content
+  content="$(<"$source")"
+  mkdir -p "$(dirname "$target")"
+  printf '%s\n' "${content//\$AI_CONFIG_DIR/$config_dir}" > "$target"
+}
+
 setup_config() {
   heading "⚙️  Settings and instructions ($CLAUDE_DIR)"
   step "Merging settings and starter permissions (your own entries stay put)..."
@@ -342,9 +358,16 @@ setup_config() {
   ok "Settings merged"
   note "⚙️  Settings merged into $CLAUDE_DIR/settings.json"
   step "Installing instructions (AGENTS.md is replaced on every run)..."
-  cp "$CONFIG_SRC/AGENTS.md" "$CLAUDE_DIR/AGENTS.md"
+  install_with_config_dir "$CONFIG_SRC/AGENTS.md" "$CLAUDE_DIR/AGENTS.md" "$CLAUDE_DIR"
   ok "Instructions installed"
   note "📜 Instructions in $CLAUDE_DIR/AGENTS.md"
+  step "Installing working-convention docs (replaced on every run)..."
+  local doc
+  for doc in "$CONFIG_SRC"/docs/agents/*.md; do
+    install_with_config_dir "$doc" "$CLAUDE_DIR/docs/agents/$(basename "$doc")" "$CLAUDE_DIR"
+  done
+  ok "Working-convention docs installed"
+  note "📋 Issue-tracker and triage-label docs in $CLAUDE_DIR/docs/agents/"
 }
 
 check_prerequisites() {
@@ -377,7 +400,7 @@ print_summary() {
     log "  - Once per repo: /create-verification-skill"
   fi
   if skillset_chosen mattpocock; then
-    log "  - Once per repo: /setup-matt-pocock-skills"
+    log "  - Once per repo: /setup-matt-pocock-skills (accept only the domain docs)"
   fi
   log "  - Restart running sessions to pick up changes."
 }

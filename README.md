@@ -35,9 +35,9 @@ It configures `~/.claude`, or `$CLAUDE_CONFIG_DIR` when that is set. If the dire
 
 Starter settings and permissions come from `config/settings.json`. Re-runs add any new entries and keep your own; entries you remove will come back, so edit `config/settings.json` to change the baseline.
 
-Standing instructions come from `config/AGENTS.md`, copied to `~/.claude/AGENTS.md` on every run, so edit the repo copy rather than the installed one.
+Standing instructions come from `config/AGENTS.md`, and the issue-tracker and triage-label docs from `config/docs/agents/`. Every run replaces `~/.claude/AGENTS.md` and `~/.claude/docs/agents/*.md` with these, so edit the repo copies rather than the installed ones. `$AI_CONFIG_DIR` in them becomes the config directory.
 
-It ends with a list of next steps (`/setup-pstack`, and `/setup-matt-pocock-skills` or `/create-verification-skill` once per repo, depending on your skill sets). It never runs slash commands itself.
+It ends with a list of next steps (`/setup-pstack`, and `/setup-matt-pocock-skills` (accept only the domain docs) or `/create-verification-skill` once per repo, depending on your skill sets). It never runs slash commands itself.
 
 ### Prerequisites
 
