@@ -52,7 +52,7 @@ An overhaul mod is one Claude Code plugin that reskins Claude Code around a sing
 
 | Overhaul mod | What you get |
 |--------------|--------------|
-| `under-empire` | The `Warlock Engineer` output style (a scheming Skaven voice for prose, plain professional artefacts) and a reminder hook that keeps the voice on |
+| [`under-empire`](overhaul-mods/under-empire/README.md) | The `Warlock Engineer` output style (a scheming Skaven voice for prose, plain professional artefacts), a reminder hook that keeps the voice on, and the Underlings pane, which shows running subagents and background tasks as Skaven rats |
 
 To add one, create `overhaul-mods/<id>/` with a `.claude-plugin/plugin.json` and add a `marketplace.json` entry. No script change is needed. Bump the plugin `version` when you edit an overhaul mod, otherwise `claude plugin update` may not refresh the cached copy.
 
