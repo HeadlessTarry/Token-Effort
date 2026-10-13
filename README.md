@@ -48,7 +48,7 @@ It ends with a list of next steps (`/setup-pstack`, and `/setup-matt-pocock-skil
 
 ## 🎭 Overhaul mods
 
-An overhaul mod is one Claude Code plugin that reskins Claude Code around a single theme, bundling several features such as an output style and mods (see [GLOSSARY.md](GLOSSARY.md)). Pick one during install, or `none`. It is all-or-nothing: you get the whole overhaul mod or none of it, and choosing one uninstalls any other plugin from the local `token-effort` marketplace (`.claude-plugin/marketplace.json`).
+An overhaul mod is one Claude Code plugin that reskins Claude Code around a single theme by bundling several features, such as an output style and a hook (see [GLOSSARY.md](GLOSSARY.md)). Pick one during install, or `none`. It is all-or-nothing: you get the whole overhaul mod or none of it, and choosing one uninstalls any other plugin from the local `token-effort` marketplace (`.claude-plugin/marketplace.json`).
 
 | Overhaul mod | What you get |
 |--------------|--------------|

@@ -6,7 +6,7 @@
 
 ## Context
 
-A persona was a tiny plugin holding an output style and a reminder hook. The Skaven theme is growing beyond a voice into mods that change Claude Code's own interface (see #225). "Persona" describes only the voice, so it no longer fits a plugin that reskins Claude Code around a theme.
+A persona was a tiny plugin holding an output style and a reminder hook. "Persona" describes only a voice, so it does not fit a plugin meant to reskin Claude Code around a theme, which may include mods that change Claude Code's own interface.
 
 ## Decision
 
@@ -22,3 +22,6 @@ Retire personas. Ship themes as **overhaul mods** (see [GLOSSARY.md](../../GLOSS
 - New themes and mods need no installer change: add a folder and a marketplace entry.
 - An overhaul mod can grow features without new install flags; the cost is no per-feature choice.
 - Scripts or habits using `--persona` break and must switch to `--overhaul`.
+- Platform scope: Claude Code only (plugins, output styles and hooks are Claude Code features). Scope is limited to `under-empire`, which ships an output style and a reminder hook; mods may follow.
+- Limitation: a saved `persona` value other than `skaven` or `Default` is dropped, and the overhaul choice falls back to `none`.
+- Limitation: only one overhaul mod can be active at a time.
