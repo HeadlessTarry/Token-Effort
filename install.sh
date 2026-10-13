@@ -2,7 +2,7 @@
 # Token-Effort installer: configures Claude Code in ~/.claude (or $CLAUDE_CONFIG_DIR).
 # Safe to re-run; running it again is how updates happen.
 #
-# Usage: ./install.sh [--persona <name>] [--skills <id,...|all>] [--reconfigure]
+# Usage: ./install.sh [--overhaul <id|none>] [--skills <id,...|all>] [--reconfigure]
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -17,12 +17,12 @@ platform_config_dir() {
 }
 CLAUDE_DIR="$(platform_config_dir claude)"
 STATE_FILE="$CLAUDE_DIR/.token-effort-state"
-PERSONA_MARKETPLACE="token-effort"
+OVERHAUL_MARKETPLACE="token-effort"
 # Third-party skill sets offered at install, one per line: <id> <plugin>@<marketplace> <github-repo>
 SKILLSETS_AVAILABLE="mattpocock mattpocock-skills@mattpocock mattpocock/skills
 pstack pstack@pstack-claude michael-denyer/pstack-claude"
 
-PERSONA="" SKILLSETS="" RECONFIGURE=0
+OVERHAUL="" SKILLSETS="" RECONFIGURE=0
 SUMMARY=()
 LAST_PLUGIN_VERSION=""
 NEXT_STEPS=()
@@ -50,7 +50,7 @@ parse_args() {
   while [[ $# -gt 0 ]]; do
     local flag="$1" value="${2:-}"
     case "$flag" in
-      --persona)     PERSONA="${value:?--persona needs a value}"; shift 2 ;;
+      --overhaul)    OVERHAUL="${value:?--overhaul needs a value}"; shift 2 ;;
       --skills)      SKILLSETS="${value:?--skills needs a value}"; shift 2 ;;
       --reconfigure) RECONFIGURE=1; shift ;;
       -h|--help)     usage; exit 0 ;;
@@ -210,15 +210,15 @@ uninstall_plugin_if_present() { # plugin@marketplace label
   run_quiet claude plugin uninstall "$id" </dev/null
 }
 
-list_personas() { # prints persona ids, one per line
+list_overhaul_mods() { # prints overhaul mod ids, one per line
   local d
-  for d in "$REPO_DIR"/personas/*/; do
+  for d in "$REPO_DIR"/overhaul-mods/*/; do
     [[ -d "$d" ]] && basename "$d"
   done
 }
 
-installed_personas() { # prints persona ids currently installed from the token-effort marketplace
-  json_query plugin list -- 'for (const p of l) if (p.id && p.id.endsWith("@" + arg)) console.log(p.id.split("@")[0])' "$PERSONA_MARKETPLACE"
+installed_overhaul_mods() { # prints plugin ids currently installed from the token-effort marketplace
+  json_query plugin list -- 'for (const p of l) if (p.id && p.id.endsWith("@" + arg)) console.log(p.id.split("@")[0])' "$OVERHAUL_MARKETPLACE"
 }
 
 npx_skills_add() { # source skill
@@ -227,21 +227,38 @@ npx_skills_add() { # source skill
   (cd "$REPO_DIR" && run_quiet npx --yes skills add "$source" --skill "$skill" -g -a claude-code --copy -y </dev/null)
 }
 
-setup_persona() {
-  local saved choice
-  saved="$(state_get persona)"
+# migrate_legacy_state: map the pre-overhaul state key to overhaul=, once
+migrate_legacy_state() {
+  local legacy tmp="$STATE_FILE.tmp"
+  legacy="$(state_get persona)"
+  [[ -n "$legacy" ]] || return 0
+  if [[ -z "$(state_get overhaul)" ]]; then
+    case "$(lower "$legacy")" in
+      skaven)  state_set overhaul under-empire ;;
+      default) state_set overhaul none ;;
+      *) ;; # unknown legacy value: dropped, so the overhaul choice falls back to the default
+    esac
+  fi
+  grep -v '^persona=' "$STATE_FILE" > "$tmp" || true
+  mv "$tmp" "$STATE_FILE"
+}
 
-  local options=(Default) id
+setup_overhaul() {
+  migrate_legacy_state
+  local saved choice
+  saved="$(state_get overhaul)"
+
+  local options=(none) id
   while read -r id; do
     [[ -n "$id" ]] && options+=("$id")
-  done < <(list_personas)
+  done < <(list_overhaul_mods)
 
-  if [[ -n "$PERSONA" ]]; then
-    choice="$PERSONA"
+  if [[ -n "$OVERHAUL" ]]; then
+    choice="$OVERHAUL"
   elif [[ -n "$saved" ]] && [[ "$RECONFIGURE" -eq 0 ]]; then
     choice="$saved"
   else
-    choice="$(choose "Persona" "${saved:-Default}" "${options[@]}")"
+    choice="$(choose "Overhaul mod" "${saved:-none}" "${options[@]}")"
   fi
 
   # normalise case against the known options
@@ -249,28 +266,28 @@ setup_persona() {
   for opt in "${options[@]}"; do
     [[ "$(lower "$opt")" = "$(lower "$choice")" ]] && match="$opt"
   done
-  [[ -n "$match" ]] || die "unknown persona '$choice' (available: ${options[*]})"
+  [[ -n "$match" ]] || die "unknown overhaul mod '$choice' (available: ${options[*]})"
   choice="$match"
-  state_set persona "$choice"
+  state_set overhaul "$choice"
 
-  heading "🎭 Persona"
+  heading "🎭 Overhaul mod"
   local keep=""
-  if [[ "$choice" = Default ]]; then
-    step "Default (no costume, just the facts)"
+  if [[ "$choice" = none ]]; then
+    step "none (plain Claude Code, just the facts)"
   else
-    step "$choice - putting on the costume"
+    step "$choice - bolting on the whole overhaul"
     keep="$choice"
-    install_or_update_plugin "$choice@$PERSONA_MARKETPLACE" "$REPO_DIR"
+    install_or_update_plugin "$choice@$OVERHAUL_MARKETPLACE" "$REPO_DIR"
   fi
   local other
   while read -r other; do
     [[ -n "$other" ]] && [[ "$other" != "$keep" ]] || continue
-    uninstall_plugin_if_present "$other@$PERSONA_MARKETPLACE" "the old persona '$other'"
-  done < <(installed_personas)
-  if [[ "$choice" = Default ]]; then
-    note "🎭 Persona: Default"
+    uninstall_plugin_if_present "$other@$OVERHAUL_MARKETPLACE" "the old overhaul mod '$other'"
+  done < <(installed_overhaul_mods)
+  if [[ "$choice" = none ]]; then
+    note "🎭 Overhaul mod: none"
   else
-    note "🎭 Persona: $choice (v$LAST_PLUGIN_VERSION)"
+    note "🎭 Overhaul mod: $choice (v$LAST_PLUGIN_VERSION)"
   fi
 }
 
@@ -413,7 +430,7 @@ main() {
   warn_update_blockers
   choose_skillsets
   setup_config
-  setup_persona
+  setup_overhaul
   setup_skillsets
   setup_skills
   print_summary
