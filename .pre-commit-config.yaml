@@ -46,6 +46,12 @@ repos:
         language: python
         additional_dependencies: [skills-ref==0.1.1]
         files: ^skills/[^/]+/SKILL\.md$
+      - id: overhaul-mods
+        name: Validate and test overhaul mods
+        entry: python scripts/check_overhaul_mods.py
+        language: python
+        files: ^overhaul-mods/
+        require_serial: true
       - id: commit-msg-format
         name: Check commit message format
         entry: '\A(feat|fix|docs|chore): \S'

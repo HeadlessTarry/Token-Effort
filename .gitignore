@@ -1,8 +1,5 @@
 # Worktrees
 .worktrees/
 
-# Plugin Development
+# npm
 node_modules/
-package.json
-package-lock.json
-

@@ -3,6 +3,10 @@ set -euo pipefail
 
 option="${1:-}"
 
+echo "📦 Installing pinned npm tools..."
+npm ci
+
+echo ""
 echo "🪝 Setting up git hooks..."
 uvx --no-build pre-commit install
 
