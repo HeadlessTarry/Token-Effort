@@ -50,8 +50,8 @@ repos:
         name: Validate and test overhaul mods
         entry: python scripts/check_overhaul_mods.py
         language: python
-        files: ^overhaul-mods/
-        require_serial: true
+        files: ^(overhaul-mods/|package(-lock)?\.json$)
+        pass_filenames: false
       - id: commit-msg-format
         name: Check commit message format
         entry: '\A(feat|fix|docs|chore): \S'

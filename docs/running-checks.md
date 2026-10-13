@@ -20,7 +20,7 @@ Pre-commit hooks on all files (see [.pre-commit-config.yaml](../.pre-commit-conf
 | `shell-header` | Shell scripts open with `#!/usr/bin/env bash` and their first statement is `set -euo pipefail` ([scripts/check_shell_header.py](../scripts/check_shell_header.py)) |
 | `markdown-links` | Relative Markdown links point at files that exist; offline, URLs are not fetched ([scripts/check_md_links.py](../scripts/check_md_links.py)) |
 | `skill-spec` | Each `skills/*/SKILL.md` passes `skills-ref` `0.x`, the Agent Skills spec validator; alpha, "demonstration purposes only", no release since 2026-01-10 ([scripts/check_skill_spec.py](../scripts/check_skill_spec.py)) |
-| `overhaul-mods` | Each `overhaul-mods/*` folder passes `claude plugin validate --strict` (warnings fail); a mod whose `hooks/hooks.json` names a hooks module under `modules` must also pass `claude plugin test`. Uses the `claude` CLI pinned in [package.json](../package.json), from `node_modules/.bin/`; fails if `./setup_dev_env.sh` has not installed it ([scripts/check_overhaul_mods.py](../scripts/check_overhaul_mods.py)) |
+| `overhaul-mods` | When `overhaul-mods/`, `package.json` or `package-lock.json` changes, each `overhaul-mods/*` folder passes `claude plugin validate --strict` (warnings fail); a mod whose `hooks/hooks.json` names a hooks module under `modules` must also pass `claude plugin test`. Uses the `claude` CLI pinned in [package.json](../package.json), from `node_modules/.bin/`; fails if `./setup_dev_env.sh` has not installed it ([scripts/check_overhaul_mods.py](../scripts/check_overhaul_mods.py)) |
 
 These hooks run on commit only, once installed by `./setup_dev_env.sh`:
 

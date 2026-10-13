@@ -12,13 +12,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-MODS_DIR = "overhaul-mods"
+MODS_DIR = Path("overhaul-mods")
 BIN_DIR = Path("node_modules") / ".bin"
-
-
-def mod_dirs(paths: list[str]) -> list[Path]:
-    mods = {Path(*Path(path).parts[:2]) for path in paths if Path(path).parts[0] == MODS_DIR}
-    return sorted(mod for mod in mods if mod.is_dir())
+CLI = "claude"
 
 
 def has_hooks_module(mod: Path) -> bool:
@@ -30,22 +26,22 @@ def has_hooks_module(mod: Path) -> bool:
     return isinstance(config, dict) and bool(config.get("modules"))
 
 
-def main(paths: list[str]) -> int:
-    claude = shutil.which("claude", path=str(BIN_DIR))
+def main() -> int:
+    claude = shutil.which(CLI, path=str(BIN_DIR))
     if claude is None:
-        print(f"{BIN_DIR / 'claude'} not found; run ./setup_dev_env.sh to install it")
+        print(f"{BIN_DIR / CLI} not found; run ./setup_dev_env.sh to install it")
         return 1
     failed = False
-    for mod in mod_dirs(paths):
+    for mod in sorted(path for path in MODS_DIR.iterdir() if path.is_dir()):
         commands = [["plugin", "validate", "--strict", str(mod)]]
         if has_hooks_module(mod):
             commands.append(["plugin", "test", str(mod)])
         for command in commands:
             if subprocess.run([claude, *command]).returncode != 0:
-                print(f"{mod}: `claude {' '.join(command)}` failed")
+                print(f"{mod}: `{CLI} {' '.join(command)}` failed")
                 failed = True
     return 1 if failed else 0
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())
