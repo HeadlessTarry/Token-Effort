@@ -6,6 +6,7 @@ The following must be installed, and available on your CLI `PATH`:
 
 - [Git](https://git-scm.com/) and Bash (Git Bash on Windows)
 - [UV (latest)](https://docs.astral.sh/uv/), which runs [pre-commit](https://pre-commit.com/) via `uvx`; no project virtual environment is needed
+- [Node.js](https://nodejs.org/) with npm, which installs the `claude` CLI version pinned in [package.json](../package.json)
 
 ## 🚀 Initial Setup
 
@@ -14,9 +15,9 @@ The following must be installed, and available on your CLI `PATH`:
 ./setup_dev_env.sh --skip-checks
 ```
 
-This installs the [pre-commit](https://pre-commit.com/) `pre-commit` and `commit-msg` git hooks. Drop `--skip-checks` to also run [run_checks.sh](../run_checks.sh) straight away.
+This runs `npm ci --ignore-scripts` plus the CLI's own install step, which installs the pinned `claude` CLI into `node_modules/.bin/` for the overhaul mod checks, and installs the [pre-commit](https://pre-commit.com/) `pre-commit` and `commit-msg` git hooks. CI runs the same script before [run_checks.sh](../run_checks.sh). Drop `--skip-checks` to also run [run_checks.sh](../run_checks.sh) straight away.
 
-Git hooks live in the shared `.git/hooks` directory, so one run per clone covers every worktree of that clone. Without them, commits skip the branch guard and the commit message check (CI does not run these two).
+Git hooks live in the shared `.git/hooks` directory, so one run per clone covers every worktree of that clone. Without them, commits skip the branch guard and the commit message check (CI does not run these two). `node_modules/` is per worktree, so run the script again in each new worktree.
 
 ## ✏️ Making Changes
 
