@@ -227,24 +227,7 @@ npx_skills_add() { # source skill
   (cd "$REPO_DIR" && run_quiet npx --yes skills add "$source" --skill "$skill" -g -a claude-code --copy -y </dev/null)
 }
 
-# migrate_legacy_state: map the pre-overhaul state key to overhaul=, once
-migrate_legacy_state() {
-  local legacy tmp="$STATE_FILE.tmp"
-  legacy="$(state_get persona)"
-  [[ -n "$legacy" ]] || return 0
-  if [[ -z "$(state_get overhaul)" ]]; then
-    case "$(lower "$legacy")" in
-      skaven)  state_set overhaul under-empire ;;
-      default) state_set overhaul none ;;
-      *) ;; # unknown legacy value: dropped, so the overhaul choice falls back to the default
-    esac
-  fi
-  grep -v '^persona=' "$STATE_FILE" > "$tmp" || true
-  mv "$tmp" "$STATE_FILE"
-}
-
 setup_overhaul() {
-  migrate_legacy_state
   local saved choice
   saved="$(state_get overhaul)"
 
