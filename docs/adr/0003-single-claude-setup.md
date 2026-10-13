@@ -3,6 +3,7 @@
 > **Status:** Accepted
 > **Date:** 2026-10-05
 > **Supersedes:** [0002-lab-forge-agent-areas.md](./0002-lab-forge-agent-areas.md)
+> **Note:** The persona parts are superseded by [0006-overhaul-mods.md](./0006-overhaul-mods.md).
 
 ## Context
 

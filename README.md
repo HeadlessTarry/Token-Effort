@@ -28,7 +28,7 @@ Re-run it any time to update. It is safe to repeat; your answers are remembered 
 | Flag | Effect |
 |------|--------|
 | `--skills <id,...\|all>` | Pick skill sets, e.g. `--skills pstack` or `--skills all`. Skill sets left out are uninstalled |
-| `--persona <name>` | Pick `Default` or a persona from `personas/` |
+| `--overhaul <id\|none>` | Pick an overhaul mod from `overhaul-mods/`, or `none` (the default) |
 | `--reconfigure` | Ask every question again |
 
 It configures `~/.claude`, or `$CLAUDE_CONFIG_DIR` when that is set. If the directory doesn't exist yet it is created; run `claude` afterwards to log in.
@@ -46,11 +46,15 @@ It ends with a list of next steps (`/setup-pstack`, and `/setup-matt-pocock-skil
 - [gh CLI](https://cli.github.com/), authenticated with `gh auth login`
 - Bash (Git Bash on Windows)
 
-## 🎭 Personas
+## 🎭 Overhaul mods
 
-You can pick a persona during install: `Default` (none) or a plugin from `personas/`. A persona is a tiny plugin holding an output style and a reminder hook, served through the local `token-effort` marketplace (`.claude-plugin/marketplace.json`).
+An overhaul mod is one Claude Code plugin that reskins Claude Code around a single theme, bundling several features such as an output style and mods (see [GLOSSARY.md](GLOSSARY.md)). Pick one during install, or `none`. It is all-or-nothing: you get the whole overhaul mod or none of it, and choosing one uninstalls any other plugin from the local `token-effort` marketplace (`.claude-plugin/marketplace.json`).
 
-To add one, create `personas/<id>/` and add a `marketplace.json` entry. No script change is needed. Bump the plugin `version` when you edit a persona, otherwise `claude plugin update` may not refresh the cached copy.
+| Overhaul mod | What you get |
+|--------------|--------------|
+| `under-empire` | The `Warlock Engineer` output style (a scheming Skaven voice for prose, plain professional artefacts) and a reminder hook that keeps the voice on |
+
+To add one, create `overhaul-mods/<id>/` with a `.claude-plugin/plugin.json` and add a `marketplace.json` entry. No script change is needed. Bump the plugin `version` when you edit an overhaul mod, otherwise `claude plugin update` may not refresh the cached copy.
 
 ## 🗂️ Directory Structure
 
@@ -59,9 +63,9 @@ install.sh           → installer and updater
 setup_dev_env.sh     → installs git hooks for local development
 run_checks.sh        → local and CI checks (pre-commit)
 scripts/             → custom check scripts used by pre-commit
-.claude-plugin/      → marketplace "token-effort" (personas)
+.claude-plugin/      → marketplace "token-effort" (overhaul mods)
 config/              → settings.json merged into ~/.claude, AGENTS.md instructions
-personas/<id>/       → persona plugins
+overhaul-mods/<id>/  → overhaul mod plugins
 skills/              → home-grown skills
 docs/                → ADRs, agent docs and developer docs
 ```

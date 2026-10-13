@@ -14,3 +14,11 @@ _Avoid_: custom field, extension field, non-standard field
 
 **Repo conventions**:
 Conventions specific to one repo (e.g. domain doc layout).
+
+**Overhaul mod**:
+One Claude Code plugin that reskins Claude Code around a single theme by bundling several features (e.g. an output style and mods). Installed all-or-nothing: you get the whole overhaul mod, or none.
+_Avoid_: persona, total overhaul, theme pack, skin
+
+**Mod**:
+A feature that changes Claude Code's own interface or behaviour, such as a pane, status line or toast. Usually one of the features an overhaul mod ships. A mod may bolt on to a skill: the skill owns what the mod reads, and the mod stays out of sight when the skill is not in use.
+_Avoid_: extension, add-on, widget

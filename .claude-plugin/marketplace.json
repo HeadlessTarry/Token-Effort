@@ -1,11 +1,12 @@
 {
   "name": "token-effort",
   "owner": { "name": "HeadlessTarry" },
+  "metadata": { "description": "Token-Effort overhaul mods for Claude Code" },
   "plugins": [
     {
-      "name": "skaven",
-      "source": "./personas/skaven",
-      "description": "Skaven persona: a scheming ratman voice for prose, with plain professional artefacts"
+      "name": "under-empire",
+      "source": "./overhaul-mods/under-empire",
+      "description": "Under-Empire overhaul mod: a scheming Skaven Warlock Engineer voice for prose, with plain professional artefacts"
     }
   ]
 }
