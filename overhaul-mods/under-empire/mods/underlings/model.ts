@@ -72,13 +72,14 @@ export function isKilled(text: string): boolean {
 }
 
 /**
- * The command that prints a file's last lines on the OS the path belongs to: PowerShell's
- * `Get-Content -Tail` for a Windows path (drive letter or UNC share), `tail` otherwise.
+ * The commands that print a file's last lines, best first: PowerShell's `Get-Content -Tail` for a
+ * Windows path (drive letter or UNC share), `tail` otherwise, and the other one as the fallback.
  */
-export function tailCommand(path: string, lines: number): string[] {
-  if (!WINDOWS_PATH.test(path)) return ['tail', '-n', String(lines), path]
+export function tailCommands(path: string, lines: number): string[][] {
+  const tail = ['tail', '-n', String(lines), path]
   const quoted = path.replace(/'/g, "''")
-  return ['powershell', '-NoProfile', '-Command', `Get-Content -LiteralPath '${quoted}' -Tail ${lines}`]
+  const powershell = ['powershell', '-NoProfile', '-Command', `Get-Content -LiteralPath '${quoted}' -Tail ${lines}`]
+  return WINDOWS_PATH.test(path) ? [powershell, tail] : [tail, powershell]
 }
 
 export type TaskNotification = { taskId: string; status: string; exitCode?: number }

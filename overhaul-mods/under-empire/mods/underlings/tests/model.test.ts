@@ -2,7 +2,7 @@ import { describe, expect, test } from 'claude-code/testing'
 
 import {
   appendText, classify, formatElapsed, formatTokens, parseExitMarker, parseOutputPath,
-  isKilled, parseTaskNotification, sanitize, shortModel, summarizeJson, summarizeResult, tailCommand, tailLines, usageTotal,
+  isKilled, parseTaskNotification, sanitize, shortModel, summarizeJson, summarizeResult, tailCommands, tailLines, usageTotal,
 } from '../model'
 
 describe('classify', () => {
@@ -80,17 +80,21 @@ describe('engine messages', () => {
   })
 })
 
-describe('tailCommand', () => {
-  test('tails a POSIX path with tail', () => {
-    expect(tailCommand('/tmp/claude/tasks/b1.output', 400)).toEqual(['tail', '-n', '400', '/tmp/claude/tasks/b1.output'])
+describe('tailCommands', () => {
+  test('tails a POSIX path with tail, then PowerShell', () => {
+    const [first, second] = tailCommands('/tmp/claude/tasks/b1.output', 400)
+    expect(first).toEqual(['tail', '-n', '400', '/tmp/claude/tasks/b1.output'])
+    expect(second?.[0]).toBe('powershell')
   })
 
-  test('tails a Windows path with PowerShell, quoting the path', () => {
-    expect(tailCommand("D:\\Temp\\O'Brien\\b1.output", 400)).toEqual([
+  test('tails a Windows path with PowerShell, quoting the path, then tail', () => {
+    const [first, second] = tailCommands("D:\\Temp\\O'Brien\\b1.output", 400)
+    expect(first).toEqual([
       'powershell', '-NoProfile', '-Command', "Get-Content -LiteralPath 'D:\\Temp\\O''Brien\\b1.output' -Tail 400",
     ])
-    expect(tailCommand('D:/Temp/b1.output', 10)[0]).toBe('powershell')
-    expect(tailCommand('\\\\server\\share\\b1.output', 10)[0]).toBe('powershell')
+    expect(second?.[0]).toBe('tail')
+    expect(tailCommands('D:/Temp/b1.output', 10)[0]?.[0]).toBe('powershell')
+    expect(tailCommands('\\\\server\\share\\b1.output', 10)[0]?.[0]).toBe('powershell')
   })
 })
 

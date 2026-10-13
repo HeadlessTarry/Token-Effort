@@ -4,7 +4,7 @@ import type { ElementTable, EngineInterface as Engine, Register, RenderElement, 
 import type { Status, TxEntry, Underling } from '../../types'
 import {
   ROLES, appendText, classify, formatElapsed, formatTokens, isKilled, parseExitMarker, parseOutputPath,
-  parseTaskNotification, sanitize, shortModel, summarizeJson, summarizeResult, summarizeToolInput, tailCommand,
+  parseTaskNotification, sanitize, shortModel, summarizeJson, summarizeResult, summarizeToolInput, tailCommands,
   tailLines, usageTotal, TRANSCRIPT_LIMIT,
 } from './model'
 import { FINISHED_GREY, spriteSvg } from './sprites'
@@ -208,11 +208,14 @@ async function pollRound($: Engine, items: Underling[]) {
 
 // ---------------------------------------------------------------- background output
 
-async function readTail($: Engine, path: string, size: number): Promise<string> {
-  if (size <= MAX_READ_BYTES) return tailLines(sanitize(await $.fs.read(path)), OUTPUT_LINES)
+async function readText($: Engine, path: string, size: number): Promise<string> {
+  if (size <= MAX_READ_BYTES) return $.fs.read(path)
   // $.fs.read refuses files past 4 MiB, so a host command reads the tail.
-  const ran = await $.process.run(tailCommand(path, OUTPUT_LINES))
-  return sanitize(ran.stdout)
+  for (const argv of tailCommands(path, OUTPUT_LINES)) {
+    const ran = await $.process.run(argv).catch(() => undefined)
+    if (ran?.exitCode === 0) return ran.stdout
+  }
+  throw new Error(`No command could read the tail of ${path}`)
 }
 
 async function pollOutput($: Engine, id: string) {
@@ -221,14 +224,15 @@ async function pollOutput($: Engine, id: string) {
   try {
     const { size } = await $.fs.stat(path)
     if (size === followedSizes.get(id)) return
+    const text = tailLines(sanitize(await readText($, path, size)), OUTPUT_LINES)
+    // Recorded only once read, so a failed read is tried again on the next poll.
     followedSizes.set(id, size)
-    const text = await readTail($, path, size)
     await update($, memberOf(outputFamily, { requestId: id }), () => text)
     const exitCode = parseExitMarker(text)
     if (exitCode !== undefined) await finishUnderling($, id, exitCode === 0 ? 'done' : 'failed', exitCode)
     else if (isKilled(text)) await finishUnderling($, id, 'stopped')
   } catch {
-    // The file appears a moment after the task starts; the next poll tries again.
+    // The file appears a moment after the task starts, or no command could read it; the next poll tries again.
   }
 }
 

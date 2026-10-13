@@ -49,20 +49,10 @@ On the desktop app the rats are animated SVGs; in a terminal each is a single gl
 ### Known limits
 
 - **Background output is near-live:** the open task's output file is read twice a second. Other running tasks are read one at a time in rotation, so the pane's load stays flat however many tasks run; most finish through the engine's task notification rather than that rotation. No plugin hook streams the output of a shell the engine started.
-- **Large output:** `$.fs.read` refuses files over 4 MiB, so past that size the tail is read with `tail`, or with PowerShell's `Get-Content -Tail` for a Windows path. Supported on Windows and Linux.
+- **Large output:** `$.fs.read` refuses files over 4 MiB, so past that size the tail is read with `tail`, or with PowerShell's `Get-Content -Tail` for a Windows path, each falling back to the other. Supported on Windows and Linux; macOS is untested.
 - **Transcripts unavailable:** agents started by a workflow run, remote agents and teammates in another process cannot be read back; their rows still show.
 - **Tokens** are the subagent's context size: the input, cache and output tokens of its latest model request, the same measure as the Agent tool's own `totalTokens`, which replaces it when a foreground subagent completes. Every request resends the whole conversation, so summing requests would count that history once per request.
 
 ## 🧪 Develop
 
-[run_checks.sh](../../run_checks.sh) validates the plugin and runs its tests (see [docs/running-checks.md](../../docs/running-checks.md)). To run them alone:
-
-```bash
-node_modules/.bin/claude plugin validate --strict overhaul-mods/under-empire
-```
-
-```bash
-node_modules/.bin/claude plugin test overhaul-mods/under-empire
-```
-
-After editing, run `/reload-plugins` in a session, and bump `version` in [.claude-plugin/plugin.json](.claude-plugin/plugin.json) as the [README](../../README.md) says.
+[run_checks.sh](../../run_checks.sh) validates the plugin and runs its tests (see [docs/running-checks.md](../../docs/running-checks.md)). After editing, run `/reload-plugins` in a session, and bump `version` in [.claude-plugin/plugin.json](.claude-plugin/plugin.json) as the [README](../../README.md) says.

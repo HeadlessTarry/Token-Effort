@@ -11,13 +11,18 @@ const PANE_PROPS = {
 
 const BIG_FILE = 5 * 1024 * 1024
 
+const LINUX_PATH = '/tmp/claude/proj/tasks/bg-big.output'
+const WINDOWS_PATH = 'D:\\Temp\\claude\\proj\\tasks\\bg-big.output'
+
+/** `tried` is every command run, in order; only `tool` exits 0. */
 const CASES = [
-  { os: 'Linux', path: '/tmp/claude/proj/tasks/bg-big.output', tool: 'tail' },
-  { os: 'Windows', path: 'D:\\Temp\\claude\\proj\\tasks\\bg-big.output', tool: 'powershell' },
+  { name: 'Linux: tailed with tail', path: LINUX_PATH, tool: 'tail', tried: ['tail'] },
+  { name: 'Windows: tailed with PowerShell', path: WINDOWS_PATH, tool: 'powershell', tried: ['powershell'] },
+  { name: 'Windows without PowerShell: falls back to tail', path: WINDOWS_PATH, tool: 'tail', tried: ['powershell', 'tail'] },
 ] as const
 
-for (const { os, path, tool } of CASES) {
-  test(`${os}: output past 4 MiB is tailed with ${tool} and shows in the task's row`, async ($, on) => {
+for (const { name, path, tool, tried } of CASES) {
+  test(`${name}, output past 4 MiB shows in the task's row`, async ($, on) => {
     const clock = mock.clock(on)
     const ran: string[][] = []
     on('ui.open', () => ({ value: { isPlaced: true } }))
@@ -26,6 +31,7 @@ for (const { os, path, tool } of CASES) {
     on('fs.stat', () => ({ value: { kind: 'file', size: BIG_FILE, mtimeMs: 0, isSymlink: false } }) as never)
     on('process.run', (_$, e) => {
       ran.push([...e.argv])
+      if (e.argv[0] !== tool) return { value: { exitCode: 127, stdout: '', stderr: 'not found' } } as never
       return { value: { exitCode: 0, stdout: 'shaft 179 dug\nshaft 180 dug\n[exited with code 0]\n', stderr: '' } } as never
     })
 
@@ -39,8 +45,8 @@ for (const { os, path, tool } of CASES) {
     } as never)
     await clock.advance(1_000)
 
-    expect(ran[0]?.[0]).toBe(tool)
-    expect(ran[0]?.at(-1)).toContain(tool === 'tail' ? path : 'Get-Content')
+    expect(ran.map(argv => argv[0])).toEqual([...tried])
+    expect(ran.at(-1)?.at(-1)).toContain(tool === 'tail' ? path : 'Get-Content')
 
     const pane = await $.ui.mount({ plugin: 'under-empire', surface: 'desktop', component: 'Pane', requestId: 'underlings', props: PANE_PROPS })
     expect(await pane.find({ text: /FINISHED · 1/ })).toBeDefined()
