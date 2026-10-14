@@ -1,11 +1,11 @@
 # 📖 Glossary
 
 **Working conventions**:
-How the maintainer tracks work, the same across all repos (issue tracker, triage labels). Installed once per user (by the core plugin on Claude Code).
+How the maintainer tracks work, the same across all repos (issue tracker, triage labels). Installed once per user, by `install.sh` or by installing the core plugin directly.
 _Avoid_: repo config, settings
 
 **Core plugin**:
-The Claude Code plugin that ships this repo's skills and working conventions. Required, unlike an overhaul mod, which is optional.
+The Claude Code plugin that ships this repo's skills and working conventions. Installed directly with `claude plugin install`, where it is required, or automatically by `install.sh`. An overhaul mod is optional on both routes.
 _Avoid_: base plugin, main plugin, token-effort plugin
 
 **Skill frontmatter field**:

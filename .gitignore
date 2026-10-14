@@ -3,3 +3,6 @@
 
 # npm
 node_modules/
+
+# local install test config dirs
+.tmp-*/

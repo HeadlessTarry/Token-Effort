@@ -29,6 +29,9 @@ The `token-effort` plugin is required on every install. It ships:
 
 Pick one route. Both give Claude Code the same result.
 
+- **Claude Code plugins**: for general use. Updates arrive through plugin auto-update, with no clone to keep.
+- **Installer script**: for maintainers of this repo. It installs from your clone, so edits take effect at the next session start (or `/reload-plugins`), and it handles skill sets, settings and cleanup of older installs for you.
+
 ### Claude Code plugins
 
 ```bash
