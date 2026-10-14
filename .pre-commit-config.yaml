@@ -56,7 +56,7 @@ repos:
         name: Test the core plugin scripts
         entry: node --test plugins/claude/token-effort/scripts/tests/*.test.js
         language: system
-        files: ^plugins/claude/token-effort/scripts/
+        files: ^(plugins/claude/token-effort/(scripts|skills/[^/]+/scripts)/|skills/disclose-ai-content/SKILL\.md$)
         pass_filenames: false
       - id: commit-msg-format
         name: Check commit message format

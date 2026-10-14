@@ -5,6 +5,7 @@ Claude Code features shipped only by the `token-effort` core plugin. Installs th
 | Feature | What it is |
 |---------|------------|
 | Session titles from issues | A `UserPromptSubmit` hook that titles a session after the GitHub issue its prompt references (below) |
+| `shepherding-pr-reviews` skill | Walks an open PR through review rounds from human and AI reviewers (below) |
 
 ## 🏷️ Session titles from issues
 
@@ -20,3 +21,17 @@ Limitations:
 
 - The hook runs `node` on every prompt, and calls `gh` only for matching prompts in untitled sessions.
 - Not verified in the desktop app: whether the Code tab sidebar shows the hook's title, and whether the app's own generated title counts as a custom title, which would make the hook skip.
+
+## 🐑 shepherding-pr-reviews
+
+A skill ([ADR 0008](../../../docs/adr/0008-claude-only-pr-review-skill.md)) that walks an open PR through review rounds from human and AI reviewers: a verdict for each comment, fixes for the valid ones, in-thread replies, and an Auto-Fix Halt at the noise or round limit (terms in [GLOSSARY.md](../../../GLOSSARY.md)).
+
+- A `PostToolUse` hook binds a PR to the session after `gh pr create`, and a `Stop` hook blocks a turn from ending while that PR has unanswered review threads.
+- Arming the Auto-Fix Watch needs the Claude desktop app. In a CLI session, rounds run when you say reviews have landed.
+
+Skill: [skills/shepherding-pr-reviews/SKILL.md](skills/shepherding-pr-reviews/SKILL.md). Its script's output contract: [OUTPUT-CONTRACT.md](skills/shepherding-pr-reviews/OUTPUT-CONTRACT.md).
+
+Limitations:
+
+- Both hooks run `node` in every session. With no `gh pr create` and no bound PR, they exit without calling `gh`.
+- Not verified: whether the Auto-Fix Watch wakes the session for a human's review.
