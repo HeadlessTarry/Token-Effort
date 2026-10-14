@@ -26,3 +26,23 @@ _Avoid_: persona, total overhaul, theme pack, skin
 **Mod**:
 A feature that changes Claude Code's own interface or behaviour, such as a pane, status line or toast. Usually one of the features an overhaul mod ships. A mod may bolt on to a skill: the skill owns what the mod reads, and the mod stays out of sight when the skill is not in use.
 _Avoid_: extension, add-on, widget
+
+**Round**:
+One submitted PR review that carries something to answer (a comment or a body), and the work of answering it. Reviews from humans and AI reviewers count equally. An empty approval is not a round.
+_Avoid_: pass, iteration, cycle
+
+**Noise**:
+A round from an AI reviewer whose findings are all Low severity. A round from a human is never noise.
+_Avoid_: nitpicks, low-value round
+
+**Verdict**:
+The agent's judgement on one review comment, *valid* or *not valid*, backed by evidence (a code path, a reproduction, a test or a doc). Only *valid* comments get a fix. An AI reviewer's comment is answered on the agent's verdict alone. A human's comment judged *not valid* waits for the human to agree before the agent replies.
+_Avoid_: ruling, assessment, triage result
+
+**Auto-Fix Watch**:
+The Claude desktop app's monitoring of one PR. It wakes the agent when CI fails, a merge conflict appears or a review lands, and lets the agent fix things without being asked. It is armed after the PR is created. A CLI session has none.
+_Avoid_: watch (on its own), monitor, subscription, poller
+
+**Auto-Fix Halt**:
+A PR's state once the noise limit (3 noise rounds) or the round limit (10 rounds) is reached. The agent turns Auto-Fix off and addresses nothing more. The PR stays halted until the human says *continue*, which allows one more round. Re-arming Auto-Fix is always the human's click.
+_Avoid_: halt (on its own), stop, pause, freeze
