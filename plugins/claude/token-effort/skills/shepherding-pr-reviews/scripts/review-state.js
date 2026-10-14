@@ -51,8 +51,14 @@ function prUrl(repo, pr) {
   return `https://github.com/${repo}/pull/${pr}`
 }
 
+// One file per PR: prs/<owner>/<repo>/<pr>.json. GitHub names are case-insensitive, so the path is lowercased.
+// Every clone, worktree and session working on that PR reads the same rounds and limits.
 function statePath(env, repo, pr) {
-  return path.join(stateRoot(env), 'prs', `${repo.replace('/', '-')}-${pr}.json`)
+  const [owner, name, ...rest] = repo.toLowerCase().split('/')
+  if (rest.length || ![owner, name].every((part) => /^[\w.-]+$/.test(part) && !/^\.+$/.test(part))) {
+    throw new UsageError(`--repo ${repo}: expected owner/name`)
+  }
+  return path.join(stateRoot(env), 'prs', owner, name, `${pr}.json`)
 }
 
 function sessionIndexPath(env, sessionId) {

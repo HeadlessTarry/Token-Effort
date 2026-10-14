@@ -303,6 +303,24 @@ test('ingest and check print the fields the output contract names', () => {
   for (const field of ['pr_state', 'threads', 'pm_comments', 'waiting_on_user', 'human_review_in_progress']) assert.ok(field in report, field)
 })
 
+test('PRs in different repos never share state, even when their names collide once joined', () => {
+  const run = makeRunner()
+
+  run(['wait', '--repo', 'a-b/c', '--pr', '7', '--thread', 'PRRT_1'])
+  const other = run(['status', '--repo', 'a/b-c', '--pr', '7']).json()
+
+  assert.deepEqual(other.waiting_on_user, [])
+})
+
+test('one PR has one state, whatever the case of its owner and repo', () => {
+  const run = makeRunner()
+
+  run(['wait', '--repo', 'Octo-Org/Widgets', '--pr', '7', '--thread', 'PRRT_1'])
+  const same = run(['status', '--repo', 'octo-org/widgets', '--pr', '7']).json()
+
+  assert.deepEqual(same.waiting_on_user, ['PRRT_1'])
+})
+
 test('--help lists every subcommand', () => {
   const result = runCli(['--help'])
 
