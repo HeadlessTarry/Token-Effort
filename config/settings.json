@@ -4,6 +4,19 @@
   "env": {
     "PYTHONUTF8": "1"
   },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_CONFIG_DIR:-$HOME/.claude}/hooks/session-title.mjs\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  },
   "extraKnownMarketplaces": {
     "mattpocock": {
       "source": {

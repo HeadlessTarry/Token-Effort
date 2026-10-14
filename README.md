@@ -37,6 +37,8 @@ Starter settings and permissions come from `config/settings.json`. Re-runs add a
 
 Standing instructions come from `config/AGENTS.md`, and the issue-tracker and triage-label docs from `config/docs/agents/`. Every run replaces `~/.claude/AGENTS.md` and `~/.claude/docs/agents/*.md` with these, so edit the repo copies rather than the installed ones. `$AI_CONFIG_DIR` in them becomes the config directory.
 
+Hook scripts come from `config/hooks/` and replace `~/.claude/hooks/*.mjs` on every run; `config/settings.json` registers them. The `session-title.mjs` hook titles a session `[#123] <issue title, at most 8 words>` when a prompt is a slash command referencing an issue, such as `/triage #123`. It reads the title with `gh`, leaves an existing custom title alone, and does nothing if `gh` fails. Research and limitations: [docs/research/session-title-from-issue.md](docs/research/session-title-from-issue.md).
+
 It ends with a list of next steps (`/setup-pstack`, and `/setup-matt-pocock-skills` (accept only the domain docs) or `/create-verification-skill` once per repo, depending on your skill sets). It never runs slash commands itself.
 
 ### Prerequisites
@@ -64,7 +66,7 @@ setup_dev_env.sh     → installs git hooks for local development
 run_checks.sh        → local and CI checks (pre-commit)
 scripts/             → custom check scripts used by pre-commit
 .claude-plugin/      → marketplace "token-effort" (overhaul mods)
-config/              → settings.json merged into ~/.claude, AGENTS.md instructions
+config/              → settings.json merged into ~/.claude, AGENTS.md instructions, hook scripts
 overhaul-mods/<id>/  → overhaul mod plugins
 skills/              → home-grown skills
 docs/                → ADRs, agent docs and developer docs

@@ -368,6 +368,11 @@ setup_config() {
   done
   ok "Working-convention docs installed"
   note "📋 Issue-tracker and triage-label docs in $CLAUDE_DIR/docs/agents/"
+  step "Installing hook scripts (replaced on every run)..."
+  mkdir -p "$CLAUDE_DIR/hooks"
+  cp "$CONFIG_SRC"/hooks/*.mjs "$CLAUDE_DIR/hooks/"
+  ok "Hook scripts installed"
+  note "🪝 Hook scripts in $CLAUDE_DIR/hooks/"
 }
 
 check_prerequisites() {

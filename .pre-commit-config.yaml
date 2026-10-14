@@ -52,6 +52,12 @@ repos:
         language: python
         files: ^(overhaul-mods/|package(-lock)?\.json$)
         pass_filenames: false
+      - id: config-hooks
+        name: Test config hook scripts
+        entry: node --test config/hooks/tests/session-title.test.mjs
+        language: system
+        files: ^config/hooks/
+        pass_filenames: false
       - id: commit-msg-format
         name: Check commit message format
         entry: '\A(feat|fix|docs|chore): \S'
