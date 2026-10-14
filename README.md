@@ -23,7 +23,7 @@ The `token-effort` plugin is required on every install. It ships:
 
 - **Home-grown skills** from `skills/`, invoked with the plugin prefix (e.g. `/token-effort:report-bug`).
 - **Working conventions** (see [GLOSSARY.md](GLOSSARY.md)): `config/AGENTS.md` is added to every session's context and every subagent's, except `Explore` and `Plan`. `$AI_CONFIG_DIR` in it becomes the plugin's `config/` directory, which holds the issue-tracker and triage-label docs from `config/docs/agents/`.
-- **`shepherding-pr-reviews`**, a Claude Code-only skill ([ADR 0008](docs/adr/0008-claude-only-pr-review-skill.md)) that walks an open PR through review rounds from human and AI reviewers: a verdict for each comment, fixes for the valid ones, in-thread replies, and an Auto-Fix Halt at the noise or round limit (see [GLOSSARY.md](GLOSSARY.md)). Its hooks bind a PR after `gh pr create` and block a turn from ending while review threads are unanswered; they do nothing in sessions with no bound PR. Arming the Auto-Fix Watch needs the Claude desktop app; in a CLI session, rounds run when you say reviews have landed.
+- **Claude Code-only features**, such as session titles from GitHub issues and the `shepherding-pr-reviews` skill: see [plugins/claude/token-effort/README.md](plugins/claude/token-effort/README.md).
 - **`/token-effort:setup`**, which merges the starter settings and permissions from [`plugins/claude/token-effort/config/settings.json`](plugins/claude/token-effort/config/settings.json) into your Claude `settings.json`. Re-runs add any new entries and keep your own; entries you remove come back, so edit that file to change the baseline.
 
 ## ⤵️ Installation
