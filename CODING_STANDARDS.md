@@ -4,7 +4,7 @@ Judgement calls for the Standards reviewer in `/code-review`. Each rule names it
 
 ## 🤖 Agent-facing docs
 
-Scope: `AGENTS.md`, `config/AGENTS.md`, `skills/**`, `plugins/claude/**/*.md`, `docs/agents/**`, `config/docs/**`.
+Scope: `AGENTS.md`, `config/AGENTS.md`, `skills/**`, `plugins/claude/token-effort/skills/**`, `plugins/claude/overhaul-mods/**`, `docs/agents/**`, `config/docs/**`.
 
 - **Positive phrasing.** Apply the Negation guidance in the `writing-for-agents` skill.
 - **Actionable instructions.** Every instruction is one the reading agent can carry out from inside its own session, with the tools it has.

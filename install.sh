@@ -18,8 +18,8 @@ platform_config_dir() {
 }
 CLAUDE_DIR="$(platform_config_dir claude)"
 STATE_FILE="$CLAUDE_DIR/.token-effort-state"
-OVERHAUL_MARKETPLACE="token-effort"
-CORE_PLUGIN="token-effort@$OVERHAUL_MARKETPLACE"
+MARKETPLACE="token-effort"
+CORE_PLUGIN="token-effort@$MARKETPLACE"
 # Third-party skill sets offered at install, one per line: <id> <plugin>@<marketplace> <github-repo>
 SKILLSETS_AVAILABLE="mattpocock mattpocock-skills@mattpocock mattpocock/skills
 pstack pstack@pstack-claude michael-denyer/pstack-claude"
@@ -198,7 +198,11 @@ list_overhaul_mods() { # prints overhaul mod ids, one per line
 }
 
 installed_overhaul_mods() { # prints overhaul mod ids installed from the token-effort marketplace (every plugin there but the core one)
-  json_query plugin list -- 'for (const p of l) if (p.id && p.id !== arg && p.id.endsWith(arg.slice(arg.indexOf("@")))) console.log(p.id.split("@")[0])' "$CORE_PLUGIN"
+  local id
+  while read -r id; do
+    [[ -n "$id" ]] && [[ "$id@$MARKETPLACE" != "$CORE_PLUGIN" ]] && printf '%s\n' "$id"
+  done < <(json_query plugin list -- 'for (const p of l) if (p.id && p.id.endsWith("@" + arg)) console.log(p.id.split("@")[0])' "$MARKETPLACE")
+  return 0
 }
 
 setup_overhaul() {
@@ -234,12 +238,12 @@ setup_overhaul() {
   else
     step "$choice - bolting on the whole overhaul"
     keep="$choice"
-    install_or_update_plugin "$choice@$OVERHAUL_MARKETPLACE" "$REPO_DIR"
+    install_or_update_plugin "$choice@$MARKETPLACE" "$REPO_DIR"
   fi
   local other
   while read -r other; do
     [[ -n "$other" ]] && [[ "$other" != "$keep" ]] || continue
-    uninstall_plugin_if_present "$other@$OVERHAUL_MARKETPLACE" "the old overhaul mod '$other'"
+    uninstall_plugin_if_present "$other@$MARKETPLACE" "the old overhaul mod '$other'"
   done < <(installed_overhaul_mods)
   if [[ "$choice" = none ]]; then
     note "🎭 Overhaul mod: none"
@@ -382,8 +386,9 @@ main() {
   check_prerequisites
   warn_update_blockers
   choose_skillsets
-  migrate_legacy_install
   setup_core
+  # after the core plugin installs, so a failed install leaves the old copies working
+  migrate_legacy_install
   setup_overhaul
   setup_skillsets
   # last, because registering a marketplace rewrites its extraKnownMarketplaces entry
