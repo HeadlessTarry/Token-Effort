@@ -12,8 +12,8 @@ A persona was a tiny plugin holding an output style and a reminder hook. "Person
 
 Retire personas. Ship themes as **overhaul mods** (see [GLOSSARY.md](../../GLOSSARY.md)).
 
-- **One overhaul mod per theme**, each a plugin in `overhaul-mods/<id>/` served through the local `token-effort` marketplace. The Skaven persona becomes `under-empire`, whose output style is `Warlock Engineer`.
-- **All-or-nothing.** `install.sh --overhaul <id|none>` installs one whole overhaul mod, or none (the default), and uninstalls every other `token-effort` plugin. Features inside an overhaul mod are not picked individually.
+- **One overhaul mod per theme**, each a plugin in `plugins/claude/overhaul-mods/<id>/` (moved from `overhaul-mods/` by [0007-core-plugin.md](./0007-core-plugin.md)) served through the local `token-effort` marketplace. The Skaven persona becomes `under-empire`, whose output style is `Warlock Engineer`.
+- **All-or-nothing.** `install.sh --overhaul <id|none>` installs one whole overhaul mod, or none (the default), and uninstalls every other overhaul mod; the core plugin from [0007-core-plugin.md](./0007-core-plugin.md) stays. Features inside an overhaul mod are not picked individually.
 - **Mods may bolt on to Token-Effort skills.** The skill owns what the mod reads; without the skill the mod stays out of sight rather than failing.
 - **`--persona` is removed**, with no alias. A saved `persona` state entry is not migrated: the only existing install was already migrated by the installer from #231, so keeping the one-off migration would leave dead code.
 

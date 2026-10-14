@@ -96,7 +96,7 @@ Hook filtering rules, which apply to every hook variant:
 
 ## ✅ Recommendation
 
-Adopt **(c1)**: a `UserPromptSubmit` hook. Implemented as `config/hooks/session-title.mjs`, registered in `config/settings.json` and copied to `~/.claude/hooks/` by `install.sh`. It lives in core config, not an overhaul mod, because it is unrelated to any theme. Steps:
+Adopt **(c1)**: a `UserPromptSubmit` hook. Implemented as `plugins/claude/token-effort/scripts/session-title.js`, registered inline in the core plugin's marketplace entry (`.claude-plugin/marketplace.json`). Steps:
 
 1. Skip if `session_title` is present.
 2. Match `#(\d+)` in a prompt that starts with `/`.

@@ -6,7 +6,8 @@
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_SRC="$REPO_DIR/config"
+CORE_DIR="$REPO_DIR/plugins/claude/token-effort"
+MODS_DIR="$REPO_DIR/plugins/claude/overhaul-mods"
 # platform_config_dir <platform>: the platform's config root (its env var, else its default dir)
 platform_config_dir() {
   local platform="$1"
@@ -17,7 +18,8 @@ platform_config_dir() {
 }
 CLAUDE_DIR="$(platform_config_dir claude)"
 STATE_FILE="$CLAUDE_DIR/.token-effort-state"
-OVERHAUL_MARKETPLACE="token-effort"
+MARKETPLACE="token-effort"
+CORE_PLUGIN="token-effort@$MARKETPLACE"
 # Third-party skill sets offered at install, one per line: <id> <plugin>@<marketplace> <github-repo>
 SKILLSETS_AVAILABLE="mattpocock mattpocock-skills@mattpocock mattpocock/skills
 pstack pstack@pstack-claude michael-denyer/pstack-claude"
@@ -110,28 +112,6 @@ ask() {
   printf '%s' "${reply:-$default}"
 }
 
-# ---------- JSON helpers (node is already required for npx) ----------
-
-# json_merge <target-file> <source-file>: deep-merge source keys into target (arrays are unioned), never dropping other keys.
-json_merge() {
-  local target="$1" source="$2"
-  node - "$target" "$source" <<'NODE'
-const fs = require('fs');
-const [target, source] = process.argv.slice(2);
-const isObj = (v) => v && typeof v === 'object' && !Array.isArray(v);
-const merge = (a, b) => {
-  for (const [k, v] of Object.entries(b)) {
-    if (isObj(v) && isObj(a[k])) a[k] = merge(a[k], v);
-    else if (Array.isArray(v) && Array.isArray(a[k])) a[k] = [...a[k], ...v.filter((x) => !a[k].some((y) => JSON.stringify(y) === JSON.stringify(x)))];
-    else a[k] = v;
-  }
-  return a;
-};
-const current = fs.existsSync(target) ? JSON.parse(fs.readFileSync(target, 'utf8') || '{}') : {};
-fs.writeFileSync(target, JSON.stringify(merge(current, JSON.parse(fs.readFileSync(source, 'utf8'))), null, 2) + '\n');
-NODE
-}
-
 # ---------- Claude Code platform ----------
 
 # run_quiet <command>...: hide the command's output unless it fails
@@ -170,9 +150,9 @@ plugin_installed() { # plugin@marketplace
   json_query plugin list -- 'process.exit(l.some(p => p.id === arg) ? 0 : 1)' "$id"
 }
 
-plugin_version() { # plugin@marketplace
+plugin_version() { # plugin@marketplace -> "v<version>", or "unversioned" for a plugin that tracks commits
   local id="$1"
-  json_query plugin list -- 'const p = l.find(p => p.id === arg); process.stdout.write(p && p.version ? p.version : "unknown")' "$id"
+  json_query plugin list -- 'const p = l.find(p => p.id === arg); process.stdout.write(p && p.version && p.version !== "unknown" ? "v" + p.version : "unversioned")' "$id"
 }
 
 marketplace_registered() { # name
@@ -199,7 +179,7 @@ install_or_update_plugin() { # plugin@marketplace marketplace-source
   fi
   local version
   version="$(plugin_version "$id")"
-  ok "$id is on v$version"
+  ok "$id is installed ($version)"
   LAST_PLUGIN_VERSION="$version"
 }
 
@@ -212,19 +192,17 @@ uninstall_plugin_if_present() { # plugin@marketplace label
 
 list_overhaul_mods() { # prints overhaul mod ids, one per line
   local d
-  for d in "$REPO_DIR"/overhaul-mods/*/; do
+  for d in "$MODS_DIR"/*/; do
     [[ -d "$d" ]] && basename "$d"
   done
 }
 
-installed_overhaul_mods() { # prints plugin ids currently installed from the token-effort marketplace
-  json_query plugin list -- 'for (const p of l) if (p.id && p.id.endsWith("@" + arg)) console.log(p.id.split("@")[0])' "$OVERHAUL_MARKETPLACE"
-}
-
-npx_skills_add() { # source skill
-  local source="$1" skill="$2"
-  step "📚 Copying skill '$skill'..."
-  (cd "$REPO_DIR" && run_quiet npx --yes skills add "$source" --skill "$skill" -g -a claude-code --copy -y </dev/null)
+installed_overhaul_mods() { # prints overhaul mod ids installed from the token-effort marketplace (every plugin there but the core one)
+  local id
+  while read -r id; do
+    [[ -n "$id" ]] && [[ "$id@$MARKETPLACE" != "$CORE_PLUGIN" ]] && printf '%s\n' "$id"
+  done < <(json_query plugin list -- 'for (const p of l) if (p.id && p.id.endsWith("@" + arg)) console.log(p.id.split("@")[0])' "$MARKETPLACE")
+  return 0
 }
 
 setup_overhaul() {
@@ -260,17 +238,17 @@ setup_overhaul() {
   else
     step "$choice - bolting on the whole overhaul"
     keep="$choice"
-    install_or_update_plugin "$choice@$OVERHAUL_MARKETPLACE" "$REPO_DIR"
+    install_or_update_plugin "$choice@$MARKETPLACE" "$REPO_DIR"
   fi
   local other
   while read -r other; do
     [[ -n "$other" ]] && [[ "$other" != "$keep" ]] || continue
-    uninstall_plugin_if_present "$other@$OVERHAUL_MARKETPLACE" "the old overhaul mod '$other'"
+    uninstall_plugin_if_present "$other@$MARKETPLACE" "the old overhaul mod '$other'"
   done < <(installed_overhaul_mods)
   if [[ "$choice" = none ]]; then
     note "🎭 Overhaul mod: none"
   else
-    note "🎭 Overhaul mod: $choice (v$LAST_PLUGIN_VERSION)"
+    note "🎭 Overhaul mod: $choice ($LAST_PLUGIN_VERSION)"
   fi
 }
 
@@ -324,60 +302,51 @@ setup_skillsets() {
   while read -r id plugin repo; do
     if skillset_chosen "$id"; then
       install_or_update_plugin "$plugin" "$repo"
-      note "🧰 Skill set: $id ($plugin v$LAST_PLUGIN_VERSION)"
+      note "🧰 Skill set: $id ($plugin $LAST_PLUGIN_VERSION)"
     else
       uninstall_plugin_if_present "$plugin" "the '$id' skill set"
     fi
   done < <(skillset_entries)
 }
 
-setup_skills() {
-  heading "📚 Home-grown skills"
-  local d name
-  for d in "$REPO_DIR"/skills/*/; do
-    [[ -f "$d/SKILL.md" ]] || continue
-    name="$(basename "$d")"
-    npx_skills_add "$REPO_DIR/skills" "$name"
-    note "📚 Skill: $name"
-  done
-  ok "Skills installed"
+# remove_legacy <path>: delete a file or directory an older install copied in, when present
+remove_legacy() {
+  local path="$1"
+  [[ -e "$path" ]] || return 0
+  rm -rf -- "$path"
+  step "🧹 Removed $path"
 }
 
-# install_with_config_dir <source> <target> <config-dir>: write source to target, replacing $AI_CONFIG_DIR with config-dir
-install_with_config_dir() {
-  local source="$1" target="$2" config_dir="$3" content
-  content="$(<"$source")"
-  mkdir -p "$(dirname "$target")"
-  printf '%s\n' "${content//\$AI_CONFIG_DIR/$config_dir}" > "$target"
+# migrate_legacy_install: delete the copies older installs made of what the core plugin now ships
+migrate_legacy_install() {
+  heading "🧹 Older install"
+  remove_legacy "$CLAUDE_DIR/AGENTS.md"
+  remove_legacy "$CLAUDE_DIR/docs/agents/issue-tracker.md"
+  remove_legacy "$CLAUDE_DIR/docs/agents/triage-labels.md"
+  local d
+  for d in "$REPO_DIR"/skills/*/; do
+    [[ -d "$d" ]] && remove_legacy "$CLAUDE_DIR/skills/$(basename "$d")"
+  done
+  ok "No copies left from older installs"
+}
+
+setup_core() {
+  heading "🪙 Core plugin"
+  install_or_update_plugin "$CORE_PLUGIN" "$REPO_DIR"
+  note "🪙 Core plugin: $CORE_PLUGIN ($LAST_PLUGIN_VERSION), with the home-grown skills and working conventions"
 }
 
 setup_config() {
-  heading "⚙️  Settings and instructions ($CLAUDE_DIR)"
+  heading "⚙️  Settings ($CLAUDE_DIR)"
   step "Merging settings and starter permissions (your own entries stay put)..."
-  json_merge "$CLAUDE_DIR/settings.json" "$CONFIG_SRC/settings.json"
+  node "$CORE_DIR/scripts/merge-settings.js" "$CLAUDE_DIR/settings.json" "$CORE_DIR/config/settings.json"
   ok "Settings merged"
   note "⚙️  Settings merged into $CLAUDE_DIR/settings.json"
-  step "Installing instructions (AGENTS.md is replaced on every run)..."
-  install_with_config_dir "$CONFIG_SRC/AGENTS.md" "$CLAUDE_DIR/AGENTS.md" "$CLAUDE_DIR"
-  ok "Instructions installed"
-  note "📜 Instructions in $CLAUDE_DIR/AGENTS.md"
-  step "Installing working-convention docs (replaced on every run)..."
-  local doc
-  for doc in "$CONFIG_SRC"/docs/agents/*.md; do
-    install_with_config_dir "$doc" "$CLAUDE_DIR/docs/agents/$(basename "$doc")" "$CLAUDE_DIR"
-  done
-  ok "Working-convention docs installed"
-  note "📋 Issue-tracker and triage-label docs in $CLAUDE_DIR/docs/agents/"
-  step "Installing hook scripts (replaced on every run)..."
-  mkdir -p "$CLAUDE_DIR/hooks"
-  cp "$CONFIG_SRC"/hooks/*.mjs "$CLAUDE_DIR/hooks/"
-  ok "Hook scripts installed"
-  note "🪝 Hook scripts in $CLAUDE_DIR/hooks/"
 }
 
 check_prerequisites() {
   command -v claude >/dev/null || die "Can't find the claude CLI on your PATH. Install Claude Code first, then come back!"
-  command -v node   >/dev/null || die "Can't find node on your PATH. It's needed for npx and the JSON edits."
+  command -v node   >/dev/null || die "Can't find node on your PATH. It's needed for the core plugin's hooks and the settings merge."
   if [[ ! -d "$CLAUDE_DIR" ]]; then
     warn "$CLAUDE_DIR doesn't exist yet; creating it (run claude afterwards to log in)"
     mkdir -p "$CLAUDE_DIR"
@@ -417,10 +386,13 @@ main() {
   check_prerequisites
   warn_update_blockers
   choose_skillsets
-  setup_config
+  setup_core
+  # after the core plugin installs, so a failed install leaves the old copies working
+  migrate_legacy_install
   setup_overhaul
   setup_skillsets
-  setup_skills
+  # last, because registering a marketplace rewrites its extraKnownMarketplaces entry
+  setup_config
   print_summary
 }
 

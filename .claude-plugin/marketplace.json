@@ -1,11 +1,56 @@
 {
   "name": "token-effort",
   "owner": { "name": "HeadlessTarry" },
-  "metadata": { "description": "Token-Effort overhaul mods for Claude Code" },
+  "metadata": { "description": "Token-Effort core plugin and overhaul mods for Claude Code" },
   "plugins": [
     {
+      "name": "token-effort",
+      "source": "./",
+      "description": "Token-Effort core plugin: home-grown skills, working conventions injected into every session and subagent, and /token-effort:setup to merge starter settings",
+      "author": { "name": "HeadlessTarry" },
+      "skills": ["./skills/", "./plugins/claude/token-effort/skills/"],
+      "hooks": {
+        "SessionStart": [
+          {
+            "hooks": [
+              {
+                "type": "command",
+                "command": "node",
+                "args": ["${CLAUDE_PLUGIN_ROOT}/plugins/claude/token-effort/scripts/inject-conventions.js", "SessionStart"],
+                "timeout": 10
+              }
+            ]
+          }
+        ],
+        "UserPromptSubmit": [
+          {
+            "hooks": [
+              {
+                "type": "command",
+                "command": "node",
+                "args": ["${CLAUDE_PLUGIN_ROOT}/plugins/claude/token-effort/scripts/session-title.js"],
+                "timeout": 15
+              }
+            ]
+          }
+        ],
+        "SubagentStart": [
+          {
+            "hooks": [
+              {
+                "type": "command",
+                "command": "node",
+                "args": ["${CLAUDE_PLUGIN_ROOT}/plugins/claude/token-effort/scripts/inject-conventions.js", "SubagentStart"],
+                "timeout": 10
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "name": "under-empire",
-      "source": "./overhaul-mods/under-empire",
+      "source": "./plugins/claude/overhaul-mods/under-empire",
       "description": "Under-Empire overhaul mod: a scheming Skaven Warlock Engineer voice for prose, with plain professional artefacts, and an Underlings pane of running subagents and background tasks"
     }
   ]

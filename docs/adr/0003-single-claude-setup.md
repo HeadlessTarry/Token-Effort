@@ -3,7 +3,7 @@
 > **Status:** Accepted
 > **Date:** 2026-10-05
 > **Supersedes:** [0002-lab-forge-agent-areas.md](./0002-lab-forge-agent-areas.md)
-> **Note:** The persona parts are superseded by [0006-overhaul-mods.md](./0006-overhaul-mods.md).
+> **Note:** The persona parts are superseded by [0006-overhaul-mods.md](./0006-overhaul-mods.md), and the install parts by [0007-core-plugin.md](./0007-core-plugin.md).
 
 ## Context
 
@@ -21,7 +21,7 @@ There was no concrete problem behind the split beyond isolating the two skill se
 
 One Claude Code setup in the default `~/.claude`.
 
-- **`install.sh` configures `~/.claude`** (or `$CLAUDE_CONFIG_DIR` when set, creating it if missing). It merges `config/settings.json` into its `settings.json` and copies `config/AGENTS.md` to its `AGENTS.md`.
+- **`install.sh` configures `~/.claude`** (or `$CLAUDE_CONFIG_DIR` when set, creating it if missing). It merges the starter settings (now `plugins/claude/token-effort/config/settings.json`) into its `settings.json` and copies `config/AGENTS.md` to its `AGENTS.md`.
 - **Skill sets are chosen at install** (`--skills <id,...|all>`), defined in a table at the top of `install.sh`. Deselected skill sets are uninstalled on the next run, as personas already are.
 - **Every home-grown skill in `skills/` is always installed**, whichever skill sets are chosen. With one install target there is nothing to choose per skill, so the per-area `manifest` is gone.
 - **One persona** (`--persona`), as before.
