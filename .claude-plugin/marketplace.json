@@ -33,6 +33,31 @@
               }
             ]
           }
+        ],
+        "PostToolUse": [
+          {
+            "matcher": "^(Bash|PowerShell)$",
+            "hooks": [
+              {
+                "type": "command",
+                "command": "node",
+                "args": ["${CLAUDE_PLUGIN_ROOT}/plugins/claude/token-effort/skills/shepherding-pr-reviews/scripts/review-state.js", "hook-post-create"],
+                "timeout": 15
+              }
+            ]
+          }
+        ],
+        "Stop": [
+          {
+            "hooks": [
+              {
+                "type": "command",
+                "command": "node",
+                "args": ["${CLAUDE_PLUGIN_ROOT}/plugins/claude/token-effort/skills/shepherding-pr-reviews/scripts/review-state.js", "hook-stop"],
+                "timeout": 30
+              }
+            ]
+          }
         ]
       }
     },
