@@ -23,9 +23,16 @@ test('formatTitle keeps at most 8 words', () => {
 })
 
 test('hookOutput sets the session title', () => {
-  assert.deepEqual(hookOutput({ prompt: '/triage #12' }, lookup('Fix login')), {
-    hookSpecificOutput: { hookEventName: 'UserPromptSubmit', sessionTitle: '[#12] Fix login' },
-  })
+  const output = hookOutput({ prompt: '/triage #12' }, lookup('Fix login'))
+  assert.equal(output.hookSpecificOutput.hookEventName, 'UserPromptSubmit')
+  assert.equal(output.hookSpecificOutput.sessionTitle, '[#12] Fix login')
+})
+
+test('hookOutput asks the agent to set the title through the desktop app', () => {
+  const { additionalContext } = hookOutput({ prompt: '/triage #12' }, lookup('Fix login')).hookSpecificOutput
+  assert.match(additionalContext, /mcp__ccd_session_mgmt__set_session_title/)
+  assert.match(additionalContext, /session_id "self"/)
+  assert.ok(additionalContext.includes('title "[#12] Fix login"'))
 })
 
 test('hookOutput passes the issue number and cwd to the lookup', () => {

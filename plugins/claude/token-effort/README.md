@@ -14,13 +14,16 @@ When a prompt is a slash command that references an issue, such as `/triage #123
 - The title is the issue's own title from `gh issue view`, cut to 8 words. It is not an agent-written summary, because in the CLI the model has no tool to rename a session.
 - A session that already has a custom title keeps it, so a later prompt with another issue ref does not rename it.
 - If `gh` is missing, unauthenticated or the issue does not exist, the hook prints nothing and the prompt goes ahead as normal.
+- In the Claude desktop app, the app replaces the hook's title with its own generated one (for `/mattpocock-skills:triage #230` it was `Mattpocock skills triage #230`). So the hook also asks the agent, through `additionalContext`, to call the app's `mcp__ccd_session_mgmt__set_session_title` tool with the same title. The app renames a generated title without asking, and asks the user before replacing a title they set. In the CLI that tool does not exist and the agent ignores the request.
 
 Script: [scripts/session-title.js](scripts/session-title.js), registered in the core plugin entry in [.claude-plugin/marketplace.json](../../../.claude-plugin/marketplace.json).
 
 Limitations:
 
 - The hook runs `node` on every prompt, and calls `gh` only for matching prompts in untitled sessions.
-- Not verified in the desktop app: whether the Code tab sidebar shows the hook's title, and whether the app's own generated title counts as a custom title, which would make the hook skip.
+- Verified in the desktop app: the hook's title is written to the transcript, then overwritten by the app's generated title, which the app re-writes as the custom title on every later turn. `set_session_title` on a session with a generated title renames it without a prompt, and the new title persists in the transcript.
+- Not verified end to end: a new desktop session started with `/<skill> #<n>` keeping the `[#<n>] ...` title after the agent's rename.
+- In the desktop app the title change costs the agent one tool call in the first turn.
 
 ## 🐑 shepherding-pr-reviews
 
