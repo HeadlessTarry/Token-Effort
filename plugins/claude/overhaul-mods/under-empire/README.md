@@ -55,4 +55,4 @@ On the desktop app the rats are animated SVGs; in a terminal each is a single gl
 
 ## 🧪 Develop
 
-[run_checks.sh](../../run_checks.sh) validates the plugin and runs its tests (see [docs/running-checks.md](../../docs/running-checks.md)). After editing, run `/reload-plugins` in a session, and bump `version` in [.claude-plugin/plugin.json](.claude-plugin/plugin.json) as the [README](../../README.md) says.
+[run_checks.sh](../../../../run_checks.sh) validates the plugin and runs its tests (see [docs/running-checks.md](../../../../docs/running-checks.md)). After editing, run `/reload-plugins` in a session. The plugin sets no `version`, so each commit is a new version (see the [README](../../../../README.md)).

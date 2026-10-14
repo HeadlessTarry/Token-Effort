@@ -2,6 +2,7 @@
 
 > **Status:** Accepted
 > **Date:** 2026-10-09
+> **Note:** The install parts are superseded by [0007-core-plugin.md](./0007-core-plugin.md): the core plugin injects the conventions, and `install.sh` no longer copies them. The `platform_config_dir` seam in `install.sh` is currently unused for conventions (it only resolves the Claude config root), but remains the intended extension point for another platform.
 
 ## Context
 

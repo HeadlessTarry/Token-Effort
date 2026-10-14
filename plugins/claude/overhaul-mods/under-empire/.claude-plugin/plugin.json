@@ -1,6 +1,5 @@
 {
   "name": "under-empire",
-  "version": "0.2.0",
   "description": "Under-Empire overhaul mod: a scheming Skaven Warlock Engineer voice for prose, with plain professional artefacts, and an Underlings pane of running subagents and background tasks",
   "author": { "name": "HeadlessTarry" },
   "types": "./types/index.d.ts"
