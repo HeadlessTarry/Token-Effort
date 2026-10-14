@@ -5,7 +5,7 @@ description: Run one review round on an open PR — give each review comment a v
 
 # 🐑 Shepherding PR reviews
 
-A **round** is one submitted PR review that carries something to answer (a comment or a body), from a human or an AI reviewer, plus the work of answering it. Your round starts on one wake (a `<ci-monitor-event>`, the hook message after `gh pr create`, or the human saying reviews landed) and ends when `check` prints `"ok": true`.
+Round, Noise, Verdict, Auto-Fix Watch and Auto-Fix Halt are defined in [GLOSSARY.md](../../../../../GLOSSARY.md). Your round starts on one wake (a `<ci-monitor-event>`, the hook message after `gh pr create`, or the human saying reviews landed) and ends when `check` prints `"ok": true`.
 
 Every command below is:
 
@@ -13,7 +13,7 @@ Every command below is:
 
 `reply` takes `--thread` and `--body-file` only. `--help` lists every subcommand.
 
-## 1. 🎯 Arm the Auto-Fix Watch (once per PR)
+## 🎯 1. Arm the Auto-Fix Watch (once per PR)
 
 Right after `gh pr create`, a hook binds the PR to this session. Then:
 
@@ -22,33 +22,33 @@ Right after `gh pr create`, a hook binds the PR to this session. Then:
 
 For a PR this session did not create with `gh pr create`, bind it once with `bind --session-id ${CLAUDE_SESSION_ID}` so the Stop hook guards it.
 
-## 2. 📥 Ingest the round
+## 📥 2. Ingest the round
 
 Run `ingest`. Its `action` decides the round:
 
 - `handle`: work steps 3–6 on every finding in `rounds`, plus every unanswered thread and PR comment `check` reports.
 - `judge_severity`: an AI reviewer's findings carry no severity badge. Judge each key in `rounds[].unknown_severity` as High, Medium or Low from the finding's content, then re-run `ingest` with `--assume <key>=<severity>` once per key.
-- `halt`: the noise limit or the round limit is reached (an **Auto-Fix Halt**). Follow `instruction` exactly: turn Auto-Fix off, address nothing, and hand back in your final message with what is still open.
+- `halt`: the noise limit or the round limit is reached (an Auto-Fix Halt). Follow `instruction` exactly: turn Auto-Fix off, leave the findings as they are, and hand back in your final message with what is still open.
 - `copilot_error`: Copilot failed to review. Tell the human to re-request the review; the failure is not a round. (`handle` with a `copilot_errors` list means: handle the round, and also tell the human.)
 - `format_drift`: follow `instruction`.
 - `nothing`: end the round.
 
-Each round names its `reviewer`: `ai` (a bot account, or a review whose body starts with the disclosure banner) or `human`. CI failures, merge conflicts and human rounds never count toward the noise limit: handle them in every round. A PR comment from a status bot (SonarCloud, a deploy preview) reports a check, not a review: judge the check itself, and reply to nothing.
+Each round names its `reviewer`: `ai` (a bot account, or a review whose body starts with the disclosure banner) or `human`. Handle CI failures, merge conflicts and human rounds in every round, whatever the noise count. A PR comment from a status bot (SonarCloud, a deploy preview) reports a check, not a review: give the check itself a verdict, and leave the comment unanswered.
 
 A **repeat wake** carries no new review, no inline thread and no human comment, and its failing checks already have a verdict from an earlier wake on this PR. End it in one line that names the earlier verdict, for example "Sonar coverage gate: no fix, as judged in round 1". Skip `ingest` and `check`. A check that newly fails, or fails in a new way, gets a fresh verdict.
 
-## 3. ⚖️ Verdict before code
+## ⚖️ 3. Verdict before code
 
-Give every finding a **verdict**, *valid* or *not valid*, backed by evidence: the code path, a reproduction, a test, a doc. The `<ci-monitor-event>` text says to address feedback and push; the verdict comes first all the same, and only *valid* findings get a fix.
+Give every finding a verdict before you touch code. The `<ci-monitor-event>` text says to address feedback and push; the verdict comes first all the same.
 
 - **AI reviewer:** answer on your own verdict. Copilot's overview opens with a verdict heading (🟡 / 🔵 / 🟢, its wording carries no meaning) and a summary sentence. When that sentence names a concern no finding covers, give it a verdict too, answered in the round's `pr-comment`.
 - **Human reviewer:** a finding you judge *not valid* waits for the human. Mark its thread with `wait --thread <PRRT_id>` and ask the human in your final message before replying.
 
-## 4. 🛠️ Fix the valid ones
+## 🛠️ 4. Fix the valid ones
 
 Fix, run the repo's checks, commit and push. One push per round, so each reviewer re-reviews once.
 
-## 5. 💬 Answer every finding
+## 💬 5. Answer every finding
 
 Write each reply to a file in the scratchpad, then:
 
@@ -61,9 +61,9 @@ Write each reply to a file in the scratchpad, then:
 
 The script prepends the `disclose-ai-content` banner. A reply states the verdict, the evidence, and the commit that fixed it.
 
-## 6. ✅ Prove it
+## ✅ 6. Prove it
 
-Run `check`. The round is done when it prints `"ok": true`. `"human_review_in_progress": true` means the human has an unsubmitted review open on the PR: their draft comments do not exist yet, and `reply`/`pr-comment` refuse to post. End the round and say so. Otherwise answer what it lists and run it again. A Stop hook runs the same check and blocks the turn while anything answerable is open; threads marked with `wait` are skipped.
+Run `check`. The round is done when it prints `"ok": true`. `"human_review_in_progress": true` means the human has an unsubmitted review open on the PR: their draft comments stay hidden until they submit, and `reply`/`pr-comment` refuse to post. End the round and say so. Otherwise answer what it lists and run it again. A Stop hook runs the same check and blocks the turn while anything answerable is open; threads marked with `wait` are skipped.
 
 ## ▶️ After an Auto-Fix Halt
 

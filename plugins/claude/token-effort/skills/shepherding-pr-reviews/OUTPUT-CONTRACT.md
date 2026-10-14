@@ -8,7 +8,7 @@ These hold across releases. New fields may be added; none of these may be rename
 
 - The script is `scripts/review-state.js`, and its PR subcommands take `--repo owner/name --pr N`.
 - `ingest` prints JSON with `action`, `instruction`, `noise_count`, `noise_limit`, `round_count`, `round_limit`, `rounds[].kind` and `rounds[].findings[].severity`.
-- A halt's `instruction` begins with `Round limit` or `Noise limit`.
+- When `ingest` reaches a limit (`action` is `halt`), `instruction` begins with `Round limit` or `Noise limit`.
 - `check` prints JSON with `pr_state`, `threads`, `pm_comments`, `waiting_on_user` and `human_review_in_progress`.
 
 ## 🔢 Values

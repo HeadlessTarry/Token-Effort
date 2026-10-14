@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // PR review state, round and noise counting, thread replies, and the hooks that guard them.
-// The shepherding-pr-reviews skill drives it; its SKILL.md documents the output contract.
+// The shepherding-pr-reviews skill drives it; OUTPUT-CONTRACT.md beside SKILL.md documents what it prints.
 // GitHub is reached through a port (ghPort below), so tests can pass an in-memory fake to main().
 const crypto = require('node:crypto')
 const { execFileSync } = require('node:child_process')
@@ -47,6 +47,10 @@ function stateRoot(env) {
   return path.join(config, 'state', 'shepherding-pr-reviews')
 }
 
+function prUrl(repo, pr) {
+  return `https://github.com/${repo}/pull/${pr}`
+}
+
 function statePath(env, repo, pr) {
   return path.join(stateRoot(env), 'prs', `${repo.replace('/', '-')}-${pr}.json`)
 }
@@ -73,7 +77,7 @@ function newState(repo, pr) {
   return {
     repo,
     pr,
-    url: `https://github.com/${repo}/pull/${pr}`,
+    url: prUrl(repo, pr),
     session_id: null,
     created_at: new Date().toISOString().replace(/\.\d+Z$/, 'Z'),
     noise_count: 0,
@@ -124,6 +128,10 @@ function isOwnPost(comment, viewer) {
   return login === viewer && startsWithBanner(comment.body)
 }
 
+function isCopilot(review) {
+  return COPILOT_LOGINS.has(review.user?.login)
+}
+
 function isAiReview(review) {
   return review.user?.type === 'Bot' || /\[bot\]$/.test(review.user?.login || '') || startsWithBanner(review.body)
 }
@@ -149,6 +157,10 @@ function unansweredThreads(state, pull, viewer) {
     found.push({ thread_id: thread.id, path: thread.path, line: thread.line, comment_id: comments[0].databaseId })
   }
   return found
+}
+
+function hasOpenWork(report) {
+  return report.threads.length > 0 || report.pm_comments.length > 0
 }
 
 function postedRoundMarkers(github, repo, pr) {
@@ -263,7 +275,7 @@ function parseAssumptions(values) {
 
 function isCopilotError(review) {
   const body = review.body || ''
-  return COPILOT_LOGINS.has(review.user?.login) && body.includes('encountered an error') && !body.includes('ccr-overview')
+  return isCopilot(review) && body.includes('encountered an error') && !body.includes('ccr-overview')
 }
 
 function buildRound(review, comments, viewer, assumed) {
@@ -273,7 +285,7 @@ function buildRound(review, comments, viewer, assumed) {
   )
   if (!answerable.length && !(review.body || '').trim()) return null
   const reviewer = isAiReview(review) ? 'ai' : 'human'
-  const { findings, recognised } = COPILOT_LOGINS.has(review.user?.login)
+  const { findings, recognised } = isCopilot(review)
     ? parseCopilotOverview(review.body || '')
     : parseReview(review, answerable)
   for (const finding of findings) {
@@ -370,7 +382,7 @@ function ingest(ctx, args) {
     state.halted = true
     plan.action = 'halt'
     plan.instruction =
-      `${limitHit}. Do not address these findings. Call mcp__ccd_pr__set_monitor with auto_fix=false, ` +
+      `${limitHit}. Leave these findings as they are. Call mcp__ccd_pr__set_monitor with auto_fix=false, ` +
       `address_comments=false, url=${state.url}; then hand back to the human in your final message, listing ` +
       'what is still open.'
   } else if (state.halted && !state.one_shot) {
@@ -435,7 +447,7 @@ function check(ctx, args) {
   const state = loadState(ctx.env, args.repo, args.pr)
   const report = outstanding(ctx.github, state)
   report.waiting_on_user = state.waiting_on_user
-  const done = !report.threads.length && !report.pm_comments.length
+  const done = !hasOpenWork(report)
   if (done && state.one_shot) {
     state.one_shot = false
     state.halted = true
@@ -480,13 +492,13 @@ function hookPostCreate(ctx) {
   const repo = `${match[1]}/${match[2]}`
   const pr = Number(match[3])
   bindState(ctx.env, repo, pr, payload.session_id)
-  const url = `https://github.com/${repo}/pull/${pr}`
+  const url = prUrl(repo, pr)
   const context =
     `PR ${url} was created and bound to this session. Load the shepherding-pr-reviews skill now and arm the ` +
     `Auto-Fix Watch: call mcp__ccd_pr__set_monitor with auto_fix=true, address_comments=true, url=${url}. ` +
     'When that tool is unavailable (a CLI session), tell the human the Auto-Fix Watch is not armed and that ' +
     'review rounds run when they say reviews have landed.'
-  ctx.print({ hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: context } }, 0)
+  ctx.emit({ hookSpecificOutput: { hookEventName: 'PostToolUse', additionalContext: context } })
   return 0
 }
 
@@ -513,7 +525,7 @@ function hookStop(ctx) {
       continue
     }
     saveState(ctx.env, state)
-    if (report.threads.length || report.pm_comments.length) {
+    if (hasOpenWork(report)) {
       problems.push(
         `${state.url}: ${report.threads.length} unanswered thread(s) ` +
           `[${report.threads.map((thread) => thread.thread_id).join(', ')}], ` +
@@ -526,7 +538,7 @@ function hookStop(ctx) {
       'Review threads still need an answer (shepherding-pr-reviews skill). Reply in-thread and resolve, or mark ' +
       "a human reviewer's thread with `wait` when it needs the human's decision:\n- " +
       problems.join('\n- ')
-    ctx.print({ decision: 'block', reason }, 0)
+    ctx.emit({ decision: 'block', reason })
   }
   return 0
 }
@@ -617,7 +629,7 @@ const COMMANDS = {
 
 function parseArgs(name, command, argv) {
   const options = { ...command.options, ...(command.pr && { repo: 'required', pr: 'number' }) }
-  const args = { assume: [] }
+  const args = Object.fromEntries(Object.entries(options).filter(([, kind]) => kind === 'list').map(([key]) => [key, []]))
   for (let i = 0; i < argv.length; i++) {
     const key = argv[i].replace(/^--/, '')
     const kind = options[key]
@@ -655,7 +667,9 @@ function main(argv, io = {}) {
     env: io.env || process.env,
     github: io.github || ghPort(),
     stderr,
-    print: (value, indent = 2) => stdout.write(JSON.stringify(value, null, indent) + '\n'),
+    // print: indented JSON for the agent. emit: one-line JSON for Claude Code's hook runner.
+    print: (value) => stdout.write(JSON.stringify(value, null, 2) + '\n'),
+    emit: (value) => stdout.write(JSON.stringify(value) + '\n'),
     readPayload() {
       try {
         return JSON.parse(io.stdin ?? fs.readFileSync(0, 'utf8')) || {}
