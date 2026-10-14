@@ -149,6 +149,11 @@ export function visible(offerings: Offering[]): Offering[] {
   return offerings.filter(one => one.isShepherded)
 }
 
+/** A wheel gone cold (Auto-Fix off) or retired (PR merged or closed); Clear retired removes these. */
+export function isRetired(one: Offering): boolean {
+  return one.phase === 'closed' || one.phase === 'disarmed'
+}
+
 function fresh(repo: string, pr: number, at: number, phase: Phase, autoFix: boolean): Offering {
   return {
     key: keyOf(repo, pr), repo, pr, url: `https://github.com/${repo}/pull/${pr}`, phase, autoFix, isShepherded: false,

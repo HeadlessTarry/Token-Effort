@@ -4,7 +4,7 @@ import type { ElementTable, EngineInterface as Engine, Register } from 'claude-c
 import type { LogEntry, Offering } from '../../types'
 import {
   LOG_GLYPHS, LOG_LIMIT, PHASES, apply, clock, heatColor, parseBash, parseCiEvent, parseMonitor, phaseLook, pipRows, pips,
-  sanitize, staminaColor, statusLine, textsIn, visible,
+  isRetired, sanitize, staminaColor, statusLine, textsIn, visible,
 } from './model'
 import type { WheelEvent } from './model'
 import { glyphOf, wheelSvg } from './sprites'
@@ -69,10 +69,6 @@ function eventFromToolCall(e: Record<string, unknown>, ran: unknown): WheelEvent
   return parseBash(String(e.command ?? ''), output)
 }
 
-function isRetired(one: Offering): boolean {
-  return one.phase === 'closed' || one.phase === 'disarmed'
-}
-
 /** Clears the shown wheels that are cold or retired; offerings still out of sight are kept. */
 async function clearRetired($: Engine) {
   const kept = (await read($, offerings)).filter(one => !(one.isShepherded && isRetired(one)))
@@ -121,7 +117,7 @@ export const register: Register = on => {
 
   on('session.append', WAKE_DOORS, async ($, e, next) => {
     const stored = await next(e)
-    if (!e.agentId && e.door !== 'tool-result') {
+    if (!e.agentId) {
       const event = parseCiEvent(contentText(e.message.content))
       if (event) await dispatch($, event).catch(() => undefined)
     }

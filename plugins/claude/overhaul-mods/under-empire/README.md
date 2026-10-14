@@ -60,7 +60,7 @@ On the desktop app the rats are animated SVGs; in a terminal each is a single gl
 
 A pane and status line that show a PR's Auto-Fix Watch, and the review rounds the `shepherding-pr-reviews` skill runs on it, as a Skaven Doomwheel: a wooden wheel with a rat running inside, powered by a warpstone crystal.
 
-**It needs the `shepherding-pr-reviews` skill.** Doomwheel stays out of sight until the skill's script first prints for a PR. There is no pane, status line, toast or notification before then. Signals seen earlier for that PR, such as `gh pr create` or Auto-fix being armed, are kept and shown once the wheel appears. Without the skill, a session never sees Doomwheel. It only watches: the skill does not know it exists, and nothing in the skill changes when it is installed or removed.
+**It needs the `shepherding-pr-reviews` skill.** Doomwheel stays out of sight until the skill's script first prints for a PR: its pane, status line, toasts and notifications start with that output. Signals seen earlier for that PR, such as `gh pr create` or Auto-Fix being armed, are kept and shown once the wheel appears. A session without the skill sees only the rest of `under-empire`. Doomwheel only watches: the skill works the same with or without it.
 
 ### What it shows
 
@@ -75,27 +75,27 @@ When both limits are reached in the same round, the skill reports the round limi
 
 | Phase | Wheel |
 |---|---|
-| 📜 Offering laid | PR raised, Auto-fix not yet armed: the wheel stands still |
-| ⚙ Spinning | Auto-fix armed: the wheel turns and warp-lightning crackles |
+| 📜 Offering laid | PR raised, Auto-Fix not yet armed: the wheel stands still |
+| ⚙ Spinning | Auto-Fix armed: the wheel turns and warp-lightning crackles |
 | ⚡ Warp-bolt! | A `<ci-monitor-event>` woke the session: the wheel races and lightning strikes. It settles back when the turn ends |
-| 💥 Overheated / 🥵 Exhausted / ⛔ Halted | The watch halted. While Auto-fix is still on, the card says it must be cut |
-| ❄ Cold | Auto-fix off: the rat sleeps |
+| 💥 Overheated / 🥵 Exhausted / ⛔ Halted | An Auto-Fix Halt. While the Auto-Fix Watch is still on, the card says it must be cut |
+| ❄ Cold | Auto-Fix off: the rat sleeps |
 | 🏁 Retired | The PR is merged or closed |
 
-- **Pane:** one card per PR, newest first, with the wheel, the HEAT, ROUNDS and THREADS gauges and a **squeak-scroll** of the PR's last events. The pane opens by itself when a wheel first appears or a watch halts. `/doomwheel` opens it by hand, and **Clear retired** removes cold and retired wheels.
+- **Pane:** one card per PR, newest first, with the wheel, the HEAT, ROUNDS and THREADS gauges and a **squeak-scroll** of the PR's last events. The pane opens by itself when a wheel first appears or on an Auto-Fix Halt. `/doomwheel` opens it by hand, and **Clear retired** removes cold and retired wheels.
 - **Status line:** the most recently active wheel is pinned under the prompt, for example `⚙ Doomwheel #159 · Spinning · heat ▰▱▱ · round 2/10`.
-- **Alerts:** a toast when Auto-fix is armed, and a toast plus a native notification when a watch halts, because that needs your decision.
+- **Alerts:** a toast when Auto-Fix is armed, and a toast plus a native notification on an Auto-Fix Halt, because that needs your decision.
 
 On the desktop app the wheel is an animated SVG. In a terminal it is drawn as a single glyph.
 
 ### What it reads
 
-Every signal comes from the session itself. Doomwheel never calls GitHub or the skill's script.
+Every signal comes from the session itself: its tool calls, their output and its messages.
 
 | Signal | Source | Read with |
 |---|---|---|
 | PR raised | A `gh pr create` Bash or PowerShell call whose output holds the PR URL | `tool.call` |
-| Auto-fix on / off | A `set_monitor` call (`auto_fix`, `url`) and its answer | `tool.call` |
+| Auto-Fix on / off | A `set_monitor` call (`auto_fix`, `url`) and its answer | `tool.call` |
 | Wake | A `<ci-monitor-event>` message: the PR, failed checks, new review comments, merge conflict | `session.append` (tool output is skipped, because event-shaped text there is data) |
 | Rounds, noise, halts | The JSON printed by `review-state.js ingest` | `tool.call` |
 | Threads | The JSON printed by `review-state.js check`, `reply` and `wait`, and the `continue` subcommand | `tool.call` |
@@ -103,7 +103,7 @@ Every signal comes from the session itself. Doomwheel never calls GitHub or the 
 
 ### Contract with the skill
 
-The skill owns what its script prints, in [OUTPUT-CONTRACT.md](../../token-effort/skills/shepherding-pr-reviews/OUTPUT-CONTRACT.md). Doomwheel reads the fields listed there and never shapes them. [mods/doomwheel/tests/fixtures.ts](mods/doomwheel/tests/fixtures.ts) holds that output, and [mods/doomwheel/tests/contract.test.ts](mods/doomwheel/tests/contract.test.ts) fails if a field it reads is renamed. If the contract changes, update the fixture first, then `mods/doomwheel/model.ts`. The script's name, `review-state.js`, is written once, as `SKILL_SCRIPT` in `model.ts`.
+The skill owns what its script prints, in [OUTPUT-CONTRACT.md](../../token-effort/skills/shepherding-pr-reviews/OUTPUT-CONTRACT.md). Doomwheel reads the fields listed there, as the skill prints them. [mods/doomwheel/tests/fixtures.ts](mods/doomwheel/tests/fixtures.ts) holds that output, and [mods/doomwheel/tests/contract.test.ts](mods/doomwheel/tests/contract.test.ts) fails if a field it reads is renamed. If the contract changes, update the fixture first, then `mods/doomwheel/model.ts`. The script's name, `review-state.js`, is written once, as `SKILL_SCRIPT` in `model.ts`.
 
 ### Files
 
