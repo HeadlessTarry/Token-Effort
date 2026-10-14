@@ -7,11 +7,11 @@ description: Run one review round on an open PR — give each review comment a v
 
 Round, Noise, Verdict, Auto-Fix Watch and Auto-Fix Halt are defined in [GLOSSARY.md](../../../../../GLOSSARY.md). Your round starts on one wake (a `<ci-monitor-event>`, the hook message after `gh pr create`, or the human saying reviews landed) and ends when `check` prints `"ok": true`.
 
-Every command below is:
+Every command below runs the script with its subcommand and options:
 
-    node "${CLAUDE_PLUGIN_ROOT}/plugins/claude/token-effort/skills/shepherding-pr-reviews/scripts/review-state.js" <subcommand> --repo <owner/name> --pr <n> ...
+    node "${CLAUDE_PLUGIN_ROOT}/plugins/claude/token-effort/skills/shepherding-pr-reviews/scripts/review-state.js" <subcommand> <options>
 
-`reply` takes `--thread` and `--body-file` only. `--help` lists every subcommand.
+Each subcommand takes `--repo <owner/name> --pr <n>` plus its own options, except `reply`, which takes exactly `--thread <PRRT_id> --body-file <f> [--resolve]`. `--help` lists every subcommand.
 
 ## 🎯 1. Arm the Auto-Fix Watch (once per PR)
 
