@@ -1,8 +1,12 @@
 # 📖 Glossary
 
 **Working conventions**:
-How the maintainer tracks work, the same across all repos (issue tracker, triage labels). Installed once per user by `install.sh`.
+How the maintainer tracks work, the same across all repos (issue tracker, triage labels). Installed once per user (by the core plugin on Claude Code).
 _Avoid_: repo config, settings
+
+**Core plugin**:
+The Claude Code plugin that ships this repo's skills and working conventions. Required, unlike an overhaul mod, which is optional.
+_Avoid_: base plugin, main plugin, token-effort plugin
 
 **Skill frontmatter field**:
 A frontmatter field in a `SKILL.md` that the Agent Skills spec defines: `name`, `description`, `license`, `compatibility`, `metadata` or `allowed-tools`. Skills in this repo use only Skill frontmatter fields, so they work on any Agent Skills platform.

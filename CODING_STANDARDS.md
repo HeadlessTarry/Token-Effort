@@ -4,7 +4,7 @@ Judgement calls for the Standards reviewer in `/code-review`. Each rule names it
 
 ## 🤖 Agent-facing docs
 
-Scope: `AGENTS.md`, `config/AGENTS.md`, `skills/**`, `overhaul-mods/**`, `docs/agents/**`, `config/docs/**`.
+Scope: `AGENTS.md`, `config/AGENTS.md`, `skills/**`, `plugins/claude/**/*.md`, `docs/agents/**`, `config/docs/**`.
 
 - **Positive phrasing.** Apply the Negation guidance in the `writing-for-agents` skill.
 - **Actionable instructions.** Every instruction is one the reading agent can carry out from inside its own session, with the tools it has.
@@ -20,7 +20,7 @@ Scope: every `*.md`.
 
 ## 🔐 Config and permissions
 
-Scope: `.github/workflows/**`, `config/settings.json`, skill and agent frontmatter, plugin manifests.
+Scope: `.github/workflows/**`, `plugins/claude/token-effort/config/settings.json`, skill and agent frontmatter, plugin manifests.
 
 - **Least privilege.** Every permission, tool grant, or allowed command traces to a step that uses it.
 - **Established fields.** Use only frontmatter and config fields defined by the consuming tool's schema or already in use in this repo.
