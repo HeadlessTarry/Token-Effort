@@ -35,7 +35,8 @@ const ROUND_LIMIT = 10
 const SEVERITIES = ['High', 'Medium', 'Low']
 const COPILOT_LOGINS = new Set(['copilot-pull-request-reviewer', 'copilot-pull-request-reviewer[bot]', 'Copilot'])
 const PR_URL_RE = /https:\/\/github\.com\/([\w.-]+)\/([\w.-]+)\/pull\/(\d+)/
-const GH_PR_CREATE_RE = /\bgh\s+pr\s+create\b/
+// gh pr create in command position: at the start or after a separator, optionally behind VAR=value prefixes.
+const GH_PR_CREATE_RE = /(?:^|[;&|(\n]|\$\()\s*(?:\w+=\S*\s+)*gh(?:\.exe)?\s+pr\s+create\b/
 const BADGE_RE = /alt="(High|Medium|Low) severity"/
 const THREAD_LINK_RE = /\]\([^)\s]*#discussion_r(\d+)\)/
 const ROUND_MARKER_RE = /shepherding-pr-reviews: review (\d+)/g
@@ -490,9 +491,33 @@ function stringsIn(value) {
   return []
 }
 
+// Drop text that is data rather than commands: heredoc bodies, PowerShell here-strings and quoted strings.
+function commandText(command) {
+  const lines = command.split('\n')
+  const kept = []
+  let delimiter = null
+  for (const line of lines) {
+    if (delimiter !== null) {
+      if (line.replace(/^\t+/, '').trim() === delimiter) delimiter = null
+      continue
+    }
+    kept.push(line)
+    const heredoc = /<<-?\s*(['"]?)([\w.-]+)\1/.exec(line.replace(/<<</g, ''))
+    if (heredoc) delimiter = heredoc[2]
+  }
+  return kept
+    .join('\n')
+    .replace(/@'[\s\S]*?\n'@|@"[\s\S]*?\n"@/g, '')
+    .replace(/'[^']*'|"(?:[^"\\]|\\.)*"/g, '""')
+}
+
+function ranGhPrCreate(command) {
+  return GH_PR_CREATE_RE.test(commandText(command))
+}
+
 function hookPostCreate(ctx) {
   const payload = ctx.readPayload()
-  if (!GH_PR_CREATE_RE.test(payload.tool_input?.command || '')) return 0
+  if (!ranGhPrCreate(payload.tool_input?.command || '')) return 0
   const match = stringsIn(payload.tool_response).map((text) => PR_URL_RE.exec(text)).find(Boolean)
   if (!match || !payload.session_id) return 0
   const repo = `${match[1]}/${match[2]}`
