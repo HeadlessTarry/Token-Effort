@@ -341,6 +341,43 @@ test('hook-post-create exits silently when no gh pr create ran', () => {
   assert.equal(result.stderr, '')
 })
 
+for (const [name, command] of [
+  ['a heredoc body', "python - <<'PY'\nsrc = 'gh pr create --fill'\nprint('https://github.com/owner/name/pull/42')\nPY"],
+  ['an unquoted heredoc body', 'cat > notes.txt <<EOF\ngh pr create --fill\nEOF'],
+  ['a quoted string', 'echo "run gh pr create next" && echo https://github.com/owner/name/pull/42'],
+  ['a single-quoted script', "python -c 'print(\"gh pr create\")'"],
+  ['a PowerShell here-string', "Set-Content notes.txt @'\ngh pr create --fill\n'@"],
+]) {
+  test(`hook-post-create ignores gh pr create inside ${name}`, () => {
+    const result = runCli(['hook-post-create'], {
+      session_id: 'session-1',
+      tool_name: 'Bash',
+      tool_input: { command },
+      tool_response: { stdout: 'https://github.com/owner/name/pull/42\n' },
+    })
+
+    assert.equal(result.status, 0, result.stderr)
+    assert.equal(result.stdout, '')
+  })
+}
+
+for (const command of [
+  'git push -u origin HEAD && gh pr create --fill',
+  'cd repo; GH_PROMPT_DISABLED=1 gh pr create --title "Fix" --body "$(cat <<\'EOF\'\nCloses #1\nEOF\n)"',
+]) {
+  test(`hook-post-create binds when gh pr create runs: ${command.split('\n')[0]}`, () => {
+    const result = runCli(['hook-post-create'], {
+      session_id: 'session-1',
+      tool_name: 'Bash',
+      tool_input: { command },
+      tool_response: { stdout: `https://github.com/${REPO}/pull/${PR}\n` },
+    })
+
+    assert.equal(result.status, 0, result.stderr)
+    assert.match(JSON.parse(result.stdout).hookSpecificOutput.additionalContext, /was created and bound/)
+  })
+}
+
 test('hook-stop exits silently when no PR is bound to the session', () => {
   const result = runCli(['hook-stop'], { session_id: 'session-1', hook_event_name: 'Stop' })
 
