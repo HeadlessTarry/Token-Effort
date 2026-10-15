@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // PR review state, round and noise counting, thread replies, and the hooks that guard them.
-// The shepherding-pr-reviews skill drives it; OUTPUT-CONTRACT.md beside SKILL.md documents what it prints.
+// The shepherding-pr-reviews skill drives it.
 // GitHub is reached through a port (ghPort below), so tests can pass an in-memory fake to main().
 const crypto = require('node:crypto')
 const { execFileSync } = require('node:child_process')

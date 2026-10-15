@@ -285,24 +285,6 @@ test('after a halt, continue allows exactly one more round', () => {
   assert.equal(run(['ingest', ...PR_ARGS]).json().action, 'handle')
 })
 
-test('ingest and check print the fields the output contract names', () => {
-  const github = fakeGithub()
-  github.addReview({ login: 'review-bot[bot]', type: 'Bot', comments: [{ body: `${HIGH} Null dereference.` }] })
-  const run = makeRunner(github)
-
-  const plan = run(['ingest', ...PR_ARGS]).json()
-  for (const field of ['action', 'instruction', 'noise_count', 'noise_limit', 'round_count', 'round_limit', 'rounds']) assert.ok(field in plan, field)
-  assert.ok('kind' in plan.rounds[0])
-  assert.ok('severity' in plan.rounds[0].findings[0])
-
-  github.addReview({ login: 'reviewer-human', state: 'APPROVED' })
-  for (let i = 0; i < 9; i++) github.addReview({ login: 'reviewer-human', comments: [{ body: `Point ${i}.` }] })
-  assert.equal(typeof run(['ingest', ...PR_ARGS]).json().instruction, 'string')
-
-  const report = run(['check', ...PR_ARGS]).json()
-  for (const field of ['pr_state', 'threads', 'pm_comments', 'waiting_on_user', 'human_review_in_progress']) assert.ok(field in report, field)
-})
-
 test('PRs in different repos never share state, even when their names collide once joined', () => {
   const run = makeRunner()
 

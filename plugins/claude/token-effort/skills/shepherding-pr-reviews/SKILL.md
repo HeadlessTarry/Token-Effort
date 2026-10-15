@@ -72,7 +72,3 @@ The PR stays halted until the human says *continue*. Then run `continue` and wor
 ## 👀 Known gap
 
 `mcp__ccd_pr__set_monitor` wakes the session on "review comments" without naming the reviewer. That a human's review sends a `<ci-monitor-event>` is assumed, not yet observed. When the human says they reviewed and no wake came, run a round.
-
-## 📜 Output contract
-
-Changing what `review-state.js` prints? Read [OUTPUT-CONTRACT.md](OUTPUT-CONTRACT.md) first: other tools read it.

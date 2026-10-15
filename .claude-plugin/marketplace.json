@@ -76,7 +76,7 @@
     {
       "name": "under-empire",
       "source": "./plugins/claude/overhaul-mods/under-empire",
-      "description": "Under-Empire overhaul mod: a scheming Skaven Warlock Engineer voice for prose, with plain professional artefacts, an Underlings pane of running subagents and background tasks, and a Doomwheel pane of PR review rounds"
+      "description": "Under-Empire overhaul mod: a scheming Skaven Warlock Engineer voice for prose, with plain professional artefacts, an Underlings pane of running subagents and background tasks, and a Doomwheel pane of each PR's review process"
     }
   ]
 }

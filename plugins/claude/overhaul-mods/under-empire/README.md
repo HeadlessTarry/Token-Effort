@@ -11,7 +11,7 @@ The Skaven overhaul mod. Install it with:
 | `Warlock Engineer` output style | A scheming Skaven voice for prose; code, commands and artefacts stay plain ([output-styles/warlock-engineer.md](output-styles/warlock-engineer.md)) |
 | Reminder hook | A `UserPromptSubmit` command hook that adds [hooks/reminder.txt](hooks/reminder.txt) to every prompt, so the voice holds in long sessions |
 | Underlings | A side pane listing running subagents and background tasks as animated Skaven rats (below) |
-| Doomwheel | A side pane and status line showing a PR's Auto-Fix Watch and review rounds as a Skaven Doomwheel. Needs the `shepherding-pr-reviews` skill (below) |
+| Doomwheel | A side pane showing each PR's review process, read from the session and GitHub, as a Skaven Doomwheel (below) |
 
 Claude Code loads one hooks module per plugin, so [hooks/register.ts](hooks/register.ts) registers every mod in `mods/`. Each mod keeps its own source and tests in `mods/<mod>/`, and its `$.state` keys, prefixed `<mod>.`, in the plugin's one contract, [types/index.d.ts](types/index.d.ts).
 
@@ -58,67 +58,78 @@ On the desktop app the rats are animated SVGs; in a terminal each is a single gl
 
 ## ⚙️ Doomwheel
 
-A pane and status line that show a PR's Auto-Fix Watch, and the review rounds the `shepherding-pr-reviews` skill runs on it, as a Skaven Doomwheel: a wooden wheel with a rat running inside, powered by a warpstone crystal.
+A pane that shows each PR's review process as a Skaven Doomwheel: a wooden wheel with a rat running inside, powered by a warpstone crystal. It reads the session and GitHub, and needs no skill: any PR review process drives it.
 
-**It needs the `shepherding-pr-reviews` skill.** Doomwheel stays out of sight until the skill's script first prints for a PR: its pane, status line, toasts and notifications start with that output. Signals seen earlier for that PR, such as `gh pr create` or Auto-Fix being armed, are kept and shown once the wheel appears. A session without the skill sees only the rest of `under-empire`. Doomwheel only watches: the skill works the same with or without it.
+### Which PRs get a wheel
+
+- A PR this session created with `gh pr create`.
+- A PR this session armed Auto-Fix on.
+- A PR named in a `<ci-monitor-event>`.
+- A PR added by hand with `/doomwheel <url>` (or `/doomwheel owner/name#N`). `/doomwheel` alone opens the pane.
+
+Wheels are kept per session. A wheel that is not retired resumes polling when the session starts again.
 
 ### What it shows
 
-The wheel tracks the two limits that cause an Auto-Fix Halt, each with its own look:
+| Gauge | Meaning | Look |
+|---|---|---|
+| **HEAT** | Unresolved review threads + failing checks + 1 for a merge conflict | The crystal glows green at 0, rising to red at 5 or more (a cosmetic threshold) |
+| **LAPS** | Submitted reviews, from any reviewer, with no cap | From lap 7 the wheel slows and the rat sweats. Cosmetic only: nothing halts |
+| **THREADS** | `unresolved/total` review threads | Red while any are unresolved, green at 0 |
 
-| Limit | Gauge | Rising | At the limit |
+| Phase | When | Wheel |
+|---|---|---|
+| 📜 Offering laid | PR tracked, Auto-Fix not armed | Still |
+| ⚙ Spinning | Auto-Fix on | Turning, with warp-lightning |
+| ⚡ Warp-bolt! | A `<ci-monitor-event>` arrived; settles when the turn ends | Racing, lightning strikes |
+| 💥 Cracked | Auto-Fix cut while the PR is open with work left (unresolved threads, failing checks or a conflict) | Cracked and smoking, the rat knocked out |
+| ❄ Cold | Auto-Fix off, no open work | The rat sleeps |
+| 🏆 Victory | PR merged | The rat stands on the still wheel holding the warpstone aloft, in a gold blaze |
+| 🪦 Scrapped | PR closed unmerged | The wheel lies in a grey heap and the rat slinks away |
+
+A cracked wheel goes back to Spinning when Auto-Fix is re-armed, or to Cold once its open work drops to zero. Victory and Scrapped are retired: polling stops, and **Clear retired** removes them.
+
+| Event | Toast | Native notification | Pane opens |
 |---|---|---|---|
-| **Noise limit**: 3 noise rounds | **HEAT** ▰▱▱, and the crystal's colour | The crystal glows green, then yellow, orange and red | **Overheated**: the wheel cracks, smokes and burns, and the rat is knocked out |
-| **Round limit**: 10 rounds | **ROUNDS** ▰▰▰▱▱▱▱▱▱▱ | The wheel turns slower with every round. From round 7 the rat sweats and the gauge turns amber | **Exhausted**: the wheel stays whole and the rat collapses in a puddle, under an amber glow |
+| Wheel first appears | — | — | ✓ |
+| Auto-Fix armed | ✓ | — | — |
+| Cracked | ✓ | ✓ | ✓ |
+| Victory | ✓ | — | ✓ |
+| Scrapped | — | — | — |
 
-When both limits are reached in the same round, the skill reports the round limit, and so does the wheel.
-
-| Phase | Wheel |
-|---|---|
-| 📜 Offering laid | PR raised, Auto-Fix not yet armed: the wheel stands still |
-| ⚙ Spinning | Auto-Fix armed: the wheel turns and warp-lightning crackles |
-| ⚡ Warp-bolt! | A `<ci-monitor-event>` woke the session: the wheel races and lightning strikes. It settles back when the turn ends |
-| 💥 Overheated / 🥵 Exhausted / ⛔ Halted | An Auto-Fix Halt. While the Auto-Fix Watch is still on, the card says it must be cut |
-| ❄ Cold | Auto-Fix off: the rat sleeps |
-| 🏁 Retired | The PR is merged or closed |
-
-- **Pane:** one card per PR, newest first, with the wheel, the HEAT, ROUNDS and THREADS gauges and a **squeak-scroll** of the PR's last events. The pane opens by itself when a wheel first appears or on an Auto-Fix Halt. `/doomwheel` opens it by hand, and **Clear retired** removes cold and retired wheels.
-- **Status line:** the most recently active wheel is pinned under the prompt, for example `⚙ Doomwheel #159 · Spinning · heat ▰▱▱ · round 2/10`.
-- **Alerts:** a toast when Auto-Fix is armed, and a toast plus a native notification on an Auto-Fix Halt, because that needs your decision.
+- **Pane:** one card per PR, newest first, with the wheel, the HEAT, LAPS and THREADS gauges and a **squeak-scroll** of the PR's last events.
+- **Squeak-scroll:** PR raised, Auto-Fix armed or cut, wakes, each submitted review (author and state), unresolved threads rising or falling, checks turning red or recovering, a merge conflict appearing or clearing, the wheel cracking, Victory and Scrapped. A poll that changes nothing writes nothing.
 
 On the desktop app the wheel is an animated SVG. In a terminal it is drawn as a single glyph.
 
 ### What it reads
 
-Every signal comes from the session itself: its tool calls, their output and its messages.
+Session signals find the PRs and make the wheel react at once. GitHub polling supplies the true numbers.
 
 | Signal | Source | Read with |
 |---|---|---|
 | PR raised | A `gh pr create` Bash or PowerShell call whose output holds the PR URL | `tool.call` |
-| Auto-Fix on / off | A `set_monitor` call (`auto_fix`, `url`) and its answer | `tool.call` |
-| Wake | A `<ci-monitor-event>` message: the PR, failed checks, new review comments, merge conflict | `session.append` (tool output is skipped, because event-shaped text there is data) |
-| Rounds, noise, halts | The JSON printed by `review-state.js ingest` | `tool.call` |
-| Threads | The JSON printed by `review-state.js check`, `reply` and `wait`, and the `continue` subcommand | `tool.call` |
+| Auto-Fix on / off | The desktop app's `set_monitor` call (`auto_fix`, `url`) and its answer | `tool.call` |
+| Wake | A `<ci-monitor-event>` message | `session.append` (tool output is skipped, because event-shaped text there is data) |
 | Wake settled | The main turn ending | `turn.complete` |
+| PR state, reviews, threads, checks, mergeability | One `gh api graphql` query per PR | `$.process.run` |
 
-### Contract with the skill
-
-The skill owns what its script prints, in [OUTPUT-CONTRACT.md](../../token-effort/skills/shepherding-pr-reviews/OUTPUT-CONTRACT.md). Doomwheel reads the fields listed there, as the skill prints them. [mods/doomwheel/tests/fixtures.ts](mods/doomwheel/tests/fixtures.ts) holds that output, and [mods/doomwheel/tests/contract.test.ts](mods/doomwheel/tests/contract.test.ts) fails if a field it reads is renamed. If the contract changes, update the fixture first, then `mods/doomwheel/model.ts`. The script's name, `review-state.js`, is written once, as `SKILL_SCRIPT` in `model.ts`.
+Each live PR is polled every 60 seconds, and at once on a wake, on a `gh` call that names the PR, before a cut of its Auto-Fix and at the end of each turn. If `gh` is missing or not signed in, the wheel runs on session signals alone, with one dim line on its card saying so.
 
 ### Files
 
 | File | Role |
 |---|---|
-| `mods/doomwheel/register.tsx` | The hooks, the dispatch of events into state, and the Pane drawing |
-| `mods/doomwheel/model.ts` | Pure logic: the signal parsers, the reducer that folds events into wheel state, the visibility gate, and labels |
-| `mods/doomwheel/sprites.ts` | The Doomwheel, baked into self-animating SVG (SMIL) for every phase, heat and fatigue |
-| `mods/doomwheel/tests/` | The skill's contract fixture, and unit and Pane tests on the terminal and desktop surfaces |
+| `mods/doomwheel/register.tsx` | The hooks, the polling, the dispatch of events into state, and the Pane drawing |
+| `mods/doomwheel/model.ts` | Pure logic: the signal parsers, the poll query and its reader, the reducer that folds events into wheel state, and labels |
+| `mods/doomwheel/sprites.ts` | The Doomwheel, baked into self-animating SVG (SMIL) for every phase, heat and lap count |
+| `mods/doomwheel/tests/` | Unit tests, and Pane tests on the terminal and desktop surfaces with `gh` and the clock mocked |
 
 ### Known limits
 
-- **State starts when Doomwheel first sees a signal.** A PR raised before the plugin was installed shows up on its next `ingest`, `check`, `wait` or `continue`, with counts taken from the script's output.
-- **A `reply`** names only a thread, so it is logged against the most recently active wheel shown.
-- **The skill's Stop hook block** is not visible to mods. Open threads show from the latest `check`.
+- **The first 100** reviews, review threads and checks of a PR are read; past that the gauges undercount.
+- **Checks** are the latest commit's check runs and commit statuses.
+- **A `gh` call names a PR** by its URL, `owner/name#N` or its number standing alone, so a call that merely mentions the number also triggers a poll.
 - Supported on Windows and Linux; macOS is untested.
 
 ## 🧪 Develop

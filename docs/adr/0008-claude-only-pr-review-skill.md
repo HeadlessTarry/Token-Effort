@@ -27,4 +27,4 @@ Rejected alternatives:
 - Limitation: Claude Code only. Other Agent Skills platforms get no PR review skill.
 - Limitation: the Auto-Fix Watch needs the Claude desktop app. A CLI session has no `set_monitor` or `<ci-monitor-event>`. After `gh pr create` the skill tells the human the Auto-Fix Watch is not armed, and a round runs only when the human says reviews have landed. The `Stop` hook still blocks a turn while answerable threads remain.
 - Limitation: both hooks run in every session with the core plugin installed. They must exit quickly when no `gh pr create` ran and no PR is bound to the session.
-- The skill owns the output contract the Doomwheel mod reads (#230). Doomwheel never shapes it.
+- The skill owned an output contract the Doomwheel mod read (#230), until #245 decoupled Doomwheel from the skill and removed the contract.
