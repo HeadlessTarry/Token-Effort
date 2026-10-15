@@ -1,55 +1,41 @@
 import { expect, test } from 'claude-code/testing'
 
 import {
-  apply, parseBash, parseCiEvent, parseMonitor, phaseLook, pipRows, pips, sanitize, staminaColor, statusLine, visible,
+  apply, ghTouches, heatColor, heatOf, parseBash, parseCiEvent, parseMonitor, parsePrRef, parseSnapshot, readPoll, revive,
+  sanitize, threadsGauge,
 } from '../model'
-import type { WheelEvent } from '../model'
+import type { Alert, Snapshot, WheelEvent } from '../model'
 import type { Offering } from '../../../types'
-import { CI_EVENT, PR, PR_CREATE_OUTPUT, PR_URL, REPO, SCRIPT, scriptCommand } from './fixtures'
+import { CI_EVENT, PR, PR_CREATE_OUTPUT, PR_URL, REPO, ghAnswer } from './fixtures'
+import type { PrShape } from './fixtures'
 
 function run(events: WheelEvent[], start: Offering[] = []) {
   let offerings = start
   const texts: string[] = []
-  const alerts: string[] = []
+  const alerts: Alert[] = []
   const appeared: string[] = []
   events.forEach((event, i) => {
     const applied = apply(offerings, event, 1_000 + i)
     offerings = applied.offerings
     texts.push(...applied.logs.map(entry => entry.text))
-    alerts.push(...applied.alerts.map(alert => alert.text))
+    alerts.push(...applied.alerts)
     appeared.push(...applied.appeared)
   })
-  return { offerings, texts, alerts, appeared }
+  return { offerings, wheel: offerings[0] as Offering, texts, alerts, appeared }
 }
 
-const noiseRound = (n: number) => ({ type: 'ingest', repo: REPO, pr: PR, plan: {
-  action: 'handle', noise_count: n, noise_limit: 3, round_count: n + 1, round_limit: 10,
-  rounds: [{ kind: 'noise', findings: [{ severity: 'Low' }] }],
-} }) as WheelEvent
+const snapshot = (shape: PrShape): Snapshot => parseSnapshot(ghAnswer(shape)) as Snapshot
+const poll = (shape: PrShape = {}): WheelEvent => ({ type: 'poll', repo: REPO, pr: PR, snapshot: snapshot(shape) })
+const raised: WheelEvent = { type: 'raised', repo: REPO, pr: PR }
+const arm: WheelEvent = { type: 'monitor', repo: REPO, pr: PR, autoFix: true }
+const cut: WheelEvent = { type: 'monitor', repo: REPO, pr: PR, autoFix: false }
+
+// ---------------------------------------------------------------- session signals
 
 test('gh pr create with its URL in the output raises an offering; other Bash calls are ignored', () => {
   expect(parseBash('gh pr create --draft --title "Add warp-cannon"', PR_CREATE_OUTPUT)).toEqual({ type: 'raised', repo: REPO, pr: PR })
   expect(parseBash('gh pr create --draft', 'error: no commits')).toBeUndefined()
   expect(parseBash(`gh pr view ${PR}`, PR_URL)).toBeUndefined()
-})
-
-test('the skill script subcommands are read from the command and their JSON output', () => {
-  expect(parseBash(scriptCommand('ingest'), '{\n  "action": "handle",\n  "noise_count": 1\n}'))
-    .toEqual({ type: 'ingest', repo: REPO, pr: PR, plan: { action: 'handle', noise_count: 1 } })
-  expect(parseBash(`${SCRIPT} reply --thread PRRT_x --body-file reply.md --resolve`, '{"thread": "PRRT_x", "replied": true, "resolved": true}'))
-    .toEqual({ type: 'reply', resolved: true })
-  expect(parseBash(scriptCommand('wait', '--thread PRRT_x'), '{"waiting_on_user": ["PRRT_x"]}'))
-    .toEqual({ type: 'wait', repo: REPO, pr: PR, waiting: 1 })
-  expect(parseBash(scriptCommand('continue'), '{"continued": true}')).toEqual({ type: 'continue', repo: REPO, pr: PR })
-  expect(parseBash(scriptCommand('check'), 'Error: gh exited 1')).toBeUndefined()
-})
-
-test('the script is found on POSIX and Windows paths, quoted or not', () => {
-  const args = `ingest --repo ${REPO} --pr ${PR}`
-  for (const path of ['/home/rat/skills/scripts/review-state.js', '"D:\\warren\\skills\\scripts\\review-state.js"', 'scripts\\review-state.js']) {
-    expect(parseBash(`node ${path} ${args}`, '{"action": "nothing"}'), path).toMatchObject({ type: 'ingest', pr: PR })
-  }
-  expect(parseBash(`node review_state.js ${args}`, '{"action": "nothing"}')).toBeUndefined()
 })
 
 test('set_monitor reads on/off from its input and the PR from its URL or its answer', () => {
@@ -65,144 +51,151 @@ test('a ci-monitor-event names its PR and why it woke the session', () => {
   expect(parseCiEvent('the app will wake this session with a `<ci-monitor-event>` on CI failures')).toBeUndefined()
 })
 
-test('without the skill, a raised and armed PR stays out of sight: no status line, alert or appearance', () => {
-  const { offerings, alerts, appeared } = run([
-    { type: 'raised', repo: REPO, pr: PR },
-    { type: 'monitor', repo: REPO, pr: PR, autoFix: true },
-    parseCiEvent(CI_EVENT) as WheelEvent,
-    { type: 'turnEnd' },
+test('/doomwheel takes a PR URL or owner/name#N', () => {
+  expect(parsePrRef(PR_URL)).toEqual({ repo: REPO, pr: PR })
+  expect(parsePrRef(`${REPO}#7`)).toEqual({ repo: REPO, pr: 7 })
+  expect(parsePrRef('the big one')).toBeUndefined()
+})
+
+test('a gh call touches the tracked PRs it names, by URL, key or number', () => {
+  const { offerings } = run([raised, { type: 'raised', repo: 'o/r', pr: 7 }])
+  expect(ghTouches(`gh pr view ${PR} --repo ${REPO}`, offerings)).toEqual([`${REPO}#${PR}`])
+  expect(ghTouches(`gh pr checks ${PR_URL}`, offerings)).toEqual([`${REPO}#${PR}`])
+  expect(ghTouches('gh api repos/o/r/pulls/7/comments', offerings)).toEqual(['o/r#7'])
+  expect(ghTouches(`git log -${PR}`, offerings)).toEqual([])
+  expect(ghTouches('gh pr view 420', offerings)).toEqual([])
+})
+
+// ---------------------------------------------------------------- polling
+
+test('a poll reads submitted reviews, threads, failing checks and a conflict', () => {
+  const answer = JSON.parse(ghAnswer({ reviews: ['copilot:COMMENTED', 'rat:APPROVED'], unresolved: 2, resolved: 1, failing: 2, conflict: true }))
+  answer.data.repository.pullRequest.reviews.nodes.push({ state: 'PENDING', author: { login: 'drafting' } })
+  expect(parseSnapshot(JSON.stringify(answer))).toEqual({
+    state: 'OPEN',
+    reviews: [{ author: 'copilot', state: 'COMMENTED' }, { author: 'rat', state: 'APPROVED' }],
+    unresolvedThreads: 2, totalThreads: 3, failingChecks: 2, conflict: true,
+  })
+  expect(parseSnapshot('{"data": {"repository": {"pullRequest": null}}}')).toBeUndefined()
+  expect(parseSnapshot('not json')).toBeUndefined()
+})
+
+test('gh without a login reads as unavailable; any other failure says nothing', () => {
+  expect(readPoll(REPO, PR, { exitCode: 0, stdout: ghAnswer(), stderr: '' })).toMatchObject({ type: 'poll', repo: REPO, pr: PR })
+  expect(readPoll(REPO, PR, { exitCode: 4, stdout: '', stderr: '' })).toEqual({ type: 'ghUnavailable', repo: REPO, pr: PR })
+  expect(readPoll(REPO, PR, { exitCode: 1, stdout: '', stderr: 'To get started with GitHub CLI, please run:  gh auth login' }))
+    .toEqual({ type: 'ghUnavailable', repo: REPO, pr: PR })
+  expect(readPoll(REPO, PR, { exitCode: 1, stdout: '', stderr: 'HTTP 502: Bad Gateway' })).toBeUndefined()
+})
+
+test('the gauges: HEAT adds threads, failing checks and a conflict; LAPS counts reviews; THREADS reads unresolved/total', () => {
+  const { wheel } = run([raised, poll({ reviews: ['a:COMMENTED', 'b:COMMENTED', 'c:APPROVED'], unresolved: 2, resolved: 3, failing: 1, conflict: true })])
+  expect(heatOf(wheel)).toBe(4)
+  expect(wheel.laps).toBe(3)
+  expect(threadsGauge(wheel)).toEqual({ text: '2/5', color: '#e0574a' })
+  expect(threadsGauge(run([raised, poll({ resolved: 2 })]).wheel)).toEqual({ text: '0/2', color: '#5fbf5a' })
+  expect(threadsGauge(run([raised]).wheel)).toEqual({ text: '—' })
+})
+
+test('the crystal is green at no heat and red from 5', () => {
+  expect(heatColor(0)).toBe('#5fbf5a')
+  expect(heatColor(5)).toBe('#e0574a')
+  expect(heatColor(9)).toBe('#e0574a')
+  expect(heatColor(2)).not.toBe('#5fbf5a')
+})
+
+test('changes between polls are logged; a poll that changes nothing writes nothing', () => {
+  const first = run([raised, poll({ reviews: ['copilot:COMMENTED'], unresolved: 2, resolved: 0, failing: 1, conflict: true })])
+  expect(first.texts).toEqual([
+    'An offering is laid before the Council: PR #42',
+    'copilot comments — lap 1',
+    'Unresolved threads rise to 2/2',
+    'The trial-pits run red: 1 failing check',
+    'A merge conflict! Rival tunnels collide',
   ])
-  expect(offerings).toHaveLength(1)
-  expect(visible(offerings)).toEqual([])
-  expect(statusLine(offerings)).toBeUndefined()
-  expect(alerts).toEqual([])
-  expect(appeared).toEqual([])
-})
-
-test('the first skill output makes the wheel appear, keeping what was seen before it', () => {
-  const hidden = run([
-    { type: 'raised', repo: REPO, pr: PR },
-    { type: 'monitor', repo: REPO, pr: PR, autoFix: true },
+  const same = run([poll({ reviews: ['copilot:COMMENTED'], unresolved: 2, failing: 1, conflict: true })], first.offerings)
+  expect(same.texts).toEqual([])
+  const better = run([poll({ reviews: ['copilot:COMMENTED', 'rat:CHANGES_REQUESTED'], unresolved: 1, resolved: 1 })], first.offerings)
+  expect(better.texts).toEqual([
+    'rat demands changes — lap 2',
+    'Unresolved threads fall to 1/2',
+    'The trial-pits recover — all green',
+    'The merge conflict is cleared',
   ])
-  const shown = run([noiseRound(1), noiseRound(2)], hidden.offerings)
-  expect(shown.appeared).toEqual([`${REPO}#${PR}`])
-  expect(visible(shown.offerings)[0]?.autoFix).toBe(true)
-  expect(hidden.texts).toContain('An offering is laid before the Council: PR #42')
-  expect(statusLine(shown.offerings)).toBe('⚙ Doomwheel #42 · Spinning · heat ▰▰▱ · round 3/10')
+  expect(run([poll({ resolved: 2 })], better.offerings).texts).toEqual(['Every thread resolved — the Council is appeased'])
 })
 
-test('a reply with no shown wheel is logged nowhere', () => {
-  expect(run([{ type: 'raised', repo: REPO, pr: PR }, { type: 'reply', resolved: true }]).texts)
-    .toEqual(['An offering is laid before the Council: PR #42'])
+test('the rat tires at lap 7, and a flood of reviews is one line', () => {
+  const six = Array.from({ length: 6 }, (_, i) => `r${i}:COMMENTED`)
+  const { offerings, texts } = run([raised, poll({ reviews: six })])
+  expect(texts).toContain('6 reviews submitted — lap 6')
+  expect(run([poll({ reviews: [...six, 'r6:APPROVED'] })], offerings).texts)
+    .toEqual(['r6 approves — lap 7', 'The wheel-rat pants and sweats — lap 7'])
 })
 
-test('a full life: raised, armed, woken, three noise rounds overheat it, disarmed, then retired', () => {
-  const { offerings, texts, alerts } = run([
-    { type: 'raised', repo: REPO, pr: PR },
-    { type: 'monitor', repo: REPO, pr: PR, autoFix: true },
-    parseCiEvent(CI_EVENT) as WheelEvent,
-    noiseRound(1),
-    { type: 'turnEnd' },
-    noiseRound(2),
-    { ...noiseRound(3), plan: { ...(noiseRound(3) as { plan: object }).plan, action: 'halt',
-      instruction: 'Noise limit (3 noise rounds) reached. Leave these findings as they are.' } } as WheelEvent,
-    { type: 'monitor', repo: REPO, pr: PR, autoFix: false },
-  ])
-  const [wheel] = offerings
-  expect(wheel?.phase).toBe('halted')
-  expect(wheel?.autoFix).toBe(false)
-  expect(wheel?.noise).toBe(3)
-  expect(wheel?.haltReason).toBe('Noise limit (3 noise rounds) reached')
-  expect(texts).toContain('Warp-bolt! The app squeaks: 1 trial-pit failed, 2 new review comments')
-  expect(texts).toContain('Round 4: Low-only chatter (1 finding). Heat rises to 3/3!')
-  expect(alerts.filter(alert => alert.includes('overheated'))).toHaveLength(1)
+// ---------------------------------------------------------------- phases and alerts
 
-  const closed = apply(offerings, { type: 'check', repo: REPO, pr: PR, report: { pr_state: 'MERGED' } }, 9_000)
-  expect(closed.offerings[0]?.phase).toBe('closed')
-  expect(statusLine(closed.offerings)).toBeUndefined()
+test('raised is an offering; arming spins it with a toast; a wake races it until the turn ends', () => {
+  const offered = run([raised])
+  expect(offered.wheel.phase).toBe('offering')
+  expect(offered.appeared).toEqual([`${REPO}#${PR}`])
+  expect(offered.alerts).toEqual([])
+  const armed = run([arm], offered.offerings)
+  expect(armed.wheel.phase).toBe('armed')
+  expect(armed.alerts).toEqual([{ key: `${REPO}#${PR}`, text: '⚙ Doomwheel armed for #42', notify: false, openPane: false }])
+  const woken = run([parseCiEvent(CI_EVENT) as WheelEvent], armed.offerings)
+  expect(woken.wheel.phase).toBe('waking')
+  expect(woken.texts).toEqual(['Warp-bolt! The app squeaks: 1 trial-pit failed, 2 new review comments'])
+  expect(run([{ type: 'turnEnd' }], woken.offerings).wheel.phase).toBe('armed')
 })
 
-test('a repeated halt does not alert twice', () => {
-  const halt = { type: 'ingest', repo: REPO, pr: PR, plan: { action: 'halt', instruction: "This PR is halted. Report to the human; act only if they say 'continue'." } } as WheelEvent
-  const { alerts, offerings } = run([halt, halt])
-  expect(alerts).toEqual(["⛔ Doomwheel halted on #42: This PR is halted. Your decision is needed."])
-  expect(phaseLook(offerings[0] as Offering).label).toBe('Halted')
+test('cutting Auto-fix with work left cracks the wheel, with a toast, a notification and the pane', () => {
+  const { wheel, alerts, texts } = run([raised, arm, poll({ unresolved: 1 }), cut])
+  expect(wheel.phase).toBe('cracked')
+  expect(alerts.at(-1)).toEqual({
+    key: `${REPO}#${PR}`, text: '💥 Doomwheel cracked on #42: Auto-fix is off with work left. Your decision is needed.', notify: true, openPane: true,
+  })
+  expect(texts).toContain('The wheel CRACKS! Auto-fix cut with 1 wound still open')
 })
 
-test('the round cap exhausts the rat: it tires at round 7 and collapses at 10, apart from the noise strikes', () => {
-  const signalRound = (n: number, action = 'handle', instruction?: string) => ({
-    type: 'ingest', repo: 'o/r', pr: 9, plan: {
-      action, instruction, noise_count: 1, noise_limit: 3, round_count: n, round_limit: 10,
-      rounds: [{ kind: 'signal', findings: [{ severity: 'Medium' }] }],
-    },
-  }) as WheelEvent
-  const { offerings, texts, alerts } = run([
-    signalRound(6),
-    signalRound(7),
-    signalRound(8),
-    signalRound(10, 'halt', 'Round limit (10 rounds) reached. Leave these findings as they are.'),
-  ])
-  expect(texts.filter(text => text.startsWith('The wheel-rat pants'))).toEqual(['The wheel-rat pants and sweats — round 7/10, 3 laps left'])
-  expect(texts).toContain('EXHAUSTED! Round limit (10 rounds) reached — the wheel-rat collapses mid-lap!')
-  expect(alerts).toEqual(['🥵 Doomwheel exhausted on #9: Round limit (10 rounds) reached. Your decision is needed.'])
-  expect(offerings[0]?.haltKind).toBe('rounds')
-  expect(offerings[0]?.noise).toBe(1)
-  expect(statusLine(offerings)).toBe('⚙ Doomwheel #9 · Exhausted · heat ▰▱▱ · round 10/10')
+test('cutting Auto-fix with no work left goes cold, quietly', () => {
+  const { wheel, alerts } = run([raised, arm, poll({ resolved: 2 }), cut])
+  expect(wheel.phase).toBe('cold')
+  expect(alerts.filter(alert => alert.notify)).toEqual([])
 })
 
-test('rounds the skill has not recorded yet are not logged as rounds', () => {
-  const { texts } = run([{ type: 'ingest', repo: REPO, pr: PR, plan: {
-    action: 'judge_severity', noise_count: 0, noise_limit: 3, round_count: 2, round_limit: 10,
-    rounds: [{ findings: [{ severity: null }] }],
-  } }])
-  expect(texts).toEqual(["The reviewer's runes are smudged — judging severity by snout"])
+test('a cracked wheel re-arms, or cools once its open work drops to zero', () => {
+  const cracked = run([raised, arm, poll({ failing: 1 }), cut]).offerings
+  expect(run([arm], cracked).wheel.phase).toBe('armed')
+  const cooled = run([poll({ failing: 0 })], cracked)
+  expect(cooled.wheel.phase).toBe('cold')
+  expect(cooled.texts).toContain('The last wound closes — the cracked wheel cools')
+  expect(run([poll({ failing: 2 })], cracked).wheel.phase).toBe('cracked')
 })
 
-test('a human round reads as a human review', () => {
-  const { texts } = run([{ type: 'ingest', repo: REPO, pr: PR, plan: {
-    action: 'handle', noise_count: 0, noise_limit: 3, round_count: 2, round_limit: 10,
-    rounds: [{ kind: 'human', findings: [{ severity: null }, { severity: null }] }],
-  } }])
-  expect(texts).toEqual(['Round 2: a man-thing reviews — 2 findings'])
+test('merged is victory, with a toast and the pane; closed is scrapped, silently; both are retired', () => {
+  const won = run([raised, arm, poll({ state: 'MERGED' })])
+  expect(won.wheel.phase).toBe('victory')
+  expect(won.alerts.at(-1)).toEqual({ key: `${REPO}#${PR}`, text: '🏆 Doomwheel victory: #42 is merged', notify: false, openPane: true })
+  const lost = run([raised, poll({ state: 'CLOSED' })])
+  expect(lost.wheel.phase).toBe('scrapped')
+  expect(lost.alerts).toEqual([])
+  expect(lost.texts).toContain('Scrapped. The offering is closed unmerged — the wheel collapses')
+  // Retired wheels ignore later polls and Auto-fix flips.
+  expect(run([poll({ state: 'OPEN', unresolved: 3 }), cut], won.offerings).wheel.phase).toBe('victory')
 })
 
-test('stamina turns amber once tired and red at the cap; continue clears the halt kind', () => {
-  expect(staminaColor(6, 10)).toBeUndefined()
-  expect(staminaColor(7, 10)).toBe('#d9a441')
-  expect(staminaColor(10, 10)).toBe('#e0574a')
-  const raised = run([{ type: 'raised', repo: 'o/r', pr: 1 }]).offerings[0] as Offering
-  const halted: Offering[] = [{ ...raised, isShepherded: true, phase: 'halted', haltKind: 'rounds' }]
-  expect(phaseLook(halted[0] as Offering).label).toBe('Exhausted')
-  const resumed = apply(halted, { type: 'continue', repo: 'o/r', pr: 1 }, 5).offerings[0]
-  expect(resumed?.haltKind).toBeUndefined()
-  expect(resumed?.phase).toBe('waking')
+test('gh unavailable is flagged on the wheel without a log or alert, and a good poll clears it', () => {
+  const down = run([raised, { type: 'ghUnavailable', repo: REPO, pr: PR }])
+  expect(down.wheel.ghUnavailable).toBe(true)
+  expect(down.alerts).toEqual([])
+  expect(down.texts).toEqual(['An offering is laid before the Council: PR #42'])
+  expect(run([poll()], down.offerings).wheel.ghUnavailable).toBeUndefined()
 })
 
-test('a wake settles back to spinning when the turn ends', () => {
-  const { offerings } = run([parseCiEvent(CI_EVENT) as WheelEvent])
-  expect(offerings[0]?.phase).toBe('waking')
-  expect(apply(offerings, { type: 'turnEnd' }, 5_000).offerings[0]?.phase).toBe('armed')
-})
-
-test('check reports open threads, or that the Council is appeased', () => {
-  const base = run([{ type: 'raised', repo: 'o/r', pr: 1 }]).offerings
-  const open = apply(base, { type: 'check', repo: 'o/r', pr: 1, report: { ok: false, pr_state: 'OPEN', threads: [{}, {}], pm_comments: [] } }, 2)
-  expect(open.offerings[0]?.openThreads).toBe(2)
-  expect(open.logs[0]?.text).toBe('2 threads still squeak for answers')
-  const done = apply(open.offerings, { type: 'check', repo: 'o/r', pr: 1, report: { ok: true, pr_state: 'OPEN', threads: [], pm_comments: [] } }, 3)
-  expect(done.logs[0]?.text).toBe('Every thread answered — the Council is appeased')
-})
-
-test('the status line follows the most recently active shown wheel', () => {
-  const { offerings } = run([
-    { type: 'raised', repo: 'o/r', pr: 1 },
-    { type: 'monitor', repo: 'o/r', pr: 1, autoFix: true },
-    noiseRound(1),
-  ])
-  expect(statusLine(offerings)).toBe('⚙ Doomwheel #42 · Spinning · heat ▰▱▱ · round 2/10')
-  expect(pips(5, 3)).toBe('▰▰▰')
-  expect(pipRows(7, 10, 5)).toEqual(['▰▰▰▰▰', '▰▰▱▱▱'])
-  expect(pipRows(0, 3, 5)).toEqual(['▱▱▱'])
+test('a wheel stored by an older Doomwheel revives with its unknown phase as cold and empty gauges', () => {
+  const old = { key: 'o/r#1', repo: 'o/r', pr: 1, url: 'https://github.com/o/r/pull/1', phase: 'halted', autoFix: false, createdAt: 1, updatedAt: 1 }
+  expect(revive(old as unknown as Offering)).toMatchObject({ phase: 'cold', laps: 0, unresolvedThreads: 0, failingChecks: 0, conflict: false })
 })
 
 test('sanitize drops escape sequences and control characters', () => {

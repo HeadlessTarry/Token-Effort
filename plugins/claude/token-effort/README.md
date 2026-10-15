@@ -32,7 +32,7 @@ A skill ([ADR 0008](../../../docs/adr/0008-claude-only-pr-review-skill.md)) that
 - A `PostToolUse` hook binds a PR to the session after `gh pr create`, and a `Stop` hook blocks a turn from ending while that PR has unanswered review threads.
 - Arming the Auto-Fix Watch needs the Claude desktop app. In a CLI session, rounds run when you say reviews have landed.
 
-Skill: [skills/shepherding-pr-reviews/SKILL.md](skills/shepherding-pr-reviews/SKILL.md). Its script's output contract: [OUTPUT-CONTRACT.md](skills/shepherding-pr-reviews/OUTPUT-CONTRACT.md).
+Skill: [skills/shepherding-pr-reviews/SKILL.md](skills/shepherding-pr-reviews/SKILL.md).
 
 Limitations:
 

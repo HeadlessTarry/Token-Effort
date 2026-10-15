@@ -32,10 +32,8 @@ export type TxEntry =
 
 // ---------------------------------------------------------------- doomwheel
 
-/** Where an offering's Auto-fix watch stands. */
-export type Phase = 'offering' | 'armed' | 'waking' | 'halted' | 'disarmed' | 'closed'
-
-export type HaltKind = 'noise' | 'rounds' | 'other'
+/** Where an offering's review process stands. `victory` (merged) and `scrapped` (closed) are retired. */
+export type Phase = 'offering' | 'armed' | 'waking' | 'cracked' | 'cold' | 'victory' | 'scrapped'
 
 export type Offering = {
   /** `owner/name#pr` */
@@ -45,30 +43,26 @@ export type Offering = {
   url: string
   phase: Phase
   autoFix: boolean
-  /**
-   * True once the shepherding-pr-reviews skill's script has printed for this PR. Until then the
-   * offering is kept but never shown: no card, status line, toast or notification.
-   */
-  isShepherded: boolean
-  /** Noise rounds counted toward the noise limit. */
-  noise: number
-  noiseLimit: number
-  /** Review rounds processed. */
-  rounds: number
-  roundLimit: number
-  /** Unanswered threads at the latest `check`; undefined until one runs. */
-  openThreads?: number
-  /** Human-reviewer threads waiting on the person's decision. */
-  waiting: number
-  /** The reason the watch halted, while halted. */
-  haltReason?: string
-  /** Which limit halted it: the noise limit overheats the wheel, the round limit exhausts its rat. */
-  haltKind?: HaltKind
+  /** Submitted reviews, from any reviewer, at the latest poll. */
+  laps: number
+  /** Review threads at the latest poll. */
+  unresolvedThreads: number
+  totalThreads: number
+  /** Failing checks on the head commit at the latest poll. */
+  failingChecks: number
+  /** True while GitHub reports a merge conflict. */
+  conflict: boolean
+  /** When GitHub last answered a poll; undefined until it has. */
+  polledAt?: number
+  /** True while `gh` is missing or not signed in, so the wheel runs on session signals alone. */
+  ghUnavailable?: boolean
   createdAt: number
   updatedAt: number
 }
 
-export type LogKind = 'raised' | 'armed' | 'disarmed' | 'wake' | 'round' | 'heat' | 'tired' | 'halt' | 'answered' | 'warn' | 'closed'
+export type LogKind =
+  | 'raised' | 'armed' | 'disarmed' | 'wake' | 'review' | 'tired' | 'threads' | 'checks' | 'conflict'
+  | 'crack' | 'victory' | 'scrapped' | 'warn'
 
 export type LogEntry = { at: number; key: string; kind: LogKind; text: string }
 
