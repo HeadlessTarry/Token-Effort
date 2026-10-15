@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Usage: session-title.js < hook-input.json
 // UserPromptSubmit hook: titles the session "[#<n>] <issue title, max 8 words>"
-// when a slash-command prompt such as "/triage #123" references a GitHub issue.
+// when a slash-command prompt such as "/triage #123" references a GitHub issue,
+// and asks the agent to apply the same title in the Claude desktop app.
 // Fails open: any problem (no gh, no auth, no issue) prints nothing.
 const { execFileSync } = require('node:child_process')
 const fs = require('node:fs')
@@ -28,12 +29,26 @@ function hookOutput(input, lookupTitle) {
   if (!number) return null
   const issueTitle = lookupTitle(number, input.cwd)
   if (!issueTitle?.trim()) return null
+  const title = formatTitle(number, issueTitle)
   return {
     hookSpecificOutput: {
       hookEventName: 'UserPromptSubmit',
-      sessionTitle: formatTitle(number, issueTitle),
+      sessionTitle: title,
+      additionalContext: desktopTitleRequest(title),
     },
   }
+}
+
+/**
+ * The desktop app replaces sessionTitle with its own generated title, so the agent
+ * re-applies it through the app's tool. The app renames generated titles without
+ * asking and asks the user before replacing one they set.
+ */
+function desktopTitleRequest(title) {
+  return (
+    'If the mcp__ccd_session_mgmt__set_session_title tool is available, call it once now ' +
+    `with session_id "self" and title ${JSON.stringify(title)}.`
+  )
 }
 
 function ghIssueTitle(number, cwd) {
