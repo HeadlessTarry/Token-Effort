@@ -363,6 +363,25 @@ test('removing shepherd: halted by hand on GitHub allows one more round, and the
   assert.deepEqual(github.pull.labels, [HALTED])
 })
 
+test('a halt still prints its instruction when the label write fails', () => {
+  const github = noisyPr()
+  github.addLabel = () => {
+    throw new Error('HTTP 403')
+  }
+  const result = makeRunner(github)(['ingest', ...PR_ARGS])
+
+  assert.equal(result.status, 0)
+  assert.equal(result.json().action, 'halt')
+  assert.match(result.stderr, /could not label/)
+})
+
+test('a bad --repo is refused before GitHub is called', () => {
+  const result = makeRunner()(['check', '--repo', 'not-a-repo', '--pr', '7'])
+
+  assert.equal(result.status, 2)
+  assert.match(result.stderr, /expected owner\/name/)
+})
+
 test('no per-PR state is written: only the session index, listing the PR', () => {
   const github = fakeGithub()
   github.addReview({ login: 'reviewer-human', comments: [{ body: 'Rename this.' }] })

@@ -11,7 +11,7 @@ Every command below runs the script with its subcommand and options:
 
     node "${CLAUDE_PLUGIN_ROOT}/plugins/claude/token-effort/skills/shepherding-pr-reviews/scripts/review-state.js" <subcommand> <options>
 
-Each subcommand takes `--repo <owner/name> --pr <n>` plus its own options, except `reply`, which takes `--thread <PRRT_id>` and no PR. `--help` lists every subcommand and option.
+Each subcommand takes `--repo <owner/name> --pr <n>` plus its own options, except `reply`, which names its thread with `--thread <PRRT_id>` instead. `--help` lists every subcommand and option.
 
 GitHub holds the PR's state: the script re-derives rounds, noise and the halt from the reviews, your bannered replies and their hidden markers on every run. The PR carries the label `shepherd: active` while you work it, and `shepherd: halted` after an Auto-Fix Halt.
 

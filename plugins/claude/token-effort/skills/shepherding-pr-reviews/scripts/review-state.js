@@ -291,7 +291,7 @@ function classifyRound(findings, reviewer, isFirst, carriedOver) {
   return carriedOver ? 'carry_over' : 'quiet'
 }
 
-function parseAssumptions(values, flag = '--assume') {
+function parseSeverityPairs(values, flag = '--assume') {
   const assumed = {}
   for (const value of values) {
     const at = value.lastIndexOf('=')
@@ -377,7 +377,11 @@ function derive(github, repo, pr, { assumed = {}, pull = github.pullRequest(repo
   const posted = roundMarkers(issueComments)
   const markers = severityMarkers([...comments, ...issueComments], viewer)
   const threadOf = new Map()
-  for (const thread of pull.threads) for (const comment of thread.comments) threadOf.set(comment.databaseId, thread)
+  const threadById = new Map()
+  for (const thread of pull.threads) {
+    threadById.set(thread.id, thread)
+    for (const comment of thread.comments) threadOf.set(comment.databaseId, thread)
+  }
 
   const rounds = []
   const errored = []
@@ -391,7 +395,7 @@ function derive(github, repo, pr, { assumed = {}, pull = github.pullRequest(repo
     round.pm_comment_due =
       round.format_recognised && round.findings.some((finding) => finding.kind === 'previously_missed' || finding.kind === 'review_body')
     round.handled =
-      round.thread_ids.every((id) => threadAnswered(pull.threads.find((thread) => thread.id === id), viewer)) &&
+      round.thread_ids.every((id) => threadAnswered(threadById.get(id), viewer)) &&
       !(round.pm_comment_due && !posted.has(round.review_id))
     applySeverities(round, markers, assumed)
     rounds.push(round)
@@ -422,17 +426,21 @@ function publicRound({ handled, ...round }) {
   return round
 }
 
+function isoTime(ms) {
+  return ms === null ? null : new Date(ms).toISOString()
+}
+
+// Remove before add, so the two shepherd labels are never on the PR together.
 function swapLabels(github, repo, pr, labels, add, remove) {
-  if (!labels.includes(add)) github.addLabel(repo, pr, add)
   if (labels.includes(remove)) github.removeLabel(repo, pr, remove)
+  if (!labels.includes(add)) github.addLabel(repo, pr, add)
 }
 
 // ---------------------------------------------------------------- agent-facing commands
 
 function ingest(ctx, args) {
   const { github } = ctx
-  checkRepo(args.repo)
-  const derived = derive(github, args.repo, args.pr, { assumed: parseAssumptions(args.assume) })
+  const derived = derive(github, args.repo, args.pr, { assumed: parseSeverityPairs(args.assume) })
   const unhandled = derived.rounds.filter((round) => !round.handled)
   const plan = {
     action: 'nothing',
@@ -443,7 +451,7 @@ function ingest(ctx, args) {
     round_count: derived.rounds.length,
     round_limit: ROUND_LIMIT,
     halted: false,
-    continued_at: derived.continued === null ? null : new Date(derived.continued).toISOString(),
+    continued_at: isoTime(derived.continued),
   }
   if (derived.copilotErrors.length) plan.copilot_errors = derived.copilotErrors
 
@@ -478,7 +486,12 @@ function ingest(ctx, args) {
       `${halt}. Leave these findings as they are. Call mcp__ccd_pr__set_monitor with auto_fix=false, ` +
       `address_comments=false, url=${prUrl(args.repo, args.pr)}; then hand back to the human in your final ` +
       "message, listing what is still open. Act again only after the human says 'continue'."
-    swapLabels(github, args.repo, args.pr, derived.pull.labels, HALTED, ACTIVE)
+    // The halt is derived, not stored: a failed label write must not hide the instruction. The next ingest retries it.
+    try {
+      swapLabels(github, args.repo, args.pr, derived.pull.labels, HALTED, ACTIVE)
+    } catch (error) {
+      ctx.stderr.write(`shepherding-pr-reviews: could not label ${prUrl(args.repo, args.pr)} halted: ${error.message}\n`)
+    }
   } else if (unhandled.length || hasOpenWork(derived.report)) {
     plan.action = 'handle'
   } else if (plan.copilot_errors) {
@@ -529,8 +542,7 @@ function reply(ctx, args) {
 
 function prComment(ctx, args) {
   const { github } = ctx
-  checkRepo(args.repo)
-  const severities = parseAssumptions(args.severity, '--severity')
+  const severities = parseSeverityPairs(args.severity, '--severity')
   refuseDuringHumanReview(github.pullRequest(args.repo, args.pr).pending)
   const body = withBanner(fs.readFileSync(args['body-file'], 'utf8')) + severityBlock(severities)
   github.commentOnPr(args.repo, args.pr, `${body}\n\n<!-- shepherding-pr-reviews: review ${args.review} -->`)
@@ -540,9 +552,9 @@ function prComment(ctx, args) {
 
 // The active label is cosmetic: a failure to write it never fails the bind. A halted PR keeps its halted label,
 // since swapping it out would be a continue.
-function markActive(ctx, repo, pr, labels) {
+function markActive(ctx, repo, pr, readLabels) {
   try {
-    if (!labels().includes(HALTED)) ctx.github.addLabel(repo, pr, ACTIVE)
+    if (!readLabels().includes(HALTED)) ctx.github.addLabel(repo, pr, ACTIVE)
   } catch (error) {
     ctx.stderr.write(`shepherding-pr-reviews: could not label ${prUrl(repo, pr)}: ${error.message}\n`)
   }
@@ -556,7 +568,6 @@ function bind(ctx, args) {
 }
 
 function check(ctx, args) {
-  checkRepo(args.repo)
   const { report } = derive(ctx.github, args.repo, args.pr)
   const done = !hasOpenWork(report)
   report.ok = done
@@ -565,7 +576,6 @@ function check(ctx, args) {
 }
 
 function continueRound(ctx, args) {
-  checkRepo(args.repo)
   const { labels } = ctx.github.pullRequest(args.repo, args.pr)
   swapLabels(ctx.github, args.repo, args.pr, labels, ACTIVE, HALTED)
   ctx.print({
@@ -578,7 +588,6 @@ function continueRound(ctx, args) {
 }
 
 function status(ctx, args) {
-  checkRepo(args.repo)
   const derived = derive(ctx.github, args.repo, args.pr)
   const { noise_count, halt } = applyLimits(derived.rounds, derived.continued)
   ctx.print({
@@ -588,7 +597,7 @@ function status(ctx, args) {
     labels: derived.pull.labels,
     halted: Boolean(halt),
     halt_reason: halt,
-    continued_at: derived.continued === null ? null : new Date(derived.continued).toISOString(),
+    continued_at: isoTime(derived.continued),
     noise_count,
     noise_limit: NOISE_LIMIT,
     round_count: derived.rounds.length,
@@ -830,6 +839,7 @@ function parseArgs(name, command, argv) {
       throw new UsageError(`${name}: --${key} is required`)
     }
   }
+  if (command.pr) checkRepo(args.repo)
   return args
 }
 
