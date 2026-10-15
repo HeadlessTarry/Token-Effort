@@ -31,6 +31,7 @@ A skill ([ADR 0008](../../../docs/adr/0008-claude-only-pr-review-skill.md)) that
 
 - A `PostToolUse` hook binds a PR to the session after `gh pr create`, and a `Stop` hook blocks a turn from ending while that PR has unanswered review threads.
 - Arming the Auto-Fix Watch needs the Claude desktop app. In a CLI session, rounds run when you say reviews have landed.
+- GitHub holds each PR's state, so any machine or session sees the same rounds and halt. The PR carries a `shepherd: active` label while shepherded, and `shepherd: halted` after an Auto-Fix Halt; remove `shepherd: halted` to allow one more round. Only the list of PRs each session's Stop hook guards stays local, under `~/.claude/state/shepherding-pr-reviews/sessions/`.
 
 Skill: [skills/shepherding-pr-reviews/SKILL.md](skills/shepherding-pr-reviews/SKILL.md).
 

@@ -1,6 +1,8 @@
 #!/usr/bin/env node
-// PR review state, round and noise counting, thread replies, and the hooks that guard them.
+// PR review rounds, noise counting, thread replies, and the hooks that guard them.
 // The shepherding-pr-reviews skill drives it.
+// Every per-PR fact is derived from GitHub on each run: reviews, threads, the script's own bannered replies
+// and markers, and the shepherd labels. Only the session index (which PRs a session guards) is local.
 // GitHub is reached through a port (ghPort below), so tests can pass an in-memory fake to main().
 const crypto = require('node:crypto')
 const { execFileSync } = require('node:child_process')
@@ -11,21 +13,23 @@ const path = require('node:path')
 const USAGE = `Usage: review-state.js <subcommand> [options]
 
 Agent-facing (each takes --repo owner/name --pr N, except reply):
-  ingest      Record unprocessed reviews as rounds, apply the noise and round limits, print the plan.
+  ingest      Derive the rounds, apply the noise and round limits, print the plan of unhandled rounds.
               --assume KEY=High|Medium|Low (repeatable) supplies severities the agent judged.
   reply       Reply in-thread with the disclosure banner. --thread PRRT_id --body-file F [--resolve]
+              [--severity High|Medium|Low] records the agent's severity of the thread's finding.
+              [--waiting] posts a holding reply: the thread waits on the reviewer (--body-file optional).
   pr-comment  Post the PR comment answering a round's thread-less findings. --review ID --body-file F
-  wait        Mark a thread as waiting on the human's decision. --thread PRRT_id [--release]
-  bind        Attach the PR's state to a session. --session-id ID
+              [--severity KEY=High|Medium|Low] (repeatable) records the agent's severity per finding.
+  bind        Guard the PR from a session's Stop hook. --session-id ID
   check       Report threads and PR comments still unanswered; exit 1 while any remain.
-  continue    After an Auto-Fix Halt, allow exactly one more round.
-  status      Print the PR's state file.
+  continue    After an Auto-Fix Halt, remove the "shepherd: halted" label: allows exactly one more round.
+  status      Print the PR's derived state.
 
 Hook-facing (read the hook payload JSON on stdin):
   hook-post-create  PostToolUse on Bash/PowerShell: bind a PR that gh pr create just opened.
   hook-stop         Stop: block while a PR bound to this session has unanswered threads.
 
-State lives under $CLAUDE_CONFIG_DIR (default ~/.claude) in state/shepherding-pr-reviews/.
+The session index lives under $CLAUDE_CONFIG_DIR (default ~/.claude) in state/shepherding-pr-reviews/sessions/.
 `
 
 // The disclose-ai-content skill's banner. A test pins it to that skill's text.
@@ -40,8 +44,19 @@ const GH_PR_CREATE_RE = /(?:^|[;&|(\n]|\$\()\s*(?:\w+=\S*\s+)*gh(?:\.exe)?\s+pr\
 const BADGE_RE = /alt="(High|Medium|Low) severity"/
 const THREAD_LINK_RE = /\]\([^)\s]*#discussion_r(\d+)\)/
 const ROUND_MARKER_RE = /shepherding-pr-reviews: review (\d+)/g
+const SEVERITY_MARKER_RE = /<!-- shepherding-pr-reviews: severity ([^>]*?) -->/g
+const WAITING_MARKER = '<!-- shepherding-pr-reviews: waiting -->'
+const WAITING_TEXT = "Not fixing this yet; waiting on the reviewer's decision."
+// Display only, except that the Stop hook skips a PR carrying HALTED. Removing HALTED is the continue signal.
+const ACTIVE = 'shepherd: active'
+const HALTED = 'shepherd: halted'
+const LABELS = {
+  [ACTIVE]: { color: '0E8A16', description: 'shepherding-pr-reviews is working this PR' },
+  [HALTED]: { color: 'B60205', description: 'shepherding-pr-reviews hit an Auto-Fix Halt; remove to continue' },
+}
+const SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000
 
-// ---------------------------------------------------------------- state
+// ---------------------------------------------------------------- session index (the only local state)
 
 function stateRoot(env) {
   const config = env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude')
@@ -52,74 +67,68 @@ function prUrl(repo, pr) {
   return `https://github.com/${repo}/pull/${pr}`
 }
 
-// One file per PR: prs/<owner>/<repo>/<pr>.json. GitHub names are case-insensitive, so the path is lowercased.
-// Every clone, worktree and session working on that PR reads the same rounds and limits.
-function statePath(env, repo, pr) {
-  const [owner, name, ...rest] = repo.toLowerCase().split('/')
-  if (rest.length || ![owner, name].every((part) => /^[\w.-]+$/.test(part) && !/^\.+$/.test(part))) {
+function checkRepo(repo) {
+  const [owner, name, ...rest] = repo.split('/')
+  if (rest.length || ![owner, name].every((part) => /^[\w.-]+$/.test(part || '') && !/^\.+$/.test(part))) {
     throw new UsageError(`--repo ${repo}: expected owner/name`)
   }
-  return path.join(stateRoot(env), 'prs', owner, name, `${pr}.json`)
+}
+
+function sessionsDir(env) {
+  return path.join(stateRoot(env), 'sessions')
 }
 
 function sessionIndexPath(env, sessionId) {
-  return path.join(stateRoot(env), 'sessions', `${sessionId.replace(/[^\w.-]/g, '_')}.json`)
+  return path.join(sessionsDir(env), `${sessionId.replace(/[^\w.-]/g, '_')}.json`)
 }
 
-function readJson(file, fallback) {
+// A session's index: the {repo, pr} pairs its Stop hook guards. Entries of the old format (file paths) are dropped.
+function readSessionIndex(file) {
   try {
-    return JSON.parse(fs.readFileSync(file, 'utf8'))
+    const entries = JSON.parse(fs.readFileSync(file, 'utf8'))
+    return Array.isArray(entries) ? entries.filter((entry) => entry && typeof entry.repo === 'string' && Number.isInteger(entry.pr)) : []
   } catch (error) {
-    if (error.code === 'ENOENT') return fallback
+    if (error.code === 'ENOENT' || error instanceof SyntaxError) return []
     throw error
   }
 }
 
-function writeJson(file, value) {
+function writeSessionIndex(file, entries) {
+  if (!entries.length) {
+    fs.rmSync(file, { force: true })
+    return
+  }
   fs.mkdirSync(path.dirname(file), { recursive: true })
-  fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n', 'utf8')
+  fs.writeFileSync(file, JSON.stringify(entries, null, 2) + '\n', 'utf8')
 }
 
-function newState(repo, pr) {
-  return {
-    repo,
-    pr,
-    url: prUrl(repo, pr),
-    session_id: null,
-    created_at: new Date().toISOString().replace(/\.\d+Z$/, 'Z'),
-    noise_count: 0,
-    noise_limit: NOISE_LIMIT,
-    round_limit: ROUND_LIMIT,
-    halted: false,
-    one_shot: false,
-    closed: false,
-    processed_reviews: [],
-    skipped_reviews: [],
-    errored_reviews: [],
-    rounds: [],
-    waiting_on_user: [],
-    pm_comment_due: [],
+function samePr(entry, repo, pr) {
+  return entry.repo.toLowerCase() === repo.toLowerCase() && entry.pr === pr
+}
+
+// Session files nobody touched for 30 days belong to sessions that ended with an open PR still listed.
+function sweepSessions(env, keep) {
+  const dir = sessionsDir(env)
+  if (!fs.existsSync(dir)) return
+  for (const name of fs.readdirSync(dir)) {
+    const file = path.join(dir, name)
+    if (file !== keep && Date.now() - fs.statSync(file).mtimeMs > SESSION_MAX_AGE_MS) fs.rmSync(file, { force: true })
   }
 }
 
-function loadState(env, repo, pr) {
-  return { ...newState(repo, pr), ...readJson(statePath(env, repo, pr), {}) }
-}
-
-function saveState(env, state) {
-  const file = statePath(env, state.repo, state.pr)
-  writeJson(file, state)
+function bindSession(env, repo, pr, sessionId) {
+  checkRepo(repo)
+  const file = sessionIndexPath(env, sessionId)
+  const entries = readSessionIndex(file)
+  if (!entries.some((entry) => samePr(entry, repo, pr))) entries.push({ repo, pr })
+  writeSessionIndex(file, entries)
+  sweepSessions(env, file)
   return file
 }
 
-function bindState(env, repo, pr, sessionId) {
-  const state = loadState(env, repo, pr)
-  state.session_id = sessionId
-  const file = saveState(env, state)
-  const index = sessionIndexPath(env, sessionId)
-  const files = readJson(index, [])
-  if (!files.includes(file)) writeJson(index, [...files, file])
-  return file
+// Before GitHub held the state, each PR had a file under prs/. Nothing reads them now.
+function deleteLegacyState(env) {
+  fs.rmSync(path.join(stateRoot(env), 'prs'), { recursive: true, force: true })
 }
 
 // ---------------------------------------------------------------- who posted it
@@ -154,42 +163,58 @@ function submittedComments(thread) {
   return thread.comments.filter((comment) => comment.state !== 'PENDING')
 }
 
-function unansweredThreads(state, pull, viewer) {
-  const waiting = new Set(state.waiting_on_user)
-  const found = []
-  for (const thread of pull.threads) {
-    const comments = submittedComments(thread)
-    if (!comments.length || thread.isResolved || waiting.has(thread.id)) continue
-    if (comments.length > 1 && isOwnPost(comments[comments.length - 1], viewer)) continue
-    found.push({ thread_id: thread.id, path: thread.path, line: thread.line, comment_id: comments[0].databaseId })
-  }
-  return found
+// Answered: resolved, or the last comment is the agent's own reply (a final answer or a holding reply).
+// A thread the agent opened itself (one comment) is a finding, not an answer.
+function threadAnswered(thread, viewer) {
+  const comments = submittedComments(thread)
+  if (!comments.length || thread.isResolved) return true
+  return comments.length > 1 && isOwnPost(comments[comments.length - 1], viewer)
+}
+
+function isWaiting(thread, viewer) {
+  const last = submittedComments(thread).at(-1)
+  return !thread.isResolved && Boolean(last) && isOwnPost(last, viewer) && last.body.includes(WAITING_MARKER)
+}
+
+function unansweredThreads(pull, viewer) {
+  return pull.threads
+    .filter((thread) => !threadAnswered(thread, viewer))
+    .map((thread) => ({ thread_id: thread.id, path: thread.path, line: thread.line, comment_id: submittedComments(thread)[0].databaseId }))
 }
 
 function hasOpenWork(report) {
   return report.threads.length > 0 || report.pm_comments.length > 0
 }
 
-function postedRoundMarkers(github, repo, pr) {
+function roundMarkers(issueComments) {
   const found = new Set()
-  for (const comment of github.issueComments(repo, pr)) {
+  for (const comment of issueComments) {
     for (const match of (comment.body || '').matchAll(ROUND_MARKER_RE)) found.add(Number(match[1]))
   }
   return found
 }
 
-function outstanding(github, state) {
-  const pull = github.pullRequest(state.repo, state.pr)
-  const report = { pr_state: pull.state, threads: [], pm_comments: [], human_review_in_progress: false }
-  if (pull.state !== 'OPEN') {
-    state.closed = true
-    return report
+// The agent's judged severities, from the hidden markers on its own replies and PR comments.
+function severityMarkers(posts, viewer) {
+  const found = {}
+  for (const post of posts) {
+    if (!isOwnPost(post, viewer)) continue
+    for (const [, pairs] of (post.body || '').matchAll(SEVERITY_MARKER_RE)) {
+      for (const pair of pairs.split(/\s+/)) {
+        const at = pair.lastIndexOf('=')
+        if (at > 0 && SEVERITIES.includes(pair.slice(at + 1))) found[pair.slice(0, at)] = pair.slice(at + 1)
+      }
+    }
   }
-  if (pull.pending) return { ...report, human_review_in_progress: true }
-  const posted = state.pm_comment_due.length ? postedRoundMarkers(github, state.repo, state.pr) : new Set()
-  report.pm_comments = state.pm_comment_due.filter((id) => !posted.has(id)).sort((a, b) => a - b)
-  report.threads = unansweredThreads(state, pull, github.viewer())
-  return report
+  return found
+}
+
+// The continue signal: the latest removal of the halted label, by `continue` or by hand on GitHub.
+function continuedAt(events) {
+  const times = events
+    .filter((event) => event.event === 'unlabeled' && event.label?.name === HALTED)
+    .map((event) => Date.parse(event.created_at))
+  return times.length ? Math.max(...times) : null
 }
 
 // ---------------------------------------------------------------- findings
@@ -257,35 +282,36 @@ function parseReview(review, comments) {
 }
 
 // first | human | signal | noise | carry_over | quiet. Only an AI round can be noise.
+// A finding with no known severity (a past one with neither badge nor marker) is never noise.
 function classifyRound(findings, reviewer, isFirst, carriedOver) {
   if (isFirst) return 'first'
   if (reviewer === 'human') return 'human'
-  if (findings.some((finding) => finding.severity === 'High' || finding.severity === 'Medium')) return 'signal'
+  if (findings.some((finding) => finding.severity !== 'Low')) return 'signal'
   if (findings.length) return 'noise'
   return carriedOver ? 'carry_over' : 'quiet'
 }
 
-function parseAssumptions(values) {
+function parseAssumptions(values, flag = '--assume') {
   const assumed = {}
   for (const value of values) {
     const at = value.lastIndexOf('=')
     const severity = value.slice(at + 1)
     if (at < 1 || !SEVERITIES.includes(severity)) {
-      throw new UsageError(`--assume ${value}: expected KEY=${SEVERITIES.join('|')}`)
+      throw new UsageError(`${flag} ${value}: expected KEY=${SEVERITIES.join('|')}`)
     }
     assumed[value.slice(0, at)] = severity
   }
   return assumed
 }
 
-// ---------------------------------------------------------------- agent-facing commands
+// ---------------------------------------------------------------- deriving the PR's state from GitHub
 
 function isCopilotError(review) {
   const body = review.body || ''
   return isCopilot(review) && body.includes('encountered an error') && !body.includes('ccr-overview')
 }
 
-function buildRound(review, comments, viewer, assumed) {
+function buildRound(review, comments, viewer, threadOf) {
   const answerable = comments.filter(
     (comment) =>
       comment.pull_request_review_id === review.id && !(comment.in_reply_to_id && isOwnPost(comment, viewer)),
@@ -295,12 +321,6 @@ function buildRound(review, comments, viewer, assumed) {
   const { findings, recognised } = isCopilot(review)
     ? parseCopilotOverview(review.body || '')
     : parseReview(review, answerable)
-  for (const finding of findings) {
-    if (finding.severity === null && assumed[finding.key]) {
-      finding.severity = assumed[finding.key]
-      finding.severity_source = 'agent'
-    }
-  }
   return {
     review_id: review.id,
     reviewer,
@@ -309,99 +329,162 @@ function buildRound(review, comments, viewer, assumed) {
     submitted_at: review.submitted_at,
     format_recognised: recognised,
     findings,
-    unknown_severity: reviewer === 'ai' ? findings.filter((finding) => finding.severity === null).map((finding) => finding.key) : [],
+    thread_ids: [...new Set(answerable.map((comment) => threadOf.get(comment.id)?.id).filter(Boolean))],
   }
 }
 
-function ingest(ctx, args) {
-  const { env, github } = ctx
-  const state = loadState(env, args.repo, args.pr)
-  const assumed = parseAssumptions(args.assume)
+// Severity: the agent's marker wins, then the reviewer's badge; an unhandled round may take --assume.
+function applySeverities(round, markers, assumed) {
+  for (const finding of round.findings) {
+    if (markers[finding.key]) {
+      finding.severity = markers[finding.key]
+      finding.severity_source = 'agent'
+    } else if (finding.severity === null && !round.handled && assumed[finding.key]) {
+      finding.severity = assumed[finding.key]
+      finding.severity_source = 'agent'
+    }
+  }
+  round.unknown_severity =
+    round.reviewer === 'ai' && !round.handled ? round.findings.filter((finding) => finding.severity === null).map((finding) => finding.key) : []
+}
+
+// Walk every round in order. A round submitted after the latest continue (removal of the halted label) halts the
+// PR once the counts reach a limit; rounds submitted at or before it are exempt and never trigger a halt.
+function applyLimits(rounds, continued) {
+  let noise = 0
+  let halt = null
+  rounds.forEach((round, index) => {
+    round.kind = classifyRound(round.findings, round.reviewer, index === 0, rounds.slice(0, index).some((earlier) => !earlier.handled))
+    if (round.kind === 'noise') noise += 1
+    const exempt = continued !== null && Date.parse(round.submitted_at) <= continued
+    if (halt || exempt) return
+    if (index + 1 >= ROUND_LIMIT) halt = `Round limit (${ROUND_LIMIT} rounds) reached`
+    else if (noise >= NOISE_LIMIT) halt = `Noise limit (${NOISE_LIMIT} noise rounds) reached`
+  })
+  return { noise_count: noise, halt }
+}
+
+// One read of the PR: every submitted review rebuilt into rounds, each marked handled once its threads are
+// answered and any due PR comment is posted, plus the open work `check` and the Stop hook report.
+function derive(github, repo, pr, { assumed = {}, pull = github.pullRequest(repo, pr) } = {}) {
   const viewer = github.viewer()
-  const seen = new Set([...state.processed_reviews, ...state.skipped_reviews, ...state.errored_reviews])
-  const pending = github
-    .reviews(args.repo, args.pr)
-    .filter((review) => review.submitted_at && review.state !== 'PENDING' && !seen.has(review.id))
-    .sort((a, b) => a.submitted_at.localeCompare(b.submitted_at))
-  const comments = pending.length ? github.reviewComments(args.repo, args.pr) : []
-  const open = outstanding(github, state)
-  const carriedOver = open.threads.length + open.pm_comments.length
+  const reviews = github
+    .reviews(repo, pr)
+    .filter((review) => review.submitted_at && review.state !== 'PENDING')
+    .sort((a, b) => Date.parse(a.submitted_at) - Date.parse(b.submitted_at))
+  const comments = reviews.length ? github.reviewComments(repo, pr) : []
+  const issueComments = github.issueComments(repo, pr)
+  const posted = roundMarkers(issueComments)
+  const markers = severityMarkers([...comments, ...issueComments], viewer)
+  const threadOf = new Map()
+  for (const thread of pull.threads) for (const comment of thread.comments) threadOf.set(comment.databaseId, thread)
+
+  const rounds = []
+  const errored = []
+  for (const review of reviews) {
+    if (isCopilotError(review)) {
+      errored.push(review)
+      continue
+    }
+    const round = buildRound(review, comments, viewer, threadOf)
+    if (!round) continue
+    round.pm_comment_due =
+      round.format_recognised && round.findings.some((finding) => finding.kind === 'previously_missed' || finding.kind === 'review_body')
+    round.handled =
+      round.thread_ids.every((id) => threadAnswered(pull.threads.find((thread) => thread.id === id), viewer)) &&
+      !(round.pm_comment_due && !posted.has(round.review_id))
+    applySeverities(round, markers, assumed)
+    rounds.push(round)
+  }
+
+  // A Copilot error stays reported until a later Copilot review replaces it.
+  const lastCopilot = rounds.filter((round) => COPILOT_LOGINS.has(round.author)).at(-1)
+  const copilotErrors = errored
+    .filter((review) => !lastCopilot || Date.parse(review.submitted_at) > Date.parse(lastCopilot.submitted_at))
+    .map((review) => review.id)
+
+  const report = { pr_state: pull.state, threads: [], pm_comments: [], waiting: [], human_review_in_progress: false }
+  if (pull.state === 'OPEN') {
+    if (pull.pending) report.human_review_in_progress = true
+    else {
+      report.threads = unansweredThreads(pull, viewer)
+      report.pm_comments = rounds
+        .filter((round) => round.pm_comment_due && !posted.has(round.review_id))
+        .map((round) => round.review_id)
+        .sort((a, b) => a - b)
+      report.waiting = pull.threads.filter((thread) => isWaiting(thread, viewer)).map((thread) => thread.id)
+    }
+  }
+  return { pull, rounds, copilotErrors, report, continued: continuedAt(github.issueEvents(repo, pr)) }
+}
+
+function publicRound({ handled, ...round }) {
+  return round
+}
+
+function swapLabels(github, repo, pr, labels, add, remove) {
+  if (!labels.includes(add)) github.addLabel(repo, pr, add)
+  if (labels.includes(remove)) github.removeLabel(repo, pr, remove)
+}
+
+// ---------------------------------------------------------------- agent-facing commands
+
+function ingest(ctx, args) {
+  const { github } = ctx
+  checkRepo(args.repo)
+  const derived = derive(github, args.repo, args.pr, { assumed: parseAssumptions(args.assume) })
+  const unhandled = derived.rounds.filter((round) => !round.handled)
   const plan = {
     action: 'nothing',
     instruction: null,
     rounds: [],
-    noise_count: state.noise_count,
-    noise_limit: state.noise_limit,
-    round_count: state.processed_reviews.length,
-    round_limit: state.round_limit,
+    noise_count: 0,
+    noise_limit: NOISE_LIMIT,
+    round_count: derived.rounds.length,
+    round_limit: ROUND_LIMIT,
+    halted: false,
+    continued_at: derived.continued === null ? null : new Date(derived.continued).toISOString(),
   }
+  if (derived.copilotErrors.length) plan.copilot_errors = derived.copilotErrors
 
-  const rounds = []
-  for (const review of pending) {
-    if (isCopilotError(review)) {
-      state.errored_reviews.push(review.id)
-      ;(plan.copilot_errors ??= []).push(review.id)
-      continue
-    }
-    const round = buildRound(review, comments, viewer, assumed)
-    if (round) rounds.push(round)
-    else state.skipped_reviews.push(review.id)
-  }
-
-  const drifted = rounds.find((round) => !round.format_recognised)
+  const drifted = unhandled.find((round) => !round.format_recognised)
   if (drifted) {
     plan.action = 'format_drift'
     plan.instruction =
-      `Copilot's overview for review ${drifted.review_id} no longer parses. Nothing was recorded. Tell the human ` +
-      'the review format changed; answer the threads by hand with reply/check until the parser is fixed.'
-    plan.rounds = [drifted]
+      `Copilot's overview for review ${drifted.review_id} no longer parses. Tell the human the review format ` +
+      'changed; answer the threads by hand with reply/check until the parser is fixed.'
+    plan.rounds = [publicRound(drifted)]
     ctx.print(plan)
     return 2
   }
-  if (rounds.some((round) => round.unknown_severity.length)) {
+  if (unhandled.some((round) => round.unknown_severity.length)) {
     plan.action = 'judge_severity'
     plan.instruction =
       'Judge the severity of each finding in rounds[].unknown_severity yourself, then re-run ingest with ' +
-      '--assume <key>=High|Medium|Low for each. Nothing was recorded.'
-    plan.rounds = rounds
+      '--assume <key>=High|Medium|Low for each. When you answer, pass the same severity to reply/pr-comment ' +
+      'with --severity, so later runs read it from GitHub.'
+    plan.rounds = unhandled.map(publicRound)
     ctx.print(plan)
     return 0
   }
 
-  for (const round of rounds) {
-    round.kind = classifyRound(round.findings, round.reviewer, !state.processed_reviews.length, carriedOver)
-    if (round.kind === 'noise' && !state.one_shot) state.noise_count += 1
-    if (round.findings.some((finding) => finding.kind === 'previously_missed' || finding.kind === 'review_body')) {
-      state.pm_comment_due.push(round.review_id)
-    }
-    state.processed_reviews.push(round.review_id)
-    const { findings, unknown_severity, ...summary } = round
-    state.rounds.push({ ...summary, findings: findings.map(({ key, kind, severity, title }) => ({ key, kind, severity, title })) })
-    plan.rounds.push(round)
-  }
-
-  plan.noise_count = state.noise_count
-  plan.round_count = state.processed_reviews.length
-  let limitHit = null
-  if (plan.round_count >= state.round_limit) limitHit = `Round limit (${state.round_limit} rounds) reached`
-  else if (state.noise_count >= state.noise_limit) limitHit = `Noise limit (${state.noise_limit} noise rounds) reached`
-  if (limitHit && !state.one_shot) {
-    state.halted = true
+  const { noise_count, halt } = applyLimits(derived.rounds, derived.continued)
+  plan.noise_count = noise_count
+  plan.rounds = unhandled.map(publicRound)
+  if (halt) {
+    plan.halted = true
     plan.action = 'halt'
     plan.instruction =
-      `${limitHit}. Leave these findings as they are. Call mcp__ccd_pr__set_monitor with auto_fix=false, ` +
-      `address_comments=false, url=${state.url}; then hand back to the human in your final message, listing ` +
-      'what is still open.'
-  } else if (state.halted && !state.one_shot) {
-    plan.action = 'halt'
-    plan.instruction = "This PR is halted. Report to the human; act only if they say 'continue'."
-  } else if (plan.rounds.some((round) => round.findings.length) || carriedOver) {
+      `${halt}. Leave these findings as they are. Call mcp__ccd_pr__set_monitor with auto_fix=false, ` +
+      `address_comments=false, url=${prUrl(args.repo, args.pr)}; then hand back to the human in your final ` +
+      "message, listing what is still open. Act again only after the human says 'continue'."
+    swapLabels(github, args.repo, args.pr, derived.pull.labels, HALTED, ACTIVE)
+  } else if (unhandled.length || hasOpenWork(derived.report)) {
     plan.action = 'handle'
   } else if (plan.copilot_errors) {
     plan.action = 'copilot_error'
     plan.instruction = 'Copilot failed to review. Tell the human to re-request the Copilot review.'
   }
-  saveState(env, state)
   ctx.print(plan)
   return 0
 }
@@ -415,71 +498,108 @@ function refuseDuringHumanReview(pending) {
   }
 }
 
+// The visible badge and the hidden marker that later runs read the agent's severity back from.
+function severityBlock(severities) {
+  const keys = Object.keys(severities)
+  if (!keys.length) return ''
+  const visible =
+    keys.length === 1
+      ? `**Severity: ${severities[keys[0]]}** (agent-judged)`
+      : keys.map((key) => `- \`${key}\`: **Severity: ${severities[key]}** (agent-judged)`).join('\n')
+  const pairs = keys.map((key) => `${key}=${severities[key]}`).join(' ')
+  return `\n\n${visible}\n<!-- shepherding-pr-reviews: severity ${pairs} -->`
+}
+
 function reply(ctx, args) {
   const { github } = ctx
-  refuseDuringHumanReview(github.threadPullRequest(args.thread).pending)
-  github.replyToThread(args.thread, withBanner(fs.readFileSync(args['body-file'], 'utf8')))
+  if (!args['body-file'] && !args.waiting) throw new UsageError('reply: --body-file is required')
+  if (args.severity && !SEVERITIES.includes(args.severity)) {
+    throw new UsageError(`reply: --severity must be one of ${SEVERITIES.join('|')}`)
+  }
+  const thread = github.threadPullRequest(args.thread)
+  refuseDuringHumanReview(thread.pending)
+  let body = withBanner(args['body-file'] ? fs.readFileSync(args['body-file'], 'utf8') : WAITING_TEXT)
+  if (args.severity) body += severityBlock({ [`r${thread.comment_id}`]: args.severity })
+  if (args.waiting) body += `\n\n${WAITING_MARKER}`
+  github.replyToThread(args.thread, body)
   if (args.resolve) github.resolveThread(args.thread)
-  ctx.print({ thread: args.thread, replied: true, resolved: Boolean(args.resolve) })
+  ctx.print({ thread: args.thread, replied: true, resolved: Boolean(args.resolve), waiting: Boolean(args.waiting) })
   return 0
 }
 
 function prComment(ctx, args) {
   const { github } = ctx
+  checkRepo(args.repo)
+  const severities = parseAssumptions(args.severity, '--severity')
   refuseDuringHumanReview(github.pullRequest(args.repo, args.pr).pending)
-  const body = withBanner(fs.readFileSync(args['body-file'], 'utf8'))
+  const body = withBanner(fs.readFileSync(args['body-file'], 'utf8')) + severityBlock(severities)
   github.commentOnPr(args.repo, args.pr, `${body}\n\n<!-- shepherding-pr-reviews: review ${args.review} -->`)
   ctx.print({ review: args.review, commented: true })
   return 0
 }
 
-function wait(ctx, args) {
-  const state = loadState(ctx.env, args.repo, args.pr)
-  const waiting = new Set(state.waiting_on_user)
-  if (args.release) waiting.delete(args.thread)
-  else waiting.add(args.thread)
-  state.waiting_on_user = [...waiting].sort()
-  saveState(ctx.env, state)
-  ctx.print({ waiting_on_user: state.waiting_on_user })
-  return 0
+// The active label is cosmetic: a failure to write it never fails the bind. A halted PR keeps its halted label,
+// since swapping it out would be a continue.
+function markActive(ctx, repo, pr, labels) {
+  try {
+    if (!labels().includes(HALTED)) ctx.github.addLabel(repo, pr, ACTIVE)
+  } catch (error) {
+    ctx.stderr.write(`shepherding-pr-reviews: could not label ${prUrl(repo, pr)}: ${error.message}\n`)
+  }
 }
 
 function bind(ctx, args) {
-  const file = bindState(ctx.env, args.repo, args.pr, args['session-id'])
-  ctx.print({ bound: file, session_id: args['session-id'] })
+  const file = bindSession(ctx.env, args.repo, args.pr, args['session-id'])
+  markActive(ctx, args.repo, args.pr, () => ctx.github.pullRequest(args.repo, args.pr).labels)
+  ctx.print({ bound: { repo: args.repo, pr: args.pr }, index: file, session_id: args['session-id'] })
   return 0
 }
 
 function check(ctx, args) {
-  const state = loadState(ctx.env, args.repo, args.pr)
-  const report = outstanding(ctx.github, state)
-  report.waiting_on_user = state.waiting_on_user
+  checkRepo(args.repo)
+  const { report } = derive(ctx.github, args.repo, args.pr)
   const done = !hasOpenWork(report)
-  if (done && state.one_shot) {
-    state.one_shot = false
-    state.halted = true
-  }
-  saveState(ctx.env, state)
   report.ok = done
   ctx.print(report)
   return done ? 0 : 1
 }
 
 function continueRound(ctx, args) {
-  const state = loadState(ctx.env, args.repo, args.pr)
-  state.halted = false
-  state.one_shot = true
-  saveState(ctx.env, state)
+  checkRepo(args.repo)
+  const { labels } = ctx.github.pullRequest(args.repo, args.pr)
+  swapLabels(ctx.github, args.repo, args.pr, labels, ACTIVE, HALTED)
   ctx.print({
-    one_shot: true,
-    noise_count: state.noise_count,
-    note: 'One round allowed. Auto-Fix stays off; only the human re-arms it.',
+    continued: true,
+    note:
+      'One round allowed: reviews submitted so far no longer trigger a halt, and the next review re-checks the ' +
+      'limits. Auto-Fix stays off; only the human re-arms it.',
   })
   return 0
 }
 
 function status(ctx, args) {
-  ctx.print(loadState(ctx.env, args.repo, args.pr))
+  checkRepo(args.repo)
+  const derived = derive(ctx.github, args.repo, args.pr)
+  const { noise_count, halt } = applyLimits(derived.rounds, derived.continued)
+  ctx.print({
+    repo: args.repo,
+    pr: args.pr,
+    url: prUrl(args.repo, args.pr),
+    labels: derived.pull.labels,
+    halted: Boolean(halt),
+    halt_reason: halt,
+    continued_at: derived.continued === null ? null : new Date(derived.continued).toISOString(),
+    noise_count,
+    noise_limit: NOISE_LIMIT,
+    round_count: derived.rounds.length,
+    round_limit: ROUND_LIMIT,
+    rounds: derived.rounds.map(({ findings, ...round }) => ({
+      ...round,
+      findings: findings.map(({ key, kind, severity, title }) => ({ key, kind, severity, title })),
+    })),
+    copilot_errors: derived.copilotErrors,
+    open: derived.report,
+  })
   return 0
 }
 
@@ -522,7 +642,9 @@ function hookPostCreate(ctx) {
   if (!match || !payload.session_id) return 0
   const repo = `${match[1]}/${match[2]}`
   const pr = Number(match[3])
-  bindState(ctx.env, repo, pr, payload.session_id)
+  bindSession(ctx.env, repo, pr, payload.session_id)
+  // A PR gh pr create just opened carries no labels yet.
+  markActive(ctx, repo, pr, () => [])
   const url = prUrl(repo, pr)
   const context =
     `PR ${url} was created and bound to this session. Load the shepherding-pr-reviews skill now and arm the ` +
@@ -533,41 +655,43 @@ function hookPostCreate(ctx) {
   return 0
 }
 
-function sessionStates(env, sessionId) {
-  if (!sessionId) return []
-  const found = []
-  for (const file of readJson(sessionIndexPath(env, sessionId), [])) {
-    const state = readJson(file, null)
-    if (state?.session_id === sessionId && !state.closed && !state.halted) found.push(state)
-  }
-  return found
-}
-
 function hookStop(ctx) {
   const payload = ctx.readPayload()
+  if (!payload.session_id) return 0
+  const index = sessionIndexPath(ctx.env, payload.session_id)
+  const entries = readSessionIndex(index)
+  if (!entries.length) return 0
+  const kept = []
   const problems = []
-  for (const state of sessionStates(ctx.env, payload.session_id)) {
+  for (const entry of entries) {
+    const url = prUrl(entry.repo, entry.pr)
     let report
     try {
-      report = outstanding(ctx.github, state)
+      const pull = ctx.github.pullRequest(entry.repo, entry.pr)
+      if (pull.state !== 'OPEN') continue
+      kept.push(entry)
+      // A halted PR keeps its open findings by design. The label is the only state the hook reads.
+      if (pull.labels.includes(HALTED)) continue
+      report = derive(ctx.github, entry.repo, entry.pr, { pull }).report
     } catch (error) {
       // GitHub unreachable: let the stop through rather than trap the session.
-      ctx.stderr.write(`shepherding-pr-reviews: stop check skipped for ${state.url}: ${error.message}\n`)
+      if (!kept.includes(entry)) kept.push(entry)
+      ctx.stderr.write(`shepherding-pr-reviews: stop check skipped for ${url}: ${error.message}\n`)
       continue
     }
-    saveState(ctx.env, state)
     if (hasOpenWork(report)) {
       problems.push(
-        `${state.url}: ${report.threads.length} unanswered thread(s) ` +
+        `${url}: ${report.threads.length} unanswered thread(s) ` +
           `[${report.threads.map((thread) => thread.thread_id).join(', ')}], ` +
           `PR comment due for review(s) [${report.pm_comments.join(', ')}]`,
       )
     }
   }
+  if (kept.length !== entries.length) writeSessionIndex(index, kept)
   if (problems.length) {
     const reason =
-      'Review threads still need an answer (shepherding-pr-reviews skill). Reply in-thread and resolve, or mark ' +
-      "a human reviewer's thread with `wait` when it needs the human's decision:\n- " +
+      'Review threads still need an answer (shepherding-pr-reviews skill). Reply in-thread and resolve, or post ' +
+      "a holding reply (`reply --waiting`) on a human reviewer's thread that needs the human's decision:\n- " +
       problems.join('\n- ')
     ctx.emit({ decision: 'block', reason })
   }
@@ -579,14 +703,16 @@ function hookStop(ctx) {
 const THREADS_QUERY = `query($o:String!,$r:String!,$n:Int!){repository(owner:$o,name:$r){pullRequest(number:$n){
   state
   pending:reviews(states:[PENDING],first:1){totalCount}
+  labels(first:50){nodes{name}}
   reviewThreads(first:100){nodes{
     id isResolved path line
     comments(last:50){nodes{databaseId state author{login} body}}
   }}
 }}}`
-const THREAD_PR_QUERY = `query($t:ID!){node(id:$t){... on PullRequestReviewThread{pullRequest{
-  pending:reviews(states:[PENDING],first:1){totalCount}
-}}}}`
+const THREAD_PR_QUERY = `query($t:ID!){node(id:$t){... on PullRequestReviewThread{
+  comments(first:1){nodes{databaseId}}
+  pullRequest{pending:reviews(states:[PENDING],first:1){totalCount}}
+}}}`
 
 function gh(args, input) {
   return execFileSync('gh', args, { encoding: 'utf8', input, maxBuffer: 64 * 1024 * 1024, stdio: 'pipe' })
@@ -614,17 +740,33 @@ function ghPort() {
     reviews: (repo, pr) => restList(`repos/${repo}/pulls/${pr}/reviews`),
     reviewComments: (repo, pr) => restList(`repos/${repo}/pulls/${pr}/comments`),
     issueComments: (repo, pr) => restList(`repos/${repo}/issues/${pr}/comments`),
+    issueEvents: (repo, pr) => restList(`repos/${repo}/issues/${pr}/events`),
     pullRequest(repo, pr) {
       const [o, r] = repo.split('/')
       const pull = graphql(THREADS_QUERY, { o, r, n: pr }).repository.pullRequest
       return {
         state: pull.state,
         pending: pull.pending.totalCount,
+        labels: pull.labels.nodes.map((label) => label.name),
         threads: pull.reviewThreads.nodes.map((thread) => ({ ...thread, comments: thread.comments.nodes })),
       }
     },
     threadPullRequest(threadId) {
-      return { pending: graphql(THREAD_PR_QUERY, { t: threadId }).node.pullRequest.pending.totalCount }
+      const thread = graphql(THREAD_PR_QUERY, { t: threadId }).node
+      return { pending: thread.pullRequest.pending.totalCount, comment_id: thread.comments.nodes[0]?.databaseId }
+    },
+    addLabel(repo, pr, name) {
+      const { color, description } = LABELS[name]
+      gh(['label', 'create', name, '--repo', repo, '--color', color, '--description', description, '--force'])
+      gh(['api', '-X', 'POST', `repos/${repo}/issues/${pr}/labels`, '-f', `labels[]=${name}`])
+    },
+    removeLabel(repo, pr, name) {
+      try {
+        gh(['api', '-X', 'DELETE', `repos/${repo}/issues/${pr}/labels/${encodeURIComponent(name)}`])
+      } catch (error) {
+        // Already gone: nothing to remove.
+        if (!/HTTP 404/.test(`${error.stderr || ''}${error.message}`)) throw error
+      }
     },
     replyToThread(threadId, body) {
       graphql(
@@ -647,9 +789,15 @@ class UsageError extends Error {}
 
 const COMMANDS = {
   ingest: { run: ingest, pr: true, options: { assume: 'list' } },
-  reply: { run: reply, options: { thread: 'required', 'body-file': 'required', resolve: 'flag' } },
-  'pr-comment': { run: prComment, pr: true, options: { review: 'number', 'body-file': 'required' } },
-  wait: { run: wait, pr: true, options: { thread: 'required', release: 'flag' } },
+  reply: {
+    run: reply,
+    options: { thread: 'required', 'body-file': 'optional', resolve: 'flag', severity: 'optional', waiting: 'flag' },
+  },
+  'pr-comment': {
+    run: prComment,
+    pr: true,
+    options: { review: 'number', 'body-file': 'required', severity: 'list' },
+  },
   bind: { run: bind, pr: true, options: { 'session-id': 'required' } },
   check: { run: check, pr: true },
   continue: { run: continueRound, pr: true },
@@ -711,7 +859,9 @@ function main(argv, io = {}) {
   }
   try {
     if (!command) throw new UsageError(`unknown subcommand: ${name}\n\n${USAGE}`)
-    return command.run(ctx, parseArgs(name, command, rest))
+    const args = parseArgs(name, command, rest)
+    deleteLegacyState(ctx.env)
+    return command.run(ctx, args)
   } catch (error) {
     stderr.write(`review-state: ${error.message}\n`)
     return error instanceof UsageError ? 2 : 1

@@ -7,7 +7,7 @@ const { test } = require('node:test')
 
 const SKILLS = path.join(__dirname, '..', '..', 'skills')
 const SCRIPT = path.join(SKILLS, 'shepherding-pr-reviews', 'scripts', 'review-state.js')
-const SUBCOMMANDS = ['ingest', 'reply', 'pr-comment', 'wait', 'bind', 'check', 'continue', 'status', 'hook-post-create', 'hook-stop']
+const SUBCOMMANDS = ['ingest', 'reply', 'pr-comment', 'bind', 'check', 'continue', 'status', 'hook-post-create', 'hook-stop']
 
 function configDir() {
   return fs.mkdtempSync(path.join(os.tmpdir(), 'review-state-'))
@@ -28,10 +28,15 @@ const PR = 7
 const VIEWER = 'agent-user'
 const PR_ARGS = ['--repo', REPO, '--pr', String(PR)]
 
+const HALTED = 'shepherd: halted'
+const ACTIVE = 'shepherd: active'
+
 // An in-memory GitHub with one open PR, standing in for the gh CLI port.
 function fakeGithub() {
   let nextId = 100
-  const pull = { state: 'OPEN', pending: 0, reviews: [], reviewComments: [], threads: [], issueComments: [] }
+  const pull = { state: 'OPEN', pending: 0, reviews: [], reviewComments: [], threads: [], issueComments: [], labels: [], events: [] }
+  // Every write happens one second after the last, so timestamps order like GitHub's.
+  const now = () => new Date(Date.UTC(2026, 9, 14, 10) + nextId++ * 1000).toISOString().replace(/\.\d+Z$/, 'Z')
 
   function addComment(review, thread, login, body) {
     const id = nextId++
@@ -41,7 +46,7 @@ function fakeGithub() {
   }
 
   function addReview({ login, type = 'User', body = '', state = 'COMMENTED', comments = [] }) {
-    const review = { id: nextId++, user: { login, type }, body, state, submitted_at: `2026-10-14T10:${String(nextId).padStart(2, '0')}:00Z`, commit_id: 'abcdef1234' }
+    const review = { id: nextId++, user: { login, type }, body, state, submitted_at: now(), commit_id: 'abcdef1234' }
     pull.reviews.push(review)
     for (const comment of comments) {
       const thread = { id: `PRRT_${nextId++}`, isResolved: false, path: comment.path || 'src/app.js', line: 3, comments: [] }
@@ -63,14 +68,28 @@ function fakeGithub() {
     reviews: () => pull.reviews,
     reviewComments: () => pull.reviewComments,
     issueComments: () => pull.issueComments,
-    pullRequest: () => ({ state: pull.state, pending: pull.pending, threads: pull.threads }),
-    threadPullRequest: () => ({ pending: pull.pending }),
+    issueEvents: () => pull.events,
+    pullRequest: () => ({ state: pull.state, pending: pull.pending, threads: pull.threads, labels: [...pull.labels] }),
+    threadPullRequest: (threadId) => ({
+      pending: pull.pending,
+      comment_id: pull.threads.find((thread) => thread.id === threadId).comments[0].databaseId,
+    }),
     replyToThread,
     resolveThread(threadId) {
       pull.threads.find((thread) => thread.id === threadId).isResolved = true
     },
     commentOnPr(repo, pr, body) {
       pull.issueComments.push({ user: { login: VIEWER }, body })
+    },
+    addLabel(repo, pr, name) {
+      if (pull.labels.includes(name)) return
+      pull.labels.push(name)
+      pull.events.push({ event: 'labeled', label: { name }, created_at: now() })
+    },
+    removeLabel(repo, pr, name) {
+      if (!pull.labels.includes(name)) return
+      pull.labels = pull.labels.filter((label) => label !== name)
+      pull.events.push({ event: 'unlabeled', label: { name }, created_at: now() })
     },
   }
 }
@@ -81,7 +100,7 @@ function capture() {
 }
 
 function makeRunner(github = fakeGithub(), config = configDir()) {
-  return (args, payload) => {
+  const run = (args, payload) => {
     const stdout = capture()
     const stderr = capture()
     const status = main(args, {
@@ -93,6 +112,25 @@ function makeRunner(github = fakeGithub(), config = configDir()) {
     })
     return { status, stdout: stdout.text, stderr: stderr.text, json: () => JSON.parse(stdout.text) }
   }
+  run.config = config
+  return run
+}
+
+function createPr(run, sessionId = 'session-1') {
+  return run(['hook-post-create'], {
+    session_id: sessionId,
+    tool_name: 'Bash',
+    tool_input: { command: 'gh pr create --fill' },
+    tool_response: { stdout: `https://github.com/${REPO}/pull/${PR}\n` },
+  })
+}
+
+function sessionsDir(config) {
+  return path.join(config, 'state', 'shepherding-pr-reviews', 'sessions')
+}
+
+function filesUnder(dir) {
+  return fs.existsSync(dir) ? fs.readdirSync(dir, { recursive: true }).filter((name) => fs.statSync(path.join(dir, name)).isFile()) : []
 }
 
 function bodyFile(text) {
@@ -282,25 +320,197 @@ test('after a halt, continue allows exactly one more round', () => {
   github.addReview({ login: 'reviewer-human', body: 'One more.' })
   assert.equal(run(['ingest', ...PR_ARGS]).json().action, 'halt')
   run(['continue', ...PR_ARGS])
-  assert.equal(run(['ingest', ...PR_ARGS]).json().action, 'handle')
+  const allowed = run(['ingest', ...PR_ARGS]).json()
+  assert.equal(allowed.action, 'handle')
+  assert.equal(allowed.rounds.length, 1)
+
+  github.addReview({ login: 'reviewer-human', body: 'And another.' })
+  assert.equal(run(['ingest', ...PR_ARGS]).json().action, 'halt')
 })
 
-test('PRs in different repos never share state, even when their names collide once joined', () => {
-  const run = makeRunner()
+function noisyPr() {
+  const github = fakeGithub()
+  github.addReview({ login: 'review-bot[bot]', type: 'Bot', comments: [{ body: `${HIGH} Null dereference.` }] })
+  for (let i = 0; i < 3; i++) github.addReview({ login: 'review-bot[bot]', type: 'Bot', comments: [{ body: `${LOW} Nit ${i}.` }] })
+  return github
+}
 
-  run(['wait', '--repo', 'a-b/c', '--pr', '7', '--thread', 'PRRT_1'])
-  const other = run(['status', '--repo', 'a/b-c', '--pr', '7']).json()
+test('a halt swaps shepherd: active for shepherd: halted, and continue swaps it back', () => {
+  const github = noisyPr()
+  const run = makeRunner(github)
+  createPr(run)
+  assert.deepEqual(github.pull.labels, [ACTIVE])
 
-  assert.deepEqual(other.waiting_on_user, [])
+  assert.equal(run(['ingest', ...PR_ARGS]).json().action, 'halt')
+  assert.deepEqual(github.pull.labels, [HALTED])
+
+  run(['continue', ...PR_ARGS])
+  assert.deepEqual(github.pull.labels, [ACTIVE])
 })
 
-test('one PR has one state, whatever the case of its owner and repo', () => {
+test('removing shepherd: halted by hand on GitHub allows one more round, and the next review re-halts', () => {
+  const github = noisyPr()
+  const run = makeRunner(github)
+  assert.equal(run(['ingest', ...PR_ARGS]).json().action, 'halt')
+
+  github.removeLabel(REPO, PR, HALTED)
+  const allowed = run(['ingest', ...PR_ARGS]).json()
+  assert.equal(allowed.action, 'handle')
+  assert.equal(allowed.halted, false)
+
+  github.addReview({ login: 'review-bot[bot]', type: 'Bot', comments: [{ body: `${HIGH} Race condition.` }] })
+  assert.equal(run(['ingest', ...PR_ARGS]).json().action, 'halt')
+  assert.deepEqual(github.pull.labels, [HALTED])
+})
+
+test('no per-PR state is written: only the session index, listing the PR', () => {
+  const github = fakeGithub()
+  github.addReview({ login: 'reviewer-human', comments: [{ body: 'Rename this.' }] })
+  const run = makeRunner(github)
+  createPr(run)
+  run(['ingest', ...PR_ARGS])
+  run(['check', ...PR_ARGS])
+
+  const root = path.join(run.config, 'state', 'shepherding-pr-reviews')
+  assert.deepEqual(filesUnder(root), [path.join('sessions', 'session-1.json')])
+  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(sessionsDir(run.config), 'session-1.json'), 'utf8')), [{ repo: REPO, pr: PR }])
+})
+
+test('two runs with separate config dirs derive the same rounds, counts and halt', () => {
+  const github = noisyPr()
+  const first = makeRunner(github)(['ingest', ...PR_ARGS]).json()
+  const second = makeRunner(github)(['ingest', ...PR_ARGS]).json()
+
+  assert.equal(first.action, 'halt')
+  assert.deepEqual(second, first)
+})
+
+test('old per-PR state files are deleted on first run', () => {
   const run = makeRunner()
+  const old = path.join(run.config, 'state', 'shepherding-pr-reviews', 'prs', 'octo-org', 'widgets', '7.json')
+  fs.mkdirSync(path.dirname(old), { recursive: true })
+  fs.writeFileSync(old, '{}', 'utf8')
 
-  run(['wait', '--repo', 'Octo-Org/Widgets', '--pr', '7', '--thread', 'PRRT_1'])
-  const same = run(['status', '--repo', 'octo-org/widgets', '--pr', '7']).json()
+  run(['check', ...PR_ARGS])
 
-  assert.deepEqual(same.waiting_on_user, ['PRRT_1'])
+  assert.equal(fs.existsSync(path.dirname(path.dirname(path.dirname(old)))), false)
+})
+
+test('a reply with --severity carries a visible badge and a hidden marker', () => {
+  const github = fakeGithub()
+  github.addReview({ login: 'review-bot[bot]', type: 'Bot', comments: [{ body: `${HIGH} Null dereference.` }] })
+  const run = makeRunner(github)
+  const thread = github.pull.threads[0]
+
+  run(['reply', '--thread', thread.id, '--body-file', bodyFile('Fixed in abc1234.'), '--severity', 'Low'])
+
+  const body = thread.comments.at(-1).body
+  assert.match(body, /\*\*Severity: Low\*\* \(agent-judged\)/)
+  assert.ok(body.includes(`<!-- shepherding-pr-reviews: severity r${thread.comments[0].databaseId}=Low -->`))
+})
+
+test("the agent's severity marker overrides the reviewer's badge when counting noise", () => {
+  const github = fakeGithub()
+  github.addReview({ login: 'reviewer-human', comments: [{ body: 'Handle the empty list.' }] })
+  github.addReview({ login: 'review-bot[bot]', type: 'Bot', comments: [{ body: `${HIGH} Null dereference.` }] })
+  const run = makeRunner(github)
+  assert.equal(run(['ingest', ...PR_ARGS]).json().noise_count, 0)
+
+  for (const thread of github.pull.threads) {
+    run(['reply', '--thread', thread.id, '--body-file', bodyFile('Answered.'), '--severity', 'Low', '--resolve'])
+  }
+
+  assert.equal(run(['ingest', ...PR_ARGS]).json().noise_count, 1)
+})
+
+test('pr-comment carries one severity marker per finding key', () => {
+  const github = fakeGithub()
+  const review = github.addReview({ login: 'review-bot[bot]', type: 'Bot', body: 'Consider caching.' })
+  const run = makeRunner(github)
+
+  run(['pr-comment', ...PR_ARGS, '--review', String(review.id), '--body-file', bodyFile('Not valid.'), '--severity', `review:${review.id}=Low`])
+
+  const body = github.pull.issueComments[0].body
+  assert.match(body, /\*\*Severity: Low\*\* \(agent-judged\)/)
+  assert.ok(body.includes(`<!-- shepherding-pr-reviews: severity review:${review.id}=Low -->`))
+  assert.ok(body.includes(`<!-- shepherding-pr-reviews: review ${review.id} -->`))
+})
+
+test('a past AI finding with no badge and no marker is not noise', () => {
+  const github = fakeGithub()
+  github.addReview({ login: 'reviewer-human', comments: [{ body: 'Handle the empty list.' }] })
+  github.addReview({ login: 'review-bot[bot]', type: 'Bot', comments: [{ body: 'Consider a constant.' }] })
+  const run = makeRunner(github)
+  for (const thread of github.pull.threads) run(['reply', '--thread', thread.id, '--body-file', bodyFile('Answered.'), '--resolve'])
+
+  const plan = run(['ingest', ...PR_ARGS]).json()
+
+  assert.equal(plan.action, 'nothing')
+  assert.equal(plan.noise_count, 0)
+  assert.equal(plan.round_count, 2)
+})
+
+test("a holding reply parks a human's thread until the reviewer replies", () => {
+  const github = fakeGithub()
+  github.addReview({ login: 'reviewer-human', comments: [{ body: 'Use a map here.' }] })
+  const run = makeRunner(github)
+  createPr(run)
+  const thread = github.pull.threads[0]
+
+  run(['reply', '--thread', thread.id, '--waiting'])
+  assert.match(thread.comments.at(-1).body, /<!-- shepherding-pr-reviews: waiting -->/)
+  assert.equal(run(['check', ...PR_ARGS]).json().ok, true)
+  assert.equal(run(['hook-stop'], { session_id: 'session-1' }).stdout, '')
+
+  github.replyToThread(thread.id, 'A map is clearer; please change it.', 'reviewer-human')
+  assert.deepEqual(run(['check', ...PR_ARGS]).json().threads.map((open) => open.thread_id), [thread.id])
+  assert.equal(run(['hook-stop'], { session_id: 'session-1' }).json().decision, 'block')
+})
+
+test('hook-stop skips a PR labelled shepherd: halted', () => {
+  const github = fakeGithub()
+  github.addReview({ login: 'reviewer-human', comments: [{ body: 'This loop never ends.' }] })
+  const run = makeRunner(github)
+  createPr(run)
+  github.addLabel(REPO, PR, HALTED)
+
+  const result = run(['hook-stop'], { session_id: 'session-1' })
+
+  assert.equal(result.status, 0)
+  assert.equal(result.stdout, '')
+})
+
+test('hook-stop prunes a merged PR and deletes the emptied session file', () => {
+  const github = fakeGithub()
+  const run = makeRunner(github)
+  createPr(run)
+  github.pull.state = 'MERGED'
+
+  run(['hook-stop'], { session_id: 'session-1' })
+
+  assert.deepEqual(filesUnder(sessionsDir(run.config)), [])
+})
+
+test('bind sweeps session files untouched for 30 days, but keeps its own', () => {
+  const run = makeRunner()
+  createPr(run, 'old-session')
+  const stale = path.join(sessionsDir(run.config), 'old-session.json')
+  const longAgo = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000)
+  fs.utimesSync(stale, longAgo, longAgo)
+
+  run(['bind', ...PR_ARGS, '--session-id', 'new-session'])
+
+  assert.deepEqual(filesUnder(sessionsDir(run.config)), ['new-session.json'])
+})
+
+test('bind leaves shepherd: halted in place rather than continuing the PR', () => {
+  const github = fakeGithub()
+  github.addLabel(REPO, PR, HALTED)
+  const run = makeRunner(github)
+
+  run(['bind', ...PR_ARGS, '--session-id', 'session-1'])
+
+  assert.deepEqual(github.pull.labels, [HALTED])
 })
 
 test('--help lists every subcommand', () => {
