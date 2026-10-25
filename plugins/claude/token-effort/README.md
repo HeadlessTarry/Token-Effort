@@ -6,6 +6,7 @@ Claude Code features shipped only by the `token-effort` core plugin. Installs th
 |---------|------------|
 | Session titles from issues | A `UserPromptSubmit` hook that titles a session after the GitHub issue its prompt references (below) |
 | `shepherding-pr-reviews` skill | Walks an open PR through review rounds from human and AI reviewers (below) |
+| Port MCP server | Port's EU MCP server, available in every session (below) |
 
 ## 🏷️ Session titles from issues
 
@@ -39,3 +40,21 @@ Limitations:
 
 - Both hooks run `node` in every session. With no `gh pr create` and no bound PR, they exit without calling `gh`.
 - Not verified: whether the Auto-Fix Watch wakes the session for a human's review.
+
+## 🧭 Port MCP server
+
+The core plugin registers [Port's MCP server](https://docs.port.io/agent-management/port-mcp-server/installation) as `port-eu` (`https://mcp.port.io/v1`, HTTP transport) in every session. It sends `x-read-only-mode: 0`, so Port's write tools and actions are available.
+
+The server is declared under `mcpServers` in the core plugin entry in [.claude-plugin/marketplace.json](../../../.claude-plugin/marketplace.json).
+
+First use:
+
+1. Restart Claude Code after installing or updating the plugin.
+2. Run `/mcp`, select the Port server, and finish the login in your browser.
+3. Check it works by asking Claude to list your Port blueprints.
+
+Limitations:
+
+- EU region only. A US account (Port app URL contains `us`) needs its own `claude mcp add --transport http port-us https://mcp.us.port.io/v1 --header "x-read-only-mode: 0"`.
+- If you previously added Port yourself with `claude mcp add`, remove that entry, or the server appears twice.
+- Sessions without a Port login show the server as needing authentication in `/mcp`.
