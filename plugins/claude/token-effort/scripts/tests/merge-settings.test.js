@@ -107,6 +107,23 @@ test('fails with a message and leaves the target alone on invalid JSON', () => {
   assert.equal(fs.readFileSync(target, 'utf8'), '{ not json')
 })
 
+test('the starter settings hide the bundled code-review skill without dropping existing entries', () => {
+  const dir = tempDir()
+  const target = path.join(dir, 'settings.json')
+  const starter = path.join(__dirname, '..', '..', 'config', 'settings.json')
+  writeJson(target, { skillOverrides: { mine: 'off' }, permissions: { deny: ['Bash(rm *)'] } })
+
+  const result = merge(target, starter)
+
+  assert.equal(result.status, 0, result.stderr)
+  const merged = readJson(target)
+  assert.equal(merged.skillOverrides.mine, 'off')
+  assert.equal(merged.skillOverrides['code-review'], 'off')
+  assert.ok(merged.permissions.deny.includes('Bash(rm *)'))
+  assert.ok(merged.permissions.deny.includes('Skill(review)'))
+  assert.equal('disableBundledSkills' in readJson(starter), false)
+})
+
 test('fails with usage when arguments are missing', () => {
   const result = spawnSync(process.execPath, [SCRIPT], { encoding: 'utf8' })
 
