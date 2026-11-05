@@ -23,7 +23,7 @@ The `token-effort` plugin is required on every install. It ships:
 
 - **Home-grown skills** from `skills/`, invoked with the plugin prefix (e.g. `/token-effort:report-bug`).
 - **Working conventions** (see [GLOSSARY.md](GLOSSARY.md)): `config/AGENTS.md` is added to every session's context and every subagent's, except `Explore` and `Plan`. `$AI_CONFIG_DIR` in it becomes the plugin's `config/` directory, which holds the issue-tracker and triage-label docs from `config/docs/agents/`.
-- **Claude Code-only features**, such as session titles from GitHub issues and the `shepherding-pr-reviews` skill: see [plugins/claude/token-effort/README.md](plugins/claude/token-effort/README.md).
+- **Claude Code-only features**, such as session titles from GitHub issues, the `shepherding-pr-reviews` skill and the Port MCP server: see [plugins/claude/token-effort/README.md](plugins/claude/token-effort/README.md).
 - **`/token-effort:setup`**, which merges the starter settings and permissions from [`plugins/claude/token-effort/config/settings.json`](plugins/claude/token-effort/config/settings.json) into your Claude `settings.json`. Re-runs add any new entries and keep your own; entries you remove come back, so edit that file to change the baseline.
 
 ## ⤵️ Installation
