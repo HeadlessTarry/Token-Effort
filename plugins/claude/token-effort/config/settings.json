@@ -80,8 +80,13 @@
       "Bash(git rebase *)",
       "Bash(git worktree *)"
     ],
-    "deny": [],
+    "deny": [
+      "Skill(review)"
+    ],
     "defaultMode": "auto"
+  },
+  "skillOverrides": {
+    "code-review": "off"
   },
   "worktree": {
     "baseRef": "fresh",
