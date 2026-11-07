@@ -11,7 +11,6 @@
 
 ## ⚙️ Default Behaviors (ON unless disabled)
 
-- **Concise feedback**: When reporting information to me, be extremely concise and sacrifice grammar for the sake of concision
 - **Git commit messages**: Format the commit summary line as `type: Summary message` (no scope, e.g. `feat: Add installer`), where `type` is one of; `feat` for feature enhancement, `fix` for bug/review fixes, `docs` for documentation changes or `chore` for maintenance tasks
 - **Icons for markdown headers**: When editing markdown (`*.md`) insert relevant unicode icons at the start of any level 1/2 headers (e.g. `# 🂡 Level 1` or `## 🂢 Level 2`)
 - **Icons for CI/CD workflows**: When editing CI/CD workflows (e.g. GitHub actions) insert relevant unicode icons at the start of display names (e.g. `⤵️ Checkout repository`)
