@@ -11,7 +11,7 @@ Install the skills first with `./install.sh` (see the [README](../README.md)).
 - [ ] [`gh` CLI](#1-gh-cli) authenticated
 - [ ] [Issues](#2-issues-enabled) enabled on the repository
 - [ ] [Issue labels](#3-issue-labels) created
-- [ ] [Issue templates](#4-issue-templates) in place
+- [ ] [Issue templates](#4-issue-templates-optional) considered (optional)
 - [ ] [Triage labels and tracker config](#5-triage-labels-and-tracker-config) set up
 
 ---
@@ -26,7 +26,7 @@ In the repository, go to **Settings** → **General** → **Features** and tick 
 
 ## 3. Issue labels
 
-`propose-feature` and `report-bug` rely on the labels their issue templates apply:
+Create the standard labels the skills and triage work with:
 
 | Label | Description | Color |
 |-------|-------------|-------|
@@ -44,15 +44,11 @@ gh label create "documentation" --color "#0075ca" --description "Improvements or
 gh label create "duplicate"     --color "#cfd3d7" --description "This issue or pull request already exists"
 ```
 
-## 4. Issue templates
+## 4. Issue templates (optional)
 
-The skills find templates in `.github/ISSUE_TEMPLATE/` by their `labels:` frontmatter, not by filename, and fall back to a plain format when none match. This repository's templates are the reference:
+`propose-feature` and `report-bug` need no issue templates. Without them, they interview with built-in questions and file a built-in body format.
 
-- `01-feature_request.md` applies `enhancement`
-- `02-bug_report.md` applies `bug`
-- `config.yml` disables blank issues
-
-Copy them into a repository to use them there.
+A repository may add templates in `.github/ISSUE_TEMPLATE/` to override that default. When a template matches, its sections frame the interview and the issue body.
 
 ## 5. Triage labels and tracker config
 

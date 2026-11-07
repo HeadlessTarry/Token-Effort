@@ -44,5 +44,5 @@ The Claude desktop app's monitoring of one PR. It wakes the agent when CI fails,
 _Avoid_: watch (on its own), monitor, subscription, poller
 
 **Auto-Fix Halt**:
-A PR's state once the noise limit (3 noise rounds) or the round limit (10 rounds) is reached. The agent turns Auto-Fix off and addresses nothing more. The PR stays halted until the human says *continue*, which allows one more round. Re-arming Auto-Fix is always the human's click.
+A PR's state once the noise limit (3 noise rounds) or the round limit (10 rounds) is reached. The agent turns Auto-Fix off and addresses nothing more. The PR carries the `shepherd: halted` label and stays halted until the label is removed: by the agent when the human says *continue*, or by the human on GitHub. Removing it allows one more round: reviews submitted before then never trigger a halt, and the next review re-checks the limits. Re-arming Auto-Fix is always the human's click.
 _Avoid_: halt (on its own), stop, pause, freeze

@@ -6,9 +6,16 @@
     {
       "name": "token-effort",
       "source": "./",
-      "description": "Token-Effort core plugin: home-grown skills, working conventions injected into every session and subagent, and /token-effort:setup to merge starter settings",
+      "description": "Token-Effort core plugin: home-grown skills, working conventions injected into every session and subagent, the Port MCP server, and /token-effort:setup to merge starter settings",
       "author": { "name": "HeadlessTarry" },
       "skills": ["./skills/", "./plugins/claude/token-effort/skills/"],
+      "mcpServers": {
+        "port-eu": {
+          "type": "http",
+          "url": "https://mcp.port.io/v1",
+          "headers": { "x-read-only-mode": "0" }
+        }
+      },
       "hooks": {
         "SessionStart": [
           {
