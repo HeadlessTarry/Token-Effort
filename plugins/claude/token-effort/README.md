@@ -7,6 +7,7 @@ Claude Code features shipped only by the `token-effort` core plugin. Installs th
 | Session titles from issues | A `UserPromptSubmit` hook that titles a session after the GitHub issue its prompt references (below) |
 | `shepherding-pr-reviews` skill | Walks an open PR through review rounds from human and AI reviewers (below) |
 | Port MCP server | Port's EU MCP server, available in every session (below) |
+| SonarQube Cloud MCP server | SonarQube Cloud's hosted, read-only MCP server, configured with your own user token (below) |
 
 ## 🏷️ Session titles from issues
 
@@ -41,7 +42,11 @@ Limitations:
 - Both hooks run `node` in every session. With no `gh pr create` and no bound PR, they exit without calling `gh`.
 - Not verified: whether the Auto-Fix Watch wakes the session for a human's review.
 
-## 🧭 Port MCP server
+## 🔌 MCP servers
+
+The core plugin registers two MCP servers under `mcpServers` in its entry in [.claude-plugin/marketplace.json](../../../.claude-plugin/marketplace.json): Port and SonarQube Cloud.
+
+### 🧭 Port MCP server
 
 The core plugin registers [Port's MCP server](https://docs.port.io/agent-management/port-mcp-server/installation) as `port-eu` (`https://mcp.port.io/v1`, HTTP transport) in every session. It sends `x-read-only-mode: 0`, so Port's write tools and actions are available.
 
@@ -58,3 +63,25 @@ Limitations:
 - EU region only. A US account (Port app URL contains `us`) needs its own `claude mcp add --transport http port-us https://mcp.us.port.io/v1 --header "x-read-only-mode: 0"`.
 - If you previously added Port yourself with `claude mcp add`, remove that entry, or the server appears twice.
 - Sessions without a Port login show the server as needing authentication in `/mcp`.
+
+### 🔎 SonarQube Cloud MCP server
+
+The core plugin registers [SonarQube Cloud's hosted MCP server](https://docs.sonarsource.com/sonarqube-mcp-server/setup/sonarqube-cloud-hosted) as `sonarqube` (`https://api.sonarcloud.io/mcp`, HTTP transport). It sends `SONARQUBE_READ_ONLY: true`, so only read tools are available.
+
+The server and its two `userConfig` options (`sonarqube_token`, `sonarqube_org`) are declared in the core plugin entry in [.claude-plugin/marketplace.json](../../../.claude-plugin/marketplace.json). The token is stored in your credential store, not in the repo.
+
+First use:
+
+1. Create a user token under **My account > Access Tokens > Personal Tokens** in SonarQube Cloud.
+2. Install or update the plugin and enter the token and your organization key when Claude Code asks. The organization key defaults to `headlesstarry`.
+3. Restart Claude Code, run `/mcp` and check that `sonarqube` is connected.
+4. Check it works by asking Claude for the quality gate status of a project.
+
+Limitations:
+
+- Only a user (personal) token works. Project, global and scoped organization tokens are rejected. SonarQube Cloud documents the Personal Tokens tab as available only to users who signed in with GitHub.
+- EU region only. A US organization needs the URL `https://api.sonarqube.us/mcp`.
+- The hosted server has a smaller tool set than the local Docker server. The architecture and dependency-risk tools need paid plans.
+- A user who leaves the token empty gets a `sonarqube` server that fails to connect. The other servers are unaffected.
+- Not verified against a live install: that the hosted server honours the `SONARQUBE_ORG` and `SONARQUBE_READ_ONLY` headers, and that `${user_config.*}` is substituted for an `mcpServers` entry declared in `marketplace.json`.
+- Issue, rule and source text returned by the server is untrusted data.
