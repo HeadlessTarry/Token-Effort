@@ -42,7 +42,11 @@ Limitations:
 - Both hooks run `node` in every session. With no `gh pr create` and no bound PR, they exit without calling `gh`.
 - Not verified: whether the Auto-Fix Watch wakes the session for a human's review.
 
-## 🧭 Port MCP server
+## 🔌 MCP servers
+
+The core plugin registers two MCP servers under `mcpServers` in its entry in [.claude-plugin/marketplace.json](../../../.claude-plugin/marketplace.json): Port and SonarQube Cloud.
+
+### 🧭 Port MCP server
 
 The core plugin registers [Port's MCP server](https://docs.port.io/agent-management/port-mcp-server/installation) as `port-eu` (`https://mcp.port.io/v1`, HTTP transport) in every session. It sends `x-read-only-mode: 0`, so Port's write tools and actions are available.
 
@@ -60,7 +64,7 @@ Limitations:
 - If you previously added Port yourself with `claude mcp add`, remove that entry, or the server appears twice.
 - Sessions without a Port login show the server as needing authentication in `/mcp`.
 
-## 🔎 SonarQube Cloud MCP server
+### 🔎 SonarQube Cloud MCP server
 
 The core plugin registers [SonarQube Cloud's hosted MCP server](https://docs.sonarsource.com/sonarqube-mcp-server/setup/sonarqube-cloud-hosted) as `sonarqube` (`https://api.sonarcloud.io/mcp`, HTTP transport). It sends `SONARQUBE_READ_ONLY: true`, so only read tools are available.
 
