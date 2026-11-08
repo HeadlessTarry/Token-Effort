@@ -6,14 +6,37 @@
     {
       "name": "token-effort",
       "source": "./",
-      "description": "Token-Effort core plugin: home-grown skills, working conventions injected into every session and subagent, the Port MCP server, and /token-effort:setup to merge starter settings",
+      "description": "Token-Effort core plugin: home-grown skills, working conventions injected into every session and subagent, the Port and SonarQube Cloud MCP servers, and /token-effort:setup to merge starter settings",
       "author": { "name": "HeadlessTarry" },
       "skills": ["./skills/", "./plugins/claude/token-effort/skills/"],
+      "userConfig": {
+        "sonarqube_token": {
+          "type": "string",
+          "title": "SonarQube Cloud user token",
+          "description": "Personal access token from My account > Access Tokens in SonarQube Cloud",
+          "sensitive": true
+        },
+        "sonarqube_org": {
+          "type": "string",
+          "title": "SonarQube Cloud organization key",
+          "description": "Organization key, for example headlesstarry",
+          "default": "headlesstarry"
+        }
+      },
       "mcpServers": {
         "port-eu": {
           "type": "http",
           "url": "https://mcp.port.io/v1",
           "headers": { "x-read-only-mode": "0" }
+        },
+        "sonarqube": {
+          "type": "http",
+          "url": "https://api.sonarcloud.io/mcp",
+          "headers": {
+            "Authorization": "Bearer ${user_config.sonarqube_token}",
+            "SONARQUBE_ORG": "${user_config.sonarqube_org}",
+            "SONARQUBE_READ_ONLY": "true"
+          }
         }
       },
       "hooks": {
