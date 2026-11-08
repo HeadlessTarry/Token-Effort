@@ -57,7 +57,7 @@ def has_hooks_module(mod: Path) -> bool:
     try:
         with open(mod / "hooks" / "hooks.json", encoding="utf-8") as handle:
             config = json.load(handle)
-    except (OSError, ValueError):
+    except OSError, ValueError:
         return False
     return isinstance(config, dict) and bool(config.get("modules"))
 
@@ -71,11 +71,7 @@ def problems(report: dict) -> list[str]:
     found = []
     for section in [report.get("manifest") or {}, *report.get("contents", [])]:
         found += [f"error: {issue.get('path')}: {issue.get('message')}" for issue in section.get("errors", [])]
-        found += [
-            f"warning: {issue.get('path')}: {issue.get('message')}"
-            for issue in section.get("warnings", [])
-            if not allowed(issue)
-        ]
+        found += [f"warning: {issue.get('path')}: {issue.get('message')}" for issue in section.get("warnings", []) if not allowed(issue)]
     return found
 
 
