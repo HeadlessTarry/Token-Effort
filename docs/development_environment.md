@@ -6,6 +6,7 @@ The following must be installed, and available on your CLI `PATH`:
 
 - [Git](https://git-scm.com/) and Bash (Git Bash on Windows)
 - [UV (latest)](https://docs.astral.sh/uv/), which runs [pre-commit](https://pre-commit.com/) via `uvx`; no project virtual environment is needed
+- Python 3.14 as `python3.14` on `PATH`, which pre-commit uses to build the `language: python` hook environments (`default_language_version` in [.pre-commit-config.yaml](../.pre-commit-config.yaml)); CI installs it with `actions/setup-python`
 - [Node.js](https://nodejs.org/) with npm, which installs the `claude` CLI version pinned in [package.json](../package.json)
 
 ## 🚀 Initial Setup
