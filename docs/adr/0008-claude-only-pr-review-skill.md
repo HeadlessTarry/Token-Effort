@@ -1,6 +1,6 @@
 # 0008-claude-only-pr-review-skill
 
-> **Status:** Accepted
+> **Status:** Superseded by #277, which dropped the `shepherding-pr-reviews` skill
 > **Date:** 2026-10-14
 
 ## Context

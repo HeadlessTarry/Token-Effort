@@ -5,7 +5,6 @@ Claude Code features shipped only by the `token-effort` core plugin. Installs th
 | Feature | What it is |
 |---------|------------|
 | Session titles from issues | A `UserPromptSubmit` hook that titles a session after the GitHub issue its prompt references (below) |
-| `shepherding-pr-reviews` skill | Walks an open PR through review rounds from human and AI reviewers (below) |
 | Port MCP server | Port's EU MCP server, available in every session (below) |
 | SonarQube Cloud MCP server | SonarQube Cloud's hosted, read-only MCP server, configured with your own user token (below) |
 
@@ -26,21 +25,6 @@ Limitations:
 - Verified in the desktop app: the hook's title is written to the transcript, then overwritten by the app's generated title, which the app re-writes as the custom title on every later turn. `set_session_title` on a session with a generated title renames it without a prompt, and the new title persists in the transcript.
 - Not verified end to end: a new desktop session started with `/<skill> #<n>` keeping the `[#<n>] ...` title after the agent's rename.
 - In the desktop app the title change costs the agent one tool call in the first turn.
-
-## 🐑 shepherding-pr-reviews
-
-A skill ([ADR 0008](../../../docs/adr/0008-claude-only-pr-review-skill.md)) that walks an open PR through review rounds from human and AI reviewers: a verdict for each comment, fixes for the valid ones, in-thread replies, and an Auto-Fix Halt at the noise or round limit (terms in [GLOSSARY.md](../../../GLOSSARY.md)).
-
-- A `PostToolUse` hook binds a PR to the session after `gh pr create`, and a `Stop` hook blocks a turn from ending while that PR has unanswered review threads.
-- Arming the Auto-Fix Watch needs the Claude desktop app. In a CLI session, rounds run when you say reviews have landed.
-- GitHub holds each PR's state, so any machine or session sees the same rounds and halt. The PR carries a `shepherd: active` label while shepherded, and `shepherd: halted` after an Auto-Fix Halt; remove `shepherd: halted` to allow one more round. Only the list of PRs each session's Stop hook guards stays local, under `~/.claude/state/shepherding-pr-reviews/sessions/`.
-
-Skill: [skills/shepherding-pr-reviews/SKILL.md](skills/shepherding-pr-reviews/SKILL.md).
-
-Limitations:
-
-- Both hooks run `node` in every session. With no `gh pr create` and no bound PR, they exit without calling `gh`.
-- Not verified: whether the Auto-Fix Watch wakes the session for a human's review.
 
 ## 🔌 MCP servers
 
